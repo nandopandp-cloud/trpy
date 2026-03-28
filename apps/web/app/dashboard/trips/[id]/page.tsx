@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   ArrowLeft, Edit2, MapPin, Calendar, Wallet,
-  Plus, Trash2, Loader2, Share2, MoreVertical,
+  Plus, Trash2, Loader2, Share2, MoreVertical, Youtube, Image as ImageIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
@@ -19,6 +19,9 @@ import { ExpenseForm } from '@/components/budget/expense-form';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
+import { FavoriteButton } from '@/components/favorites/favorite-button';
+import { YouTubeGallery } from '@/components/integrations/youtube/youtube-gallery';
+import { PinterestGallery } from '@/components/integrations/pinterest/pinterest-gallery';
 import { cn } from '@/lib/utils';
 import type { ItineraryItem } from '@trpy/database';
 
@@ -121,6 +124,14 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
           </motion.button>
 
           <div className="flex gap-2">
+            <FavoriteButton
+              type="PLACE"
+              externalId={params.id}
+              name={trip?.title ?? ''}
+              image={trip?.coverImage ?? undefined}
+              size="md"
+              className="w-10 h-10"
+            />
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.9 }}
@@ -243,24 +254,32 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
 
         {/* Tabs */}
         <Tabs defaultValue="itinerary">
-          <TabsList className="mb-6 w-full">
-            <TabsTrigger value="itinerary" className="flex-1">
-              Itinerário
-              {trip.itineraryDays.length > 0 && (
-                <span className="ml-1.5 text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                  {trip.itineraryDays.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="budget" className="flex-1">
-              Despesas
-              {trip.expenses.length > 0 && (
-                <span className="ml-1.5 text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                  {trip.expenses.length}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto mb-6">
+            <TabsList className="w-full min-w-max">
+              <TabsTrigger value="itinerary" className="flex-1">
+                Itinerário
+                {trip.itineraryDays.length > 0 && (
+                  <span className="ml-1.5 text-xs bg-muted px-1.5 py-0.5 rounded-full">
+                    {trip.itineraryDays.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="budget" className="flex-1">
+                Despesas
+                {trip.expenses.length > 0 && (
+                  <span className="ml-1.5 text-xs bg-muted px-1.5 py-0.5 rounded-full">
+                    {trip.expenses.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="videos" className="flex-1 gap-1.5">
+                <Youtube className="w-3.5 h-3.5" /> Vídeos
+              </TabsTrigger>
+              <TabsTrigger value="inspiration" className="flex-1 gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5" /> Inspiração
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Itinerary tab */}
           <TabsContent value="itinerary">
@@ -293,6 +312,26 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
           <TabsContent value="budget">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
               <BudgetDashboard trip={trip} expenses={trip.expenses} />
+            </motion.div>
+          </TabsContent>
+
+          {/* Videos tab */}
+          <TabsContent value="videos">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Vídeos sobre <span className="font-semibold text-foreground">{trip.destination}</span>
+              </p>
+              <YouTubeGallery destination={trip.destination} />
+            </motion.div>
+          </TabsContent>
+
+          {/* Inspiration (Pinterest) tab */}
+          <TabsContent value="inspiration">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Inspirações para <span className="font-semibold text-foreground">{trip.destination}</span>
+              </p>
+              <PinterestGallery destination={trip.destination} theme="travel" />
             </motion.div>
           </TabsContent>
         </Tabs>

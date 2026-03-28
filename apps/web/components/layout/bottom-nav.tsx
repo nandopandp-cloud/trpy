@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, PlaneTakeoff, Wallet, Sparkles } from 'lucide-react';
+import { LayoutDashboard, PlaneTakeoff, Heart, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV = [
   { href: '/dashboard', label: 'Início', icon: LayoutDashboard, exact: true },
   { href: '/dashboard/trips', label: 'Viagens', icon: PlaneTakeoff },
-  { href: '/dashboard/budget', label: 'Finanças', icon: Wallet },
+  { href: '/dashboard/favorites', label: 'Favoritos', icon: Heart },
   { href: '/dashboard/ai', label: 'IA', icon: Sparkles },
 ];
 

@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Map, Wallet, LayoutDashboard, Settings,
-  ChevronLeft, Sparkles, PlaneTakeoff,
+  ChevronLeft, Sparkles, PlaneTakeoff, Heart,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ const NAV = [
   { href: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard, exact: true },
   { href: '/dashboard/trips', label: 'Viagens', icon: PlaneTakeoff },
   { href: '/dashboard/budget', label: 'Finanças', icon: Wallet },
+  { href: '/dashboard/favorites', label: 'Favoritos', icon: Heart },
   { href: '/dashboard/ai', label: 'IA', icon: Sparkles, badge: 'novo' },
 ];
 

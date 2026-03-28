@@ -10,6 +10,7 @@ const TITLES: Record<string, string> = {
   '/dashboard': 'Visão Geral',
   '/dashboard/trips': 'Minhas Viagens',
   '/dashboard/budget': 'Finanças',
+  '/dashboard/favorites': 'Favoritos',
   '/dashboard/ai': 'Assistente IA',
   '/dashboard/settings': 'Configurações',
 };
