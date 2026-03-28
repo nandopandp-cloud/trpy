@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Auth (NextAuth compatible) ─────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  trips    Trip[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── Trips ───────────────────────────────────────────────────────────────────
+
+enum TripStatus {
+  PLANNING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model Trip {
+  id          String     @id @default(cuid())
+  userId      String
+  title       String
+  destination String
+  description String?
+  coverImage  String?
+  startDate   DateTime
+  endDate     DateTime
+  budget      Decimal    @db.Decimal(10, 2)
+  totalSpent  Decimal    @default(0) @db.Decimal(10, 2)
+  currency    String     @default("BRL")
+  status      TripStatus @default(PLANNING)
+  isDeleted   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itineraryDays  ItineraryDay[]
+  expenses       Expense[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("trips")
+}
+
+// ─── Itinerary ───────────────────────────────────────────────────────────────
+
+model ItineraryDay {
+  id        String   @id @default(cuid())
+  tripId    String
+  dayNumber Int
+  date      DateTime
+  title     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trip  Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  items ItineraryItem[]
+
+  @@unique([tripId, dayNumber])
+  @@index([tripId])
+  @@map("itinerary_days")
+}
+
+enum ItemType {
+  ACTIVITY
+  RESTAURANT
+  HOTEL
+  TRANSPORT
+  OTHER
+}
+
+model ItineraryItem {
+  id           String    @id @default(cuid())
+  dayId        String
+  type         ItemType  @default(ACTIVITY)
+  title        String
+  description  String?
+  location     String?
+  latitude     Decimal?  @db.Decimal(9, 6)
+  longitude    Decimal?  @db.Decimal(9, 6)
+  startTime    String?
+  durationMins Int?
+  cost         Decimal?  @db.Decimal(10, 2)
+  bookingUrl   String?
+  order        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  day ItineraryDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+  @@index([dayId])
+  @@map("itinerary_items")
+}
+
+// ─── Expenses ────────────────────────────────────────────────────────────────
+
+enum ExpenseCategory {
+  ACCOMMODATION
+  FOOD
+  TRANSPORT
+  ACTIVITIES
+  SHOPPING
+  HEALTH
+  OTHER
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  tripId      String
+  category    ExpenseCategory @default(OTHER)
+  title       String
+  amount      Decimal         @db.Decimal(10, 2)
+  currency    String          @default("BRL")
+  date        DateTime
+  notes       String?
+  receiptUrl  String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([category])
+  @@map("expenses")
+}
