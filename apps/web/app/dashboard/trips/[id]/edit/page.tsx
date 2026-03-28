@@ -40,7 +40,7 @@ export default function EditTripPage({ params }: { params: { id: string } }) {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
             {isLoading ? (
               <CardSkeleton />
             ) : trip ? (

@@ -10,10 +10,19 @@ import {
 } from 'lucide-react';
 import { useTrips } from '@/hooks/useTrips';
 import { TripCard } from '@/components/trips/trip-card';
+import { DestinationCard } from '@/components/cards/destination-card';
 import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/ui/skeletons';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+
+const TRENDING_DESTINATIONS = [
+  { name: 'Bali', country: 'Indonésia', emoji: '🌊', gradient: 'from-emerald-600 to-teal-700', category: 'Praia', rating: 4.9 },
+  { name: 'Paris', country: 'França', emoji: '🗼', gradient: 'from-sky-600 to-indigo-700', category: 'Cultural', rating: 4.8 },
+  { name: 'Patagônia', country: 'Argentina', emoji: '🏔️', gradient: 'from-slate-600 to-slate-800', category: 'Aventura', rating: 4.9 },
+  { name: 'Tóquio', country: 'Japão', emoji: '🎌', gradient: 'from-rose-600 to-pink-700', category: 'Cultural', rating: 4.8 },
+  { name: 'Santorini', country: 'Grécia', emoji: '🏝️', gradient: 'from-blue-600 to-cyan-700', category: 'Praia', rating: 4.7 },
+];
 
 const stagger = {
   container: { hidden: {}, show: { transition: { staggerChildren: 0.08 } } },
@@ -175,6 +184,36 @@ export default function DashboardPage() {
                 </div>
                 <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">{cat.label}</span>
               </motion.button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Trending destinations ──────────────────────────────── */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-foreground">Destinos em alta</h2>
+            <Link href="/dashboard/trips/new">
+              <motion.span
+                whileHover={{ x: 2 }}
+                className="flex items-center gap-1 text-sm text-primary font-medium hover:text-primary/80 transition-colors"
+              >
+                Planejar <ArrowRight className="w-3.5 h-3.5" />
+              </motion.span>
+            </Link>
+          </div>
+          <div className="flex gap-4 scroll-x-hidden pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+            {TRENDING_DESTINATIONS.map((dest, i) => (
+              <DestinationCard
+                key={dest.name}
+                name={dest.name}
+                country={dest.country}
+                emoji={dest.emoji}
+                gradient={dest.gradient}
+                category={dest.category}
+                rating={dest.rating}
+                index={i}
+                onClick={() => router.push('/dashboard/trips/new')}
+              />
             ))}
           </div>
         </div>

@@ -6,7 +6,7 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
 
 export function CardSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('rounded-xl border border-border bg-card p-0 overflow-hidden', className)}>
+    <div className={cn('rounded-3xl border border-border bg-card p-0 overflow-hidden shadow-card', className)}>
       <Skeleton className="h-40 w-full rounded-none" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-5 w-2/3" />

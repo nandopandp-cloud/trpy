@@ -2,114 +2,181 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, MapPin, Calendar, Loader2, Clock, Utensils, Landmark } from 'lucide-react';
+import {
+  Sparkles, Send, MapPin, Calendar, Loader2,
+  Clock, Utensils, Landmark, Hotel, Bus, Zap,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ActivityCard } from '@/components/cards/activity-card';
 import { cn } from '@/lib/utils';
 
 const SUGGESTIONS = [
-  '7 dias em Lisboa, foco em gastronomia e cultura',
-  '10 dias em Bali, praias e templos',
-  'Fim de semana em Buenos Aires',
-  '14 dias na Patagônia, aventura e natureza',
+  { label: '7 dias em Lisboa', sub: 'Gastronomia e cultura' },
+  { label: '10 dias em Bali', sub: 'Praias e templos' },
+  { label: 'Fim de semana em Buenos Aires', sub: 'Tango e gastronomia' },
+  { label: '14 dias na Patagônia', sub: 'Aventura e natureza' },
+  { label: '5 dias em Amsterdã', sub: 'Museus e canais' },
+  { label: '10 dias no Japão', sub: 'Cultura e tecnologia' },
+];
+
+interface GeneratedActivity {
+  title: string;
+  type: string;
+  time?: string;
+  duration?: number;
+  location?: string;
+  cost?: number;
+  description?: string;
+}
+
+interface GeneratedDay {
+  day: number;
+  theme: string;
+  activities: GeneratedActivity[];
+}
+
+const MOCK_RESULT: GeneratedDay[] = [
+  {
+    day: 1,
+    theme: 'Chegada e bairro histórico',
+    activities: [
+      { title: 'Check-in no hotel boutique', type: 'HOTEL', time: '14:00', location: 'Centro histórico', cost: 380 },
+      { title: 'Passeio pelo bairro histórico', type: 'ACTIVITY', time: '16:00', duration: 120, location: 'Alfama', cost: 0 },
+      { title: 'Jantar com vista panorâmica', type: 'RESTAURANT', time: '20:00', location: 'Portas do Sol', cost: 65, description: 'Culinária portuguesa tradicional' },
+    ],
+  },
+  {
+    day: 2,
+    theme: 'Cultura e gastronomia',
+    activities: [
+      { title: 'Museu Nacional de Arte Antiga', type: 'ACTIVITY', time: '09:30', duration: 150, location: 'Janelas Verdes', cost: 12 },
+      { title: 'Almoço no Mercado da Ribeira', type: 'RESTAURANT', time: '13:00', location: 'Cais do Sodré', cost: 30 },
+      { title: 'Passeio de tuk-tuk', type: 'TRANSPORT', time: '15:30', duration: 90, location: 'Centro', cost: 25 },
+      { title: 'Fado ao vivo', type: 'ACTIVITY', time: '21:00', duration: 120, location: 'Bairro Alto', cost: 45, description: 'Show com jantar incluído' },
+    ],
+  },
+  {
+    day: 3,
+    theme: 'Belém e arredores',
+    activities: [
+      { title: 'Torre de Belém', type: 'ACTIVITY', time: '09:00', duration: 60, location: 'Belém', cost: 8 },
+      { title: 'Pastéis de Belém', type: 'RESTAURANT', time: '10:30', location: 'Belém', cost: 10, description: 'A original desde 1837' },
+      { title: 'Mosteiro dos Jerônimos', type: 'ACTIVITY', time: '11:30', duration: 90, location: 'Belém', cost: 10 },
+    ],
+  },
 ];
 
 const TYPE_ICON: Record<string, React.ElementType> = {
-  ACCOMMODATION: MapPin,
-  FOOD: Utensils,
-  TRANSPORT: Loader2,
-  ACTIVITIES: Landmark,
-  OTHER: Clock,
+  ACTIVITY: Zap,
+  RESTAURANT: Utensils,
+  HOTEL: Hotel,
+  TRANSPORT: Bus,
+  OTHER: Landmark,
 };
 
 export default function AIPage() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [result, setResult] = useState<null | { days: { day: number; activities: string[] }[] }>(null);
+  const [result, setResult] = useState<GeneratedDay[] | null>(null);
+  const [expandedDay, setExpandedDay] = useState<number | null>(0);
 
-  async function handleGenerate() {
-    if (!prompt.trim()) return;
+  async function handleGenerate(customPrompt?: string) {
+    const text = customPrompt ?? prompt;
+    if (!text.trim()) return;
+    if (customPrompt) setPrompt(customPrompt);
+
     setIsGenerating(true);
     setResult(null);
+    setExpandedDay(0);
 
-    // Simulated response — replace with real Claude API call
-    await new Promise((r) => setTimeout(r, 1800));
-    setResult({
-      days: [
-        { day: 1, activities: ['Chegada e check-in', 'Passeio pela cidade histórica', 'Jantar local'] },
-        { day: 2, activities: ['Museu Nacional', 'Almoço no mercado', 'Vista panorâmica ao entardecer'] },
-        { day: 3, activities: ['Excursão ao litoral', 'Praia e relaxamento', 'Restaurante beira-mar'] },
-      ],
-    });
+    await new Promise((r) => setTimeout(r, 2000));
+    setResult(MOCK_RESULT);
     setIsGenerating(false);
   }
 
+  const totalCost = result?.flatMap(d => d.activities).reduce((s, a) => s + (a.cost ?? 0), 0) ?? 0;
+  const totalActivities = result?.flatMap(d => d.activities).length ?? 0;
+
   return (
     <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center space-y-3"
       >
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-ocean glow-teal animate-pulse-glow mx-auto">
+        <motion.div
+          animate={{ rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-ocean glow-teal animate-pulse-glow mx-auto"
+        >
           <Sparkles className="w-8 h-8 text-white" />
-        </div>
+        </motion.div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Assistente de Viagens IA</h1>
-          <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-            Descreva seu destino ideal e a IA criará um itinerário personalizado para você.
+          <h1 className="text-2xl font-black text-foreground">Planejar com IA</h1>
+          <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto leading-relaxed">
+            Descreva sua viagem ideal e a IA cria um itinerário completo, com atividades, restaurantes e dicas.
           </p>
         </div>
       </motion.div>
 
-      {/* Input */}
+      {/* Input area */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-card border border-border rounded-3xl p-4 shadow-card"
+        className="bg-card border border-border rounded-3xl p-5 shadow-card"
       >
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Ex: 7 dias em Lisboa, foco em gastronomia e cultura local, orçamento médio..."
+          placeholder="Ex: 7 dias em Lisboa, Portugal — interesse em gastronomia, cultura e história. Orçamento médio de R$ 8.000..."
           rows={3}
-          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none"
+          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none leading-relaxed"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleGenerate();
           }}
         />
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-          <span className="text-xs text-muted-foreground">⌘ + Enter para gerar</span>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Datas</span>
+            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Destino</span>
+            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Duração</span>
+          </div>
           <Button
-            onClick={handleGenerate}
+            onClick={() => handleGenerate()}
             disabled={!prompt.trim() || isGenerating}
-            className="gap-2 bg-ocean hover:opacity-90 border-0 glow-teal"
             size="sm"
+            className="gap-2 bg-ocean hover:opacity-90 border-0 glow-teal"
           >
             {isGenerating ? (
               <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Gerando...</>
             ) : (
-              <><Send className="w-3.5 h-3.5" /> Gerar itinerário</>
+              <><Send className="w-3.5 h-3.5" /> Gerar</>
             )}
           </Button>
         </div>
       </motion.div>
 
-      {/* Suggestions */}
+      {/* Suggestion pills */}
       {!result && !isGenerating && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sugestões</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Experimente</p>
           <div className="flex flex-wrap gap-2">
-            {SUGGESTIONS.map((s) => (
+            {SUGGESTIONS.map((s, i) => (
               <motion.button
-                key={s}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setPrompt(s)}
-                className="text-xs px-3 py-2 rounded-full border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors text-muted-foreground hover:text-foreground"
+                key={s.label}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => handleGenerate(s.label + ' — ' + s.sub)}
+                className="text-xs px-3 py-2 rounded-full border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all text-muted-foreground hover:text-foreground text-left"
               >
-                {s}
+                <span className="font-medium text-foreground">{s.label}</span>
+                <span className="text-muted-foreground"> · {s.sub}</span>
               </motion.button>
             ))}
           </div>
@@ -123,17 +190,31 @@ export default function AIPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="flex flex-col items-center gap-4 py-10"
+            className="flex flex-col items-center gap-5 py-12"
           >
             <div className="relative">
-              <div className="w-16 h-16 rounded-3xl bg-ocean/20 flex items-center justify-center">
-                <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+              <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center">
+                <Sparkles className="w-10 h-10 text-primary" />
               </div>
-              <div className="absolute inset-0 rounded-3xl border-2 border-primary/30 animate-ping" />
+              <motion.div
+                animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 rounded-3xl border-2 border-primary"
+              />
             </div>
-            <div className="text-center">
-              <p className="font-semibold text-foreground text-sm">Criando seu itinerário...</p>
-              <p className="text-xs text-muted-foreground mt-1">A IA está personalizando cada detalhe</p>
+            <div className="text-center space-y-1">
+              <p className="font-bold text-foreground">Criando seu itinerário...</p>
+              <p className="text-sm text-muted-foreground">Analisando destino e personalizando cada detalhe</p>
+            </div>
+            <div className="flex gap-1.5">
+              {[0, 0.2, 0.4].map((delay, i) => (
+                <motion.div
+                  key={i}
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity, delay }}
+                  className="w-2 h-2 rounded-full bg-primary"
+                />
+              ))}
             </div>
           </motion.div>
         )}
@@ -145,50 +226,114 @@ export default function AIPage() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
+            className="space-y-5"
           >
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-foreground">Itinerário gerado</p>
+            {/* Summary bar */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-4 bg-ocean/10 border border-primary/20 rounded-2xl px-4 py-3"
+            >
+              <Sparkles className="w-5 h-5 text-primary shrink-0" />
+              <div className="flex-1 flex flex-wrap gap-x-4 gap-y-0.5">
+                <span className="text-sm font-semibold text-foreground">{result.length} dias</span>
+                <span className="text-sm text-muted-foreground">{totalActivities} atividades</span>
+                <span className="text-sm text-muted-foreground">
+                  ~R$ {totalCost.toLocaleString('pt-BR')} estimado
+                </span>
+              </div>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="text-xs"
+                className="text-xs shrink-0"
                 onClick={() => { setResult(null); setPrompt(''); }}
               >
-                Novo itinerário
+                Refazer
               </Button>
-            </div>
+            </motion.div>
 
-            {result.days.map((day, i) => (
+            {/* Days accordion */}
+            {result.map((day, di) => (
               <motion.div
                 key={day.day}
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card border border-border rounded-3xl p-5"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: di * 0.1 }}
+                className="rounded-3xl border border-border bg-card overflow-hidden shadow-card"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-2xl bg-ocean flex items-center justify-center text-white text-sm font-bold">
+                {/* Day header */}
+                <button
+                  onClick={() => setExpandedDay(expandedDay === di ? null : di)}
+                  className="w-full flex items-center gap-4 px-5 py-4 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-ocean flex items-center justify-center text-white font-black text-sm shrink-0">
                     {day.day}
                   </div>
-                  <p className="font-semibold text-foreground text-sm">Dia {day.day}</p>
-                </div>
-                <div className="space-y-2.5">
-                  {day.activities.map((activity, j) => (
-                    <div key={j} className="flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                      <p className="text-sm text-muted-foreground">{activity}</p>
-                    </div>
-                  ))}
-                </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-bold text-foreground">Dia {day.day}</p>
+                    <p className="text-xs text-muted-foreground">{day.theme}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-muted-foreground">{day.activities.length} atividades</span>
+                    <motion.div
+                      animate={{ rotate: expandedDay === di ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Sparkles className="w-4 h-4 text-muted-foreground" />
+                    </motion.div>
+                  </div>
+                </button>
+
+                {/* Activities */}
+                <AnimatePresence initial={false}>
+                  {expandedDay === di && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 space-y-2 border-t border-border pt-3">
+                        {day.activities.map((act, ai) => (
+                          <ActivityCard
+                            key={ai}
+                            title={act.title}
+                            type={act.type}
+                            time={act.time}
+                            location={act.location}
+                            cost={act.cost}
+                            currency="R$"
+                            description={act.description}
+                            index={ai}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ))}
 
-            <div className="rounded-3xl border border-primary/20 bg-primary/5 p-4 text-center">
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="rounded-3xl border border-primary/20 bg-primary/5 p-5 text-center space-y-3"
+            >
+              <p className="text-sm font-semibold text-foreground">Gostou do itinerário?</p>
               <p className="text-xs text-muted-foreground">
-                Integração com Claude API em desenvolvimento. Em breve você poderá salvar este itinerário diretamente na sua viagem! 🚀
+                A integração com Claude API está chegando — em breve você poderá salvar diretamente na sua viagem! 🚀
               </p>
-            </div>
+              <Button
+                className="bg-ocean hover:opacity-90 border-0 glow-teal"
+                onClick={() => window.location.href = '/dashboard/trips/new'}
+              >
+                Criar viagem manualmente
+              </Button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

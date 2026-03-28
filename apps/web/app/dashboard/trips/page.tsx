@@ -1,18 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Plane, Loader2 } from 'lucide-react';
+import { Plus, Plane, Loader2, SlidersHorizontal, X } from 'lucide-react';
 import type { TripStatus } from '@trpy/database';
 import { useTrips, useDeleteTrip } from '@/hooks/useTrips';
 import { TripCard } from '@/components/trips/trip-card';
+import { HeroCard } from '@/components/cards/hero-card';
+import { SearchBarPremium } from '@/components/forms/search-bar-premium';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { CardSkeleton } from '@/components/ui/skeletons';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
-const TABS: { label: string; value: string }[] = [
+const STATUS_FILTERS = [
   { label: 'Todas', value: 'ALL' },
   { label: 'Planejando', value: 'PLANNING' },
   { label: 'Em andamento', value: 'ONGOING' },
@@ -21,105 +22,213 @@ const TABS: { label: string; value: string }[] = [
 
 export default function TripsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('ALL');
+  const [activeFilter, setActiveFilter] = useState('ALL');
   const [search, setSearch] = useState('');
 
   const { data, isLoading, isError } = useTrips({
-    status: activeTab !== 'ALL' ? (activeTab as TripStatus) : undefined,
+    status: activeFilter !== 'ALL' ? (activeFilter as TripStatus) : undefined,
+    limit: 20,
   });
-
   const deleteTrip = useDeleteTrip();
 
-  const trips = (data?.trips ?? []).filter((t) =>
-    search === '' ||
-    t.title.toLowerCase().includes(search.toLowerCase()) ||
-    t.destination.toLowerCase().includes(search.toLowerCase())
+  const allTrips = data?.trips ?? [];
+
+  const trips = useMemo(() =>
+    search === ''
+      ? allTrips
+      : allTrips.filter(
+          t =>
+            t.title.toLowerCase().includes(search.toLowerCase()) ||
+            t.destination.toLowerCase().includes(search.toLowerCase())
+        ),
+    [allTrips, search]
   );
 
+  // Suggestions based on existing destinations
+  const suggestions = useMemo(() =>
+    allTrips
+      .filter(t =>
+        search.length > 0 &&
+        (t.destination.toLowerCase().includes(search.toLowerCase()) ||
+         t.title.toLowerCase().includes(search.toLowerCase()))
+      )
+      .slice(0, 4)
+      .map(t => ({ label: t.destination, sub: t.title })),
+    [allTrips, search]
+  );
+
+  const featuredTrip = allTrips.find(t => t.status === 'ONGOING') ?? allTrips[0];
+  const restTrips = trips.filter(t => t.id !== featuredTrip?.id || search !== '' || activeFilter !== 'ALL');
+
   return (
-    <div className="min-h-screen bg-background p-6 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Minhas Viagens</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {data?.total ?? 0} viagem{data?.total !== 1 ? 's' : ''} no total
-            </p>
-          </div>
-          <Button onClick={() => router.push('/dashboard/trips/new')} className="gap-2 bg-ocean hover:opacity-90 border-0 glow-teal">
-            <Plus className="w-4 h-4" />
-            Nova viagem
-          </Button>
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-6">
+
+      {/* ── Header ───────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-end justify-between"
+      >
+        <div>
+          <h1 className="text-2xl font-black text-foreground">Minhas Viagens</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {data?.total ?? 0} viagem{(data?.total ?? 0) !== 1 ? 's' : ''} no total
+          </p>
         </div>
+        <motion.button
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={() => router.push('/dashboard/trips/new')}
+          className="hidden sm:flex items-center gap-2 bg-ocean text-white font-bold text-sm px-4 py-2.5 rounded-2xl glow-teal hover:opacity-90 transition-opacity"
+        >
+          <Plus className="w-4 h-4" />
+          Nova viagem
+        </motion.button>
+      </motion.div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
-            <TabsList className="h-9">
-              {TABS.map((t) => (
-                <TabsTrigger key={t.value} value={t.value} className="text-xs px-3">
-                  {t.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+      {/* ── Search bar premium ───────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <SearchBarPremium
+          value={search}
+          onChange={setSearch}
+          placeholder="Buscar destinos, viagens..."
+          suggestions={suggestions}
+          onSuggestionSelect={(s) => setSearch(s.label)}
+        />
+      </motion.div>
 
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por destino ou título..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 text-sm"
-            />
-          </div>
-        </div>
+      {/* ── Status filter pills ──────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex gap-2 scroll-x-hidden pb-1 -mx-4 px-4 md:mx-0 md:px-0"
+      >
+        {STATUS_FILTERS.map((f) => (
+          <motion.button
+            key={f.value}
+            whileTap={{ scale: 0.93 }}
+            onClick={() => setActiveFilter(f.value)}
+            className={cn(
+              'shrink-0 text-xs font-semibold px-4 py-2 rounded-full border transition-all duration-200',
+              activeFilter === f.value
+                ? 'bg-ocean text-white border-transparent glow-teal'
+                : 'bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
+            )}
+          >
+            {f.label}
+          </motion.button>
+        ))}
 
-        {/* Content */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <CardSkeleton key={i} />
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="text-center py-16 text-muted-foreground">
-            Erro ao carregar viagens. Tente novamente.
-          </div>
-        ) : trips.length === 0 ? (
-          <EmptyState search={search} onNew={() => router.push('/dashboard/trips/new')} />
-        ) : (
-          <AnimatePresence mode="popLayout">
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-              initial={false}
+        {/* Active search badge */}
+        <AnimatePresence>
+          {search && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => setSearch('')}
+              className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-full bg-primary/10 text-primary border border-primary/25"
             >
-              {trips.map((trip, i) => (
-                <TripCard
-                  key={trip.id}
-                  trip={trip}
-                  index={i}
-                  onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
-                  onEdit={() => router.push(`/dashboard/trips/${trip.id}/edit`)}
-                  onDelete={() => {
-                    if (confirm(`Excluir "${trip.title}"?`)) {
-                      deleteTrip.mutate(trip.id);
-                    }
-                  }}
-                />
-              ))}
-            </motion.div>
-          </AnimatePresence>
-        )}
+              "{search}" <X className="w-3 h-3" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
-        {deleteTrip.isPending && (
-          <div className="fixed bottom-6 right-6 flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2 text-sm shadow-lg">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Excluindo...
+      {/* ── Content ──────────────────────────────────────────────── */}
+      {isLoading ? (
+        <div className="space-y-6">
+          <CardSkeleton className="h-72" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <CardSkeleton key={i} />)}
           </div>
+        </div>
+      ) : isError ? (
+        <div className="text-center py-16 text-muted-foreground">
+          Erro ao carregar viagens. Tente novamente.
+        </div>
+      ) : trips.length === 0 ? (
+        <EmptyState search={search} onNew={() => router.push('/dashboard/trips/new')} />
+      ) : (
+        <div className="space-y-6">
+          {/* Featured hero card — only when no search/filter */}
+          {featuredTrip && search === '' && activeFilter === 'ALL' && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <HeroCard
+                trip={featuredTrip}
+                onClick={() => router.push(`/dashboard/trips/${featuredTrip.id}`)}
+              />
+            </motion.div>
+          )}
+
+          {/* Grid of other trips */}
+          {restTrips.length > 0 && (
+            <div>
+              {search === '' && activeFilter === 'ALL' && featuredTrip && (
+                <p className="text-sm font-bold text-foreground mb-4">Outras viagens</p>
+              )}
+              <AnimatePresence mode="popLayout">
+                <motion.div
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                  initial={false}
+                >
+                  {restTrips.map((trip, i) => (
+                    <TripCard
+                      key={trip.id}
+                      trip={trip}
+                      index={i}
+                      onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
+                      onEdit={() => router.push(`/dashboard/trips/${trip.id}/edit`)}
+                      onDelete={() => {
+                        if (confirm(`Excluir "${trip.title}"?`)) {
+                          deleteTrip.mutate(trip.id);
+                        }
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Delete toast */}
+      <AnimatePresence>
+        {deleteTrip.isPending && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            className="fixed bottom-20 md:bottom-6 right-4 md:right-6 flex items-center gap-2.5 bg-card border border-border rounded-2xl px-4 py-3 text-sm shadow-card-lg z-50"
+          >
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            Excluindo viagem...
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
+
+      {/* Mobile FAB */}
+      <motion.button
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.3, type: 'spring', bounce: 0.4 }}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
+        onClick={() => router.push('/dashboard/trips/new')}
+        className="sm:hidden fixed bottom-20 right-4 w-14 h-14 rounded-full bg-ocean text-white flex items-center justify-center shadow-teal-lg glow-teal z-30"
+      >
+        <Plus className="w-6 h-6" />
+      </motion.button>
     </div>
   );
 }
@@ -131,21 +240,24 @@ function EmptyState({ search, onNew }: { search: string; onNew: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-20 text-center"
     >
-      <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-        <Plane className="w-8 h-8 text-muted-foreground" />
-      </div>
-      <h3 className="text-lg font-semibold text-foreground mb-1">
-        {search ? 'Nenhuma viagem encontrada' : 'Nenhuma viagem ainda'}
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 text-3xl"
+      >
+        {search ? '🔍' : '✈️'}
+      </motion.div>
+      <h3 className="text-lg font-bold text-foreground mb-1">
+        {search ? 'Nenhuma viagem encontrada' : 'Sem viagens ainda'}
       </h3>
       <p className="text-sm text-muted-foreground mb-6 max-w-xs">
         {search
           ? `Nenhum resultado para "${search}".`
-          : 'Crie sua primeira viagem e comece a planejar sua aventura.'}
+          : 'Crie sua primeira aventura e comece a planejar.'}
       </p>
       {!search && (
         <Button onClick={onNew} className="gap-2 bg-ocean hover:opacity-90 border-0 glow-teal">
-          <Plus className="w-4 h-4" />
-          Criar viagem
+          <Plus className="w-4 h-4" /> Criar viagem
         </Button>
       )}
     </motion.div>
