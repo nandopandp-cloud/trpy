@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -15,6 +15,7 @@ import { useTrip } from '@/hooks/useTrip';
 import { useDeleteTrip } from '@/hooks/useTrips';
 import { ItineraryDay } from '@/components/itinerary/itinerary-day';
 import { BudgetDashboard } from '@/components/budget/budget-dashboard';
+import { ExpenseForm } from '@/components/budget/expense-form';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
@@ -35,6 +36,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default function TripDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
   const { data: trip, isLoading, isError } = useTrip(params.id);
   const deleteTrip = useDeleteTrip();
 
@@ -225,12 +227,27 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
 
           {/* Budget tab */}
           <TabsContent value="budget">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <div className="flex justify-end">
+                <Button onClick={() => setShowExpenseForm(true)} className="gap-2" size="sm">
+                  <Plus className="w-3.5 h-3.5" /> Adicionar despesa
+                </Button>
+              </div>
               <BudgetDashboard trip={trip} expenses={trip.expenses} />
             </motion.div>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Expense form modal */}
+      <AnimatePresence>
+        {showExpenseForm && (
+          <ExpenseForm
+            tripId={params.id}
+            onClose={() => setShowExpenseForm(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
