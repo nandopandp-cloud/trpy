@@ -2,7 +2,7 @@
   "name": "trpy",
   "version": "0.0.1",
   "private": true,
-  "description": "Super-app de viagens com gestão financeira integrada",
+  "description": "Super-app de viagens com gest\u00e3o financeira integrada",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
@@ -17,5 +17,14 @@
   "devDependencies": {
     "typescript": "^5.3.0",
     "prettier": "^3.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "msw"
+    ]
   }
 }
