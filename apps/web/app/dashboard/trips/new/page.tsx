@@ -40,7 +40,7 @@ export default function NewTripPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
             <TripForm onSubmit={handleSubmit} submitLabel="Criar viagem" />
           </div>
         </motion.div>

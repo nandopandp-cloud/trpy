@@ -47,7 +47,7 @@ export default function TripsPage() {
               {data?.total ?? 0} viagem{data?.total !== 1 ? 's' : ''} no total
             </p>
           </div>
-          <Button onClick={() => router.push('/dashboard/trips/new')} className="gap-2">
+          <Button onClick={() => router.push('/dashboard/trips/new')} className="gap-2 bg-ocean hover:opacity-90 border-0 glow-teal">
             <Plus className="w-4 h-4" />
             Nova viagem
           </Button>
@@ -95,10 +95,11 @@ export default function TripsPage() {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
               initial={false}
             >
-              {trips.map((trip) => (
+              {trips.map((trip, i) => (
                 <TripCard
                   key={trip.id}
                   trip={trip}
+                  index={i}
                   onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
                   onEdit={() => router.push(`/dashboard/trips/${trip.id}/edit`)}
                   onDelete={() => {
@@ -142,7 +143,7 @@ function EmptyState({ search, onNew }: { search: string; onNew: () => void }) {
           : 'Crie sua primeira viagem e comece a planejar sua aventura.'}
       </p>
       {!search && (
-        <Button onClick={onNew} className="gap-2">
+        <Button onClick={onNew} className="gap-2 bg-ocean hover:opacity-90 border-0 glow-teal">
           <Plus className="w-4 h-4" />
           Criar viagem
         </Button>

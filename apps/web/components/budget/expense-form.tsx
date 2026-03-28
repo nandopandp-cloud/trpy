@@ -200,7 +200,7 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full gap-2 h-11 text-base font-semibold glow-blue"
+              className="w-full gap-2 h-11 text-base font-semibold bg-ocean hover:opacity-90 border-0 glow-teal"
             >
               {isSubmitting ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>

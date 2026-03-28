@@ -36,7 +36,7 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
   const spent = Number(trip.totalSpent);
   const remaining = budget - spent;
   const progress = budget > 0 ? (spent / budget) * 100 : 0;
-  const progressColor = progress >= 90 ? 'red' : progress >= 70 ? 'amber' : 'blue';
+  const progressColor = progress >= 90 ? 'red' : progress >= 70 ? 'amber' : 'green';
 
   // Agrupar por categoria
   const byCategory = expenses.reduce((acc, e) => {
@@ -57,7 +57,7 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
           label="Orçamento"
           value={`${trip.currency} ${budget.toLocaleString('pt-BR')}`}
           icon={<Wallet className="w-4 h-4" />}
-          color="blue"
+          color="green"
         />
         <StatCard
           label="Gasto"
@@ -75,7 +75,7 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
           label="Utilizado"
           value={`${Math.round(progress)}%`}
           icon={<DollarSign className="w-4 h-4" />}
-          color={progress >= 90 ? 'red' : progress >= 70 ? 'amber' : 'blue'}
+          color={progress >= 90 ? 'red' : progress >= 70 ? 'amber' : 'green'}
         />
       </div>
 

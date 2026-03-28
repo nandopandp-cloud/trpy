@@ -11,7 +11,6 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // CSS variable–based (Shadcn/ui compatible)
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -45,21 +44,47 @@ const config: Config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        // Brand tokens
+        // Brand palette — ocean/teal primary
         brand: {
-          blue: '#3B82F6',
-          green: '#10B981',
-          amber: '#F59E0B',
-          red: '#EF4444',
+          teal: '#10B981',
+          cyan: '#0891B2',
+          gold: '#F59E0B',
+          amber: '#FBBF24',
+          coral: '#F87171',
+          navy: '#0A0E27',
+          slate: '#1E293B',
         },
+      },
+      boxShadow: {
+        'card': '0 4px 6px -1px rgba(0,0,0,.07), 0 10px 15px -3px rgba(0,0,0,.10)',
+        'card-lg': '0 8px 16px -2px rgba(0,0,0,.10), 0 20px 40px -6px rgba(0,0,0,.15)',
+        'card-xl': '0 12px 24px -4px rgba(0,0,0,.12), 0 32px 64px -8px rgba(0,0,0,.18)',
+        'teal': '0 0 24px rgba(16,185,129,0.35), 0 0 64px rgba(16,185,129,0.12)',
+        'teal-lg': '0 0 40px rgba(16,185,129,0.45), 0 0 80px rgba(16,185,129,0.18)',
+        'gold': '0 0 32px rgba(251,191,36,0.40), 0 0 64px rgba(245,158,11,0.15)',
+        'inner-teal': 'inset 0 0 32px rgba(16,185,129,0.12)',
+      },
+      backgroundImage: {
+        'ocean': 'linear-gradient(135deg, #10B981 0%, #0891B2 100%)',
+        'ocean-dark': 'linear-gradient(135deg, #065F46 0%, #0C4A6E 100%)',
+        'sunset': 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)',
+        'aurora': 'linear-gradient(135deg, #10B981 0%, #8B5CF6 50%, #0891B2 100%)',
+        'hero-overlay': 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 65%, rgba(0,0,0,0.85) 100%)',
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        '2xl': '1.25rem',
+        '3xl': '1.5rem',
+        '4xl': '2rem',
       },
       fontFamily: {
         sans: ['Inter', ...defaultTheme.fontFamily.sans],
+      },
+      fontSize: {
+        'display': ['3.5rem', { lineHeight: '1.05', fontWeight: '900' }],
+        'display-sm': ['2.5rem', { lineHeight: '1.1', fontWeight: '800' }],
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',

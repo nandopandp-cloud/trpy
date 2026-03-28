@@ -37,7 +37,7 @@ export function Sidebar() {
         <motion.div
           whileHover={{ rotate: [0, -10, 10, 0] }}
           transition={{ duration: 0.5 }}
-          className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shrink-0 glow-blue"
+          className="w-8 h-8 rounded-xl bg-ocean flex items-center justify-center shrink-0 glow-teal"
         >
           <Map className="w-4 h-4 text-white" />
         </motion.div>
@@ -83,7 +83,7 @@ export function Sidebar() {
 
                 <div className={cn(
                   'relative z-10 w-5 h-5 flex items-center justify-center shrink-0',
-                  active && 'drop-shadow-[0_0_6px_rgba(59,130,246,0.8)]'
+                  active && 'drop-shadow-[0_0_6px_rgba(16,185,129,0.8)]'
                 )}>
                   <Icon className="w-[18px] h-[18px]" />
                 </div>

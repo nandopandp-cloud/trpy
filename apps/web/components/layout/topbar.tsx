@@ -40,7 +40,7 @@ export function Topbar() {
         </Button>
 
         {/* Avatar placeholder */}
-        <button className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
+        <button className="w-8 h-8 rounded-full bg-ocean flex items-center justify-center text-white text-xs font-bold ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
           D
         </button>
       </div>
