@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -46,8 +45,7 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('OTHER');
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
-    resolver: zodResolver(schema) as any,
+  const { register, handleSubmit, setValue, setError, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
       category: 'OTHER',
       date: format(new Date(), 'yyyy-MM-dd'),
@@ -55,19 +53,28 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
   });
 
   async function onSubmit(values: FormValues) {
+    const result = schema.safeParse(values);
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const field = issue.path[0] as keyof FormValues;
+        if (field) setError(field, { message: issue.message });
+      }
+      return;
+    }
+    const validated = result.data;
     const res = await fetch(`/api/trips/${tripId}/expenses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...values,
-        date: new Date(values.date).toISOString(),
+        ...validated,
+        date: new Date(validated.date).toISOString(),
       }),
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
 
     queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
-    toast.success('Despesa adicionada!', { description: `${values.title} — R$ ${values.amount}` });
+    toast.success('Despesa adicionada!', { description: `${validated.title} — R$ ${validated.amount}` });
     onSuccess?.();
     onClose();
   }
@@ -101,7 +108,7 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
           </motion.button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit as any)} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
           {/* Category picker */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Categoria</label>

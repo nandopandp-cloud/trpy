@@ -30,34 +30,33 @@ interface TripFormProps {
   submitLabel?: string;
 }
 
-function makeResolver(s: typeof schema) {
-  return async (values: TripFormValues) => {
-    const result = s.safeParse(values);
-    if (result.success) return { values: result.data, errors: {} };
-    const errors: Record<string, { message: string; type: string }> = {};
-    for (const issue of result.error.issues) {
-      const path = issue.path.join('.');
-      if (!errors[path]) errors[path] = { message: issue.message, type: issue.code };
-    }
-    return { values: {}, errors };
-  };
-}
-
 export function TripForm({ defaultValues, onSubmit, submitLabel = 'Salvar' }: TripFormProps) {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<TripFormValues>({
-    resolver: makeResolver(schema) as any,
     defaultValues: {
       currency: 'BRL',
       ...defaultValues,
     },
   });
 
+  async function handleValidSubmit(values: TripFormValues) {
+    const result = schema.safeParse(values);
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const field = issue.path[0] as keyof TripFormValues;
+        if (field) setError(field, { message: issue.message });
+      }
+      return;
+    }
+    await onSubmit(result.data);
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-5">
+    <form onSubmit={handleSubmit(handleValidSubmit)} className="space-y-5">
       <Field label="Título da viagem" error={errors.title?.message}>
         <Input placeholder="Ex: Férias em Lisboa" {...register('title')} />
       </Field>
