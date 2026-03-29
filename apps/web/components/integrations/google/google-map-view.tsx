@@ -16,6 +16,8 @@ interface GoogleMapViewProps {
   center?: { lat: number; lng: number };
   zoom?: number;
   height?: string;
+  /** When provided with no markers, geocodes this string to center the map */
+  defaultCenter?: string;
 }
 
 const TYPE_COLOR: Record<string, string> = {
@@ -39,12 +41,14 @@ export function GoogleMapView({
   center,
   zoom = 13,
   height = '300px',
+  defaultCenter,
 }: GoogleMapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || !mapRef.current || markers.length === 0) return;
+    if (!apiKey || !mapRef.current) return;
+    if (markers.length === 0 && !center && !defaultCenter) return;
 
     setOptions({ key: apiKey, v: 'weekly' });
 
@@ -56,11 +60,26 @@ export function GoogleMapView({
 
       if (cancelled || !mapRef.current) return;
 
-      const defaultCenter = center ?? { lat: markers[0].lat, lng: markers[0].lng };
+      let mapCenter = center ?? (markers.length > 0 ? { lat: markers[0].lat, lng: markers[0].lng } : null);
 
-      const map = new Map(mapRef.current, {
-        center: defaultCenter,
-        zoom,
+      // Geocode defaultCenter string if no explicit center
+      if (!mapCenter && defaultCenter) {
+        const { Geocoder } = await importLibrary('geocoding') as google.maps.GeocodingLibrary;
+        const geocoder = new Geocoder();
+        try {
+          const result = await geocoder.geocode({ address: defaultCenter });
+          if (result.results[0]) {
+            const loc = result.results[0].geometry.location;
+            mapCenter = { lat: loc.lat(), lng: loc.lng() };
+          }
+        } catch {}
+      }
+
+      if (!mapCenter) mapCenter = { lat: 0, lng: 0 };
+
+      const map = new Map(mapRef.current!, {
+        center: mapCenter,
+        zoom: markers.length === 0 ? 11 : zoom,
         styles: DARK_MAP_STYLES,
         mapTypeControl: false,
         streetViewControl: false,
@@ -93,9 +112,9 @@ export function GoogleMapView({
 
     initMap().catch(console.error);
     return () => { cancelled = true; };
-  }, [markers, center, zoom]);
+  }, [markers, center, zoom, defaultCenter]);
 
-  if (markers.length === 0) {
+  if (markers.length === 0 && !center && !defaultCenter) {
     return (
       <div
         style={{ height }}

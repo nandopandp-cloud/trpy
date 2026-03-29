@@ -174,7 +174,7 @@ export default function DashboardPage() {
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.94 }}
                 className="flex flex-col items-center gap-1.5 shrink-0"
-                onClick={() => router.push('/dashboard/trips/new')}
+                onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
               >
                 <div className={cn(
                   'w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center text-2xl shadow-card',
@@ -212,7 +212,7 @@ export default function DashboardPage() {
                 category={dest.category}
                 rating={dest.rating}
                 index={i}
-                onClick={() => router.push('/dashboard/trips/new')}
+                onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
               />
             ))}
           </div>
