@@ -1,7 +1,6 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { Loader2, Save } from 'lucide-react';
@@ -31,13 +30,26 @@ interface TripFormProps {
   submitLabel?: string;
 }
 
+function makeResolver(s: typeof schema) {
+  return async (values: TripFormValues) => {
+    const result = s.safeParse(values);
+    if (result.success) return { values: result.data, errors: {} };
+    const errors: Record<string, { message: string; type: string }> = {};
+    for (const issue of result.error.issues) {
+      const path = issue.path.join('.');
+      if (!errors[path]) errors[path] = { message: issue.message, type: issue.code };
+    }
+    return { values: {}, errors };
+  };
+}
+
 export function TripForm({ defaultValues, onSubmit, submitLabel = 'Salvar' }: TripFormProps) {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<TripFormValues>({
-    resolver: zodResolver(schema) as any,
+    resolver: makeResolver(schema) as any,
     defaultValues: {
       currency: 'BRL',
       ...defaultValues,
