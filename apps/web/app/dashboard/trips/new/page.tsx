@@ -25,13 +25,17 @@ export default function NewTripPage() {
   const [step, setStep] = useState<'inspire' | 'form'>('inspire');
 
   async function handleSubmit(values: TripFormValues) {
-    await createTrip.mutateAsync({
-      ...values,
-      startDate: new Date(values.startDate).toISOString(),
-      endDate: new Date(values.endDate).toISOString(),
-    });
-    toast.success('Viagem criada!', { description: `${values.title} — ${values.destination}` });
-    router.push('/dashboard/trips');
+    try {
+      await createTrip.mutateAsync({
+        ...values,
+        startDate: new Date(values.startDate).toISOString(),
+        endDate: new Date(values.endDate).toISOString(),
+      });
+      toast.success('Viagem criada!', { description: `${values.title} — ${values.destination}` });
+      router.push('/dashboard/trips');
+    } catch (e) {
+      toast.error((e as Error).message ?? 'Erro ao criar viagem');
+    }
   }
 
   return (

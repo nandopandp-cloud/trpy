@@ -7,8 +7,8 @@ import { ok, err, handleError } from '@/lib/api';
 const createTripSchema = z.object({
   title: z.string().min(1).max(100),
   destination: z.string().min(1).max(200),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
   budget: z.number().positive(),
   description: z.string().max(1000).optional(),
   coverImage: z.string().url().optional(),

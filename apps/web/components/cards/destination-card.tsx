@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Star, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -27,7 +28,7 @@ const DEFAULT_GRADIENTS = [
 export function DestinationCard({
   name,
   country,
-  image,
+  image: imageProp,
   category,
   rating = 4.8,
   gradient,
@@ -36,6 +37,17 @@ export function DestinationCard({
   index = 0,
 }: DestinationCardProps) {
   const bg = gradient ?? DEFAULT_GRADIENTS[index % DEFAULT_GRADIENTS.length];
+  const [image, setImage] = useState<string | undefined>(imageProp);
+
+  useEffect(() => {
+    if (imageProp) return;
+    fetch(`/api/destination-photo?q=${encodeURIComponent(name)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.data.photoUrl) setImage(data.data.photoUrl);
+      })
+      .catch(() => {});
+  }, [name, imageProp]);
 
   return (
     <motion.div
