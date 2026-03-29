@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   ArrowLeft, Edit2, MapPin, Calendar, Wallet,
-  Plus, Trash2, Loader2, Share2, MoreVertical, Youtube, Image as ImageIcon,
+  Plus, Trash2, Loader2, Share2, MoreVertical, Youtube, Image as ImageIcon, Map, Compass,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
@@ -22,6 +22,8 @@ import { DashboardSkeleton } from '@/components/ui/skeletons';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { YouTubeGallery } from '@/components/integrations/youtube/youtube-gallery';
 import { PinterestGallery } from '@/components/integrations/pinterest/pinterest-gallery';
+import { GoogleMapView, type MapMarker } from '@/components/integrations/google/google-map-view';
+import { PlacesRecommendations } from '@/components/integrations/google/places-recommendations';
 import { cn } from '@/lib/utils';
 import type { ItineraryItem } from '@trpy/database';
 
@@ -272,6 +274,12 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
                   </span>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="map" className="flex-1 gap-1.5">
+                <Map className="w-3.5 h-3.5" /> Mapa
+              </TabsTrigger>
+              <TabsTrigger value="discover" className="flex-1 gap-1.5">
+                <Compass className="w-3.5 h-3.5" /> Descobrir
+              </TabsTrigger>
               <TabsTrigger value="videos" className="flex-1 gap-1.5">
                 <Youtube className="w-3.5 h-3.5" /> Vídeos
               </TabsTrigger>
@@ -312,6 +320,43 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
           <TabsContent value="budget">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
               <BudgetDashboard trip={trip} expenses={trip.expenses} />
+            </motion.div>
+          </TabsContent>
+
+          {/* Map tab */}
+          <TabsContent value="map">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              {(() => {
+                const markers: MapMarker[] = trip.itineraryDays
+                  .flatMap((day) => day.items)
+                  .filter((item) => item.latitude != null && item.longitude != null)
+                  .map((item) => ({
+                    lat: Number(item.latitude),
+                    lng: Number(item.longitude),
+                    title: item.title,
+                    type: (item.type as MapMarker['type']) ?? 'OTHER',
+                  }));
+                return (
+                  <>
+                    {markers.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        As atividades do itinerário com coordenadas aparecerão aqui.
+                      </p>
+                    )}
+                    <GoogleMapView markers={markers} height="420px" />
+                  </>
+                );
+              })()}
+            </motion.div>
+          </TabsContent>
+
+          {/* Discover tab */}
+          <TabsContent value="discover">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                O que fazer em <span className="font-semibold text-foreground">{trip.destination}</span>
+              </p>
+              <PlacesRecommendations destination={trip.destination} />
             </motion.div>
           </TabsContent>
 

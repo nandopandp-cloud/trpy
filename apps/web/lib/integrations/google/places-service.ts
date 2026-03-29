@@ -150,3 +150,16 @@ export function getPhotoUrl(photoRef: string, maxWidth = 800): string {
   const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
   return `${BASE_URL}/place/photo?maxwidth=${maxWidth}&photo_reference=${photoRef}&key=${key}`;
 }
+
+export async function geocodeAddress(
+  address: string,
+): Promise<{ lat: number; lng: number } | null> {
+  const key = getApiKey();
+  const params = new URLSearchParams({ address, language: 'pt-BR', key });
+  const res = await fetch(`${BASE_URL}/geocode/json?${params}`, {
+    next: { revalidate: 86400 },
+  });
+  const data = await res.json();
+  if (data.status !== 'OK' || !data.results?.[0]) return null;
+  return data.results[0].geometry.location as { lat: number; lng: number };
+}

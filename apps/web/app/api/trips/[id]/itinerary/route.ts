@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ItemType } from '@trpy/database';
 import { prisma } from '@/lib/prisma';
 import { ok, err, handleError } from '@/lib/api';
+import { geocodeAddress } from '@/lib/integrations/google/places-service';
 
 const addItemSchema = z.object({
   dayId: z.string(),
@@ -73,6 +74,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       });
       if (!day) return err('Dia não encontrado', 404);
 
+      // Geocode usando localização se disponível, senão título + destino da viagem
+      let latitude: number | undefined;
+      let longitude: number | undefined;
+      try {
+        const query = data.location
+          ? `${data.location}, ${trip.destination}`
+          : `${data.title}, ${trip.destination}`;
+        const coords = await geocodeAddress(query);
+        if (coords) { latitude = coords.lat; longitude = coords.lng; }
+      } catch { /* geocoding é opcional, não bloqueia criação */ }
+
       const item = await prisma.itineraryItem.create({
         data: {
           dayId: data.dayId,
@@ -84,6 +96,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           durationMins: data.durationMins,
           cost: data.cost,
           order: data.order,
+          latitude,
+          longitude,
         },
       });
       return ok(item, 201);
