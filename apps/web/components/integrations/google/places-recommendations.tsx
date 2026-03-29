@@ -44,10 +44,9 @@ function PlaceCard({
   place: PlaceSearchResult;
   favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
 }) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const photo = place.photos?.[0];
-  const photoUrl = photo && apiKey
-    ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photo.photo_reference}&key=${apiKey}`
+  const photoUrl = photo
+    ? `/api/place-photo?ref=${photo.photo_reference}&maxwidth=400`
     : null;
 
   const mapsUrl = `https://www.google.com/maps/place/?q=place_id:${place.place_id}`;
