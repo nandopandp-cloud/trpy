@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="pt-br">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TRPY | Design System</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Iconify -->
+<script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Sora:wght@100;200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<!-- AOS -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"/>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+<style>
+/* ========== BASE ========== */
+:root {
+  --trpy-primary: #18181b;
+  --trpy-primary-rgb: 24, 24, 27;
+  --trpy-secondary: #3f3f46;
+  --trpy-accent: #6366f1;
+  --trpy-accent-rgb: 99, 102, 241;
+  --trpy-accent-warm: #f59e0b;
+  --trpy-accent-warm-rgb: 245, 158, 11;
+  --trpy-neutral-50: #fafafa;
+  --trpy-neutral-100: #f4f4f5;
+  --trpy-neutral-200: #e4e4e7;
+  --trpy-neutral-300: #d4d4d8;
+  --trpy-neutral-400: #a1a1aa;
+  --trpy-neutral-500: #71717a;
+  --trpy-neutral-600: #52525b;
+  --trpy-neutral-700: #3f3f46;
+  --trpy-neutral-800: #27272a;
+  --trpy-neutral-900: #18181b;
+  --trpy-neutral-950: #09090b;
+  --trpy-success: #10b981;
+  --trpy-warning: #f59e0b;
+  --trpy-error: #ef4444;
+  --trpy-info: #3b82f6;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-accent: 'Space Grotesk', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #ffffff;
+  color: #52525b;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background-color: #e4e4e7; border-radius: 20px; }
+
+/* Selection */
+::selection { background: #18181b; color: #fff; }
+
+/* ========== ANIMATIONS ========== */
+@keyframes animationIn {
+  0% { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes shimmer {
+  from { transform: translateX(-100%) skewX(-15deg); }
+  to { transform: translateX(200%) skewX(-15deg); }
+}
+
+@keyframes textSlide {
+  0% { transform: translateY(110%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes beam {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes clip-reveal {
+  0% { clip-path: inset(100% 0 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(1deg); }
+  66% { transform: translateY(5px) rotate(-1deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.4), 0 0 80px rgba(99, 102, 241, 0.1); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  20% { transform: translate(-15%, 5%); }
+  30% { transform: translate(7%, -25%); }
+  40% { transform: translate(-5%, 25%); }
+  50% { transform: translate(-15%, 10%); }
+  60% { transform: translate(15%, 0%); }
+  70% { transform: translate(0%, 15%); }
+  80% { transform: translate(3%, 35%); }
+  90% { transform: translate(-10%, 10%); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+@keyframes ripple {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.animate-marquee { animation: marquee 40s linear infinite; }
+.animate-marquee-fast { animation: marquee 20s linear infinite; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-gradient { animation: gradient-shift 8s ease infinite; background-size: 200% 200%; }
+.animate-grain { animation: grain 8s steps(10) infinite; }
+.animate-spin-slow { animation: spin-slow 20s linear infinite; }
+.animate-breathe { animation: breathe 4s ease-in-out infinite; }
+.animate-beam { animation: beam 2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+.animate-clip { animation: clip-reveal 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite alternate; }
+
+.text-clip-anim span {
+  display: inline-block;
+  animation: textSlide 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* Scroll-triggered */
+.animate-on-scroll { animation-play-state: paused !important; }
+.animate-on-scroll.animate { animation-play-state: running !important; }
+
+/* ========== EFFECTS ========== */
+/* Flashlight */
+.flashlight-card { background: rgba(255, 255, 255, 0.02); }
+.flashlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(99, 102, 241, 0.06), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+  z-index: 2;
+}
+.flashlight-card:hover::before { opacity: 1; }
+
+/* Glass Panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.glass-panel-dark {
+  background: rgba(23, 23, 23, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Border Gradient */
+[style*="--border-gradient"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: var(--border-radius-before, inherit);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  background: var(--border-gradient);
+  pointer-events: none;
+}
+
+/* Dot Grid */
+.bg-dot-grid {
+  background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.bg-dot-grid-dark {
+  background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Grid Pattern */
+.bg-grid-pattern {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Noise overlay */
+.bg-noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Fade mask */
+.fade-mask {
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+.fade-mask-x {
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+}
+
+/* Section Divider */
+.section-glow {
+  position: relative;
+}
+.section-glow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+}
+
+/* Hide scrollbar */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
+<!-- Tailwind Config -->
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        'display': ['Inter', 'system-ui', 'sans-serif'],
+        'body': ['Inter', 'system-ui', 'sans-serif'],
+        'mono': ['Space Mono', 'monospace'],
+        'accent': ['Space Grotesk', 'sans-serif'],
+        'serif': ['Playfair Display', 'serif'],
+        'sora': ['Sora', 'sans-serif'],
+      },
+      colors: {
+        'trpy': {
+          50: '#fafafa',
+          100: '#f4f4f5',
+          200: '#e4e4e7',
+          300: '#d4d4d8',
+          400: '#a1a1aa',
+          500: '#71717a',
+          600: '#52525b',
+          700: '#3f3f46',
+          800: '#27272a',
+          900: '#18181b',
+          950: '#09090b',
+          accent: '#6366f1',
+          warm: '#f59e0b',
+        }
+      }
+    }
+  }
+};
+</script>
+</head>
+
+<body class="bg-white text-zinc-600 antialiased">
+
+<!-- ============================================================ -->
+<!-- NAVBAR -->
+<!-- ============================================================ -->
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-zinc-100 transition-all duration-300" id="navbar">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a class="text-zinc-900 font-semibold tracking-tighter text-lg uppercase flex items-center gap-2 group" href="#">
+      <span class="w-2 h-2 rounded-full bg-indigo-500 group-hover:scale-150 transition-transform duration-300"></span>
+      <span class="group-hover:tracking-normal transition-all duration-300">TRPY</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8">
+      <a class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-indigo-500 after:transition-all hover:after:w-full" href="#typography">Typography</a>
+      <a class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-indigo-500 after:transition-all hover:after:w-full" href="#colors">Colors</a>
+      <a class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-indigo-500 after:transition-all hover:after:w-full" href="#components">Components</a>
+      <a class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-indigo-500 after:transition-all hover:after:w-full" href="#animations">Animations</a>
+    </nav>
+    <div class="flex items-center gap-4">
+      <button class="hidden md:flex text-sm font-medium text-zinc-900 hover:text-zinc-600 transition-colors">Login</button>
+      <button class="group bg-zinc-900 text-white text-xs md:text-sm font-medium px-5 py-2.5 rounded-full hover:bg-zinc-800 transition-all shadow-sm hover:shadow-md flex items-center gap-2 relative overflow-hidden">
+        <span class="relative z-10">Explore DS</span>
+        <i class="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" data-lucide="arrow-right"></i>
+        <span class="absolute inset-0 overflow-hidden rounded-full">
+          <span class="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100"></span>
+        </span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: HERO -->
+<!-- ============================================================ -->
+<main>
+<section class="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden min-h-screen flex items-center" id="hero">
+  <!-- Animated Background -->
+  <div class="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
+    <!-- Gradient orbs -->
+    <div class="absolute top-20 left-1/4 w-[600px] h-[600px] bg-indigo-50 rounded-full blur-[120px] opacity-60 mix-blend-multiply animate-breathe"></div>
+    <div class="absolute top-40 right-1/4 w-[500px] h-[500px] bg-blue-50 rounded-full blur-[120px] opacity-50 mix-blend-multiply animate-breathe" style="animation-delay: 2s;"></div>
+    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-50/40 rounded-full blur-[120px] opacity-40 mix-blend-multiply animate-breathe" style="animation-delay: 4s;"></div>
+    <!-- Dot grid -->
+    <div class="absolute inset-0 bg-dot-grid opacity-30"></div>
+    <!-- Radial fade -->
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,white_70%)]"></div>
+    <!-- Animated grain -->
+    <div class="absolute inset-0 opacity-[0.015]" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noise%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.65%27 numOctaves=%273%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noise)%27/%3E%3C/svg%3E');"></div>
+    <!-- Spinning gradient ring (subtle) -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full animate-spin-slow opacity-[0.03]" style="background: conic-gradient(from 0deg, transparent 0deg, #6366f1 60deg, transparent 120deg);"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 text-center relative z-10">
+    <!-- Badge -->
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 backdrop-blur-md border border-zinc-200 mb-8 animate-on-scroll [animation:animationIn_0.8s_ease-out_0.1s_both] shadow-sm" data-aos="fade-down">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+      </span>
+      <span class="text-xs font-medium text-zinc-600 tracking-wide uppercase">Design System v1.0</span>
+    </div>
+
+    <!-- Hero Heading -->
+    <h1 class="text-5xl md:text-7xl lg:text-[6.5rem] font-medium text-zinc-900 tracking-tight leading-[0.92] mb-8 max-w-5xl mx-auto" data-aos="fade-up" data-aos-delay="100">
+      Travel with<br/>
+      <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500 animate-gradient">Purpose.</span>
+    </h1>
+
+    <p class="text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto font-light leading-relaxed mb-12" data-aos="fade-up" data-aos-delay="200">
+      A meticulously crafted design system blending elegant white aesthetics, travel-inspired imagery, and sophisticated motion design.
+    </p>
+
+    <!-- CTA Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16" data-aos="fade-up" data-aos-delay="300">
+      <!-- Primary: Beam button -->
+      <div class="group relative">
+        <div class="-inset-1 group-hover:opacity-100 transition duration-500 bg-indigo-500/20 opacity-0 rounded-full absolute blur-xl"></div>
+        <button class="group relative z-10 flex items-center justify-center overflow-hidden rounded-full p-[1px] leading-none">
+          <span class="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0_340deg,#6366f1_360deg)]"></span>
+          <span class="relative flex h-full w-full items-center rounded-full bg-zinc-900 px-8 py-4 ring-1 ring-white/10">
+            <span class="absolute inset-0 overflow-hidden rounded-full">
+              <span class="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100"></span>
+            </span>
+            <span class="relative z-10 text-base font-medium tracking-wide text-white">Get Started</span>
+            <span class="relative z-10 ml-3 flex items-center text-indigo-300 transition duration-200 group-hover:translate-x-1 group-hover:text-white">
+              <i class="w-5 h-5" data-lucide="arrow-right"></i>
+            </span>
+          </span>
+        </button>
+      </div>
+      <!-- Secondary -->
+      <button class="px-8 py-4 rounded-full text-sm font-medium text-zinc-900 border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 transition-all hover:shadow-md flex items-center gap-2 group">
+        View Components
+        <i class="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" data-lucide="chevron-down"></i>
+      </button>
+    </div>
+
+    <!-- Search Widget (from Horizonte) -->
+    <div class="max-w-4xl mx-auto bg-white p-2 rounded-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-zinc-100 flex flex-col md:flex-row items-center gap-2 animate-pulse-glow" data-aos="fade-up" data-aos-delay="400">
+      <div class="flex-1 w-full px-4 py-3 hover:bg-zinc-50 rounded-2xl transition-colors cursor-pointer group">
+        <label class="block text-xs font-medium text-zinc-400 mb-1 tracking-wide">WHERE</label>
+        <div class="flex items-center gap-2">
+          <i class="w-4 h-4 text-zinc-800" data-lucide="map-pin"></i>
+          <input class="w-full bg-transparent border-none p-0 text-sm font-medium text-zinc-900 placeholder-zinc-300 focus:ring-0 outline-none" placeholder="Search destinations..." type="text"/>
+        </div>
+      </div>
+      <div class="w-px h-10 bg-zinc-100 hidden md:block"></div>
+      <div class="flex-1 w-full px-4 py-3 hover:bg-zinc-50 rounded-2xl transition-colors cursor-pointer">
+        <label class="block text-xs font-medium text-zinc-400 mb-1 tracking-wide">WHEN</label>
+        <div class="flex items-center gap-2">
+          <i class="w-4 h-4 text-zinc-800" data-lucide="calendar"></i>
+          <span class="text-sm font-medium text-zinc-300">Flexible dates</span>
+        </div>
+      </div>
+      <div class="w-px h-10 bg-zinc-100 hidden md:block"></div>
+      <div class="flex-1 w-full px-4 py-3 hover:bg-zinc-50 rounded-2xl transition-colors cursor-pointer">
+        <label class="block text-xs font-medium text-zinc-400 mb-1 tracking-wide">WHO</label>
+        <div class="flex items-center gap-2">
+          <i class="w-4 h-4 text-zinc-800" data-lucide="users"></i>
+          <span class="text-sm font-medium text-zinc-900">2 Travelers</span>
+        </div>
+      </div>
+      <button class="w-full md:w-auto bg-zinc-900 text-white p-4 rounded-2xl hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-200 hover:scale-[1.02] active:scale-95">
+        <i class="w-5 h-5" data-lucide="search"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Hero Image Strip with Marquee -->
+  <div class="mt-20 flex gap-4 overflow-hidden select-none opacity-90 fade-mask">
+    <div class="flex gap-4 animate-marquee-fast whitespace-nowrap min-w-full justify-center">
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&q=80&w=800"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      </div>
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative mt-12 group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3c?auto=format&fit=crop&q=80&w=800"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      </div>
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&q=80&w=800"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      </div>
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative mt-12 group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=800"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      </div>
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      </div>
+      <!-- Duplicate for seamless loop -->
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&q=80&w=800"/>
+      </div>
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative mt-12 group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3c?auto=format&fit=crop&q=80&w=800"/>
+      </div>
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&q=80&w=800"/>
+      </div>
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative mt-12 group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=800"/>
+      </div>
+      <div class="w-64 h-96 md:w-80 md:h-[480px] rounded-2xl overflow-hidden shrink-0 relative group">
+        <img alt="Travel" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800"/>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: TYPOGRAPHY -->
+<!-- ============================================================ -->
+<section class="py-32 bg-zinc-50 border-t border-zinc-100 relative overflow-hidden section-glow" id="typography">
+  <!-- Background animation -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-50/50 rounded-full blur-[150px] opacity-40 animate-breathe"></div>
+    <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-50/50 rounded-full blur-[120px] opacity-30 animate-breathe" style="animation-delay: 2s;"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <!-- Section Header -->
+    <div class="mb-20" data-aos="fade-up">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-zinc-200 mb-6 shadow-sm">
+        <span class="text-xs font-mono text-zinc-500 uppercase tracking-widest">02</span>
+        <span class="w-px h-3 bg-zinc-200"></span>
+        <span class="text-xs font-medium text-zinc-600 tracking-wide uppercase">Typography</span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-medium text-zinc-900 tracking-tight mb-4">Type System</h2>
+      <p class="text-zinc-500 font-light max-w-lg">Font families, scales, weights, and hierarchy designed for travel experiences.</p>
+    </div>
+
+    <!-- Font Families -->
+    <div class="grid md:grid-cols-2 gap-8 mb-20">
+      <!-- Primary: Inter -->
+      <div class="bg-white rounded-2xl p-8 border border-zinc-100 shadow-sm hover:shadow-md transition-shadow group" data-aos="fade-up">
+        <div class="flex items-center justify-between mb-6">
+          <span class="text-xs font-mono text-zinc-400 uppercase tracking-widest">Primary</span>
+          <span class="text-xs px-2 py-1 rounded-full bg-zinc-100 text-zinc-500 font-mono">CDN / Google Fonts</span>
+        </div>
+        <h3 class="text-6xl font-medium text-zinc-900 tracking-tight mb-4 group-hover:tracking-tighter transition-all duration-500" style="font-family: 'Inter', sans-serif;">Inter</h3>
+        <p class="text-sm text-zinc-500 mb-6 font-light">font-family: 'Inter', system-ui, sans-serif</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-600" style="font-weight: 300;">Light 300</span>
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-600" style="font-weight: 400;">Regular 400</span>
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-900 text-white" style="font-weight: 500;">Medium 500</span>
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-600" style="font-weight: 600;">Semibold 600</span>
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-600" style="font-weight: 700;">Bold 700</span>
+        </div>
+      </div>
+
+      <!-- Accent: Space Grotesk -->
+      <div class="bg-white rounded-2xl p-8 border border-zinc-100 shadow-sm hover:shadow-md transition-shadow group" data-aos="fade-up" data-aos-delay="100">
+        <div class="flex items-center justify-between mb-6">
+          <span class="text-xs font-mono text-zinc-400 uppercase tracking-widest">Accent</span>
+          <span class="text-xs px-2 py-1 rounded-full bg-zinc-100 text-zinc-500 font-mono">Google Fonts</span>
+        </div>
+        <h3 class="text-6xl font-medium text-zinc-900 tracking-tight mb-4 group-hover:tracking-tighter transition-all duration-500" style="font-family: 'Space Grotesk', sans-serif;">Space Grotesk</h3>
+        <p class="text-sm text-zinc-500 mb-6 font-light">font-family: 'Space Grotesk', sans-serif</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-600" style="font-weight: 300;">Light 300</span>
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-900 text-white" style="font-weight: 500;">Medium 500</span>
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-600" style="font-weight: 700;">Bold 700</span>
+        </div>
+      </div>
+
+      <!-- Mono: Space Mono -->
+      <div class="bg-white rounded-2xl p-8 border border-zinc-100 shadow-sm hover:shadow-md transition-shadow group" data-aos="fade-up" data-aos-delay="200">
+        <div class="flex items-center justify-between mb-6">
+          <span class="text-xs font-mono text-zinc-400 uppercase tracking-widest">Monospace</span>
+          <span class="text-xs px-2 py-1 rounded-full bg-zinc-100 text-zinc-500 font-mono">Google Fonts</span>
+        </div>
+        <h3 class="text-5xl font-normal text-zinc-900 tracking-tight mb-4" style="font-family: 'Space Mono', monospace;">Space Mono</h3>
+        <p class="text-sm text-zinc-500 mb-6 font-light" style="font-family: 'Space Mono', monospace;">font-family: 'Space Mono', monospace</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-900 text-white" style="font-weight: 400;">Regular 400</span>
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-600" style="font-weight: 700;">Bold 700</span>
+        </div>
+      </div>
+
+      <!-- Serif: Playfair Display -->
+      <div class="bg-white rounded-2xl p-8 border border-zinc-100 shadow-sm hover:shadow-md transition-shadow group" data-aos="fade-up" data-aos-delay="300">
+        <div class="flex items-center justify-between mb-6">
+          <span class="text-xs font-mono text-zinc-400 uppercase tracking-widest">Serif / Decorative</span>
+          <span class="text-xs px-2 py-1 rounded-full bg-zinc-100 text-zinc-500 font-mono">Google Fonts</span>
+        </div>
+        <h3 class="text-5xl font-normal text-zinc-900 tracking-tight mb-4" style="font-family: 'Playfair Display', serif;">Playfair Display</h3>
+        <p class="text-sm text-zinc-500 mb-6 font-light">font-family: 'Playfair Display', serif</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-600" style="font-weight: 400;">Regular 400</span>
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-900 text-white" style="font-weight: 600;">Semibold 600</span>
+          <span class="text-xs px-3 py-1.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-600" style="font-weight: 700;">Bold 700</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Type Scale -->
+    <div class="bg-white rounded-3xl border border-zinc-100 shadow-sm overflow-hidden" data-aos="fade-up">
+      <div class="p-8 border-b border-zinc-100">
+        <h3 class="text-lg font-medium text-zinc-900 tracking-tight">Type Scale</h3>
+        <p class="text-sm text-zinc-500 mt-1">Complete heading and body text hierarchy</p>
+      </div>
+      <div class="divide-y divide-zinc-50">
+        <!-- H1 -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors group">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">h1</span></div>
+          <div class="flex-1">
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-medium text-zinc-900 tracking-tight leading-[0.95] group-hover:tracking-tighter transition-all duration-500">Display</h1>
+          </div>
+          <div class="text-right shrink-0 hidden md:block">
+            <p class="text-xs font-mono text-zinc-400">font-weight: 500</p>
+            <p class="text-xs font-mono text-zinc-400">5xl / 7xl / 8xl</p>
+            <p class="text-xs font-mono text-zinc-400">tracking-tight</p>
+          </div>
+        </div>
+        <!-- H2 -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors group">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">h2</span></div>
+          <div class="flex-1">
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-medium text-zinc-900 tracking-tight group-hover:tracking-tighter transition-all duration-500">Section Heading</h2>
+          </div>
+          <div class="text-right shrink-0 hidden md:block">
+            <p class="text-xs font-mono text-zinc-400">font-weight: 500</p>
+            <p class="text-xs font-mono text-zinc-400">3xl / 4xl / 5xl</p>
+            <p class="text-xs font-mono text-zinc-400">tracking-tight</p>
+          </div>
+        </div>
+        <!-- H3 -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">h3</span></div>
+          <div class="flex-1"><h3 class="text-xl md:text-2xl font-medium text-zinc-900 tracking-tight">Card Title</h3></div>
+          <div class="text-right shrink-0 hidden md:block"><p class="text-xs font-mono text-zinc-400">500 / xl-2xl / tracking-tight</p></div>
+        </div>
+        <!-- H4 -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">h4</span></div>
+          <div class="flex-1"><h4 class="text-lg font-medium text-zinc-900 tracking-tight">Subsection</h4></div>
+          <div class="text-right shrink-0 hidden md:block"><p class="text-xs font-mono text-zinc-400">500 / lg / tracking-tight</p></div>
+        </div>
+        <!-- H5 -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">h5</span></div>
+          <div class="flex-1"><h5 class="text-base font-semibold text-zinc-900">Label Title</h5></div>
+          <div class="text-right shrink-0 hidden md:block"><p class="text-xs font-mono text-zinc-400">600 / base / normal</p></div>
+        </div>
+        <!-- H6 -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">h6</span></div>
+          <div class="flex-1"><h6 class="text-sm font-semibold text-zinc-900 uppercase tracking-wider">Overline</h6></div>
+          <div class="text-right shrink-0 hidden md:block"><p class="text-xs font-mono text-zinc-400">600 / sm / uppercase tracking-wider</p></div>
+        </div>
+        <!-- Body lg -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">body-lg</span></div>
+          <div class="flex-1"><p class="text-lg text-zinc-600 font-light leading-relaxed">Large body text for introductions and hero descriptions.</p></div>
+          <div class="text-right shrink-0 hidden md:block"><p class="text-xs font-mono text-zinc-400">300 / lg / leading-relaxed</p></div>
+        </div>
+        <!-- Body -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">body</span></div>
+          <div class="flex-1"><p class="text-sm text-zinc-500 leading-relaxed">Standard body text for paragraphs, descriptions, and general content throughout the design system.</p></div>
+          <div class="text-right shrink-0 hidden md:block"><p class="text-xs font-mono text-zinc-400">400 / sm / leading-relaxed</p></div>
+        </div>
+        <!-- Body sm -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">body-sm</span></div>
+          <div class="flex-1"><p class="text-xs text-zinc-400 leading-relaxed">Small body text for metadata, captions, and supplementary information.</p></div>
+          <div class="text-right shrink-0 hidden md:block"><p class="text-xs font-mono text-zinc-400">400 / xs / leading-relaxed</p></div>
+        </div>
+        <!-- Caption -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-8 hover:bg-zinc-50/50 transition-colors">
+          <div class="w-24 shrink-0"><span class="text-xs font-mono text-zinc-400 bg-zinc-100 px-2 py-1 rounded">caption</span></div>
+          <div class="flex-1"><p class="text-xs font-mono text-zinc-400 uppercase tracking-widest">MONO CAPTION / LABEL</p></div>
+          <div class="text-right shrink-0 hidden md:block"><p class="text-xs font-mono text-zinc-400">Space Mono / xs / uppercase tracking-widest</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: COLOR SYSTEM -->
+<!-- ============================================================ -->
+<section class="py-32 bg-white border-t border-zinc-100 relative overflow-hidden section-glow" id="colors">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-1/2 left-0 w-[500px] h-[500px] bg-indigo-50/30 rounded-full blur-[150px] animate-breathe"></div>
+    <div class="absolute bottom-0 right-0 w-[400px] h-[400px] bg-amber-50/30 rounded-full blur-[120px] animate-breathe" style="animation-delay: 3s;"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <!-- Section Header -->
+    <div class="mb-20" data-aos="fade-up">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-zinc-200 mb-6 shadow-sm">
+        <span class="text-xs font-mono text-zinc-500 uppercase tracking-widest">03</span>
+        <span class="w-px h-3 bg-zinc-200"></span>
+        <span class="text-xs font-medium text-zinc-600 tracking-wide uppercase">Colors</span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-medium text-zinc-900 tracking-tight mb-4">Color Palette</h2>
+      <p class="text-zinc-500 font-light max-w-lg">Neutral-first system with accent colors. Hex, RGB, HSL, and semantic roles.</p>
+    </div>
+
+    <!-- Primary Neutrals -->
+    <h3 class="text-lg font-medium text-zinc-900 mb-6 tracking-tight" data-aos="fade-up">Neutral Scale</h3>
+    <div class="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-11 gap-3 mb-16" data-aos="fade-up">
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#fafafa] border border-zinc-200 mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+          <div class="absolute inset-0 bg-dot-grid opacity-20"></div>
+        </div>
+        <p class="text-xs font-mono text-zinc-400">50</p>
+        <p class="text-[10px] font-mono text-zinc-300">#FAFAFA</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#f4f4f5] border border-zinc-200 mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-zinc-400">100</p>
+        <p class="text-[10px] font-mono text-zinc-300">#F4F4F5</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#e4e4e7] mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-zinc-400">200</p>
+        <p class="text-[10px] font-mono text-zinc-300">#E4E4E7</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#d4d4d8] mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-zinc-400">300</p>
+        <p class="text-[10px] font-mono text-zinc-300">#D4D4D8</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#a1a1aa] mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-zinc-400">400</p>
+        <p class="text-[10px] font-mono text-zinc-300">#A1A1AA</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#71717a] mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-white/80">500</p>
+        <p class="text-[10px] font-mono text-zinc-300">#71717A</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#52525b] mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-zinc-400">600</p>
+        <p class="text-[10px] font-mono text-zinc-300">#52525B</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#3f3f46] mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-zinc-400">700</p>
+        <p class="text-[10px] font-mono text-zinc-300">#3F3F46</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#27272a] mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-zinc-400">800</p>
+        <p class="text-[10px] font-mono text-zinc-300">#27272A</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#18181b] mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-zinc-400">900</p>
+        <p class="text-[10px] font-mono text-zinc-300">#18181B</p>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-square rounded-2xl bg-[#09090b] mb-3 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300"></div>
+        <p class="text-xs font-mono text-zinc-400">950</p>
+        <p class="text-[10px] font-mono text-zinc-300">#09090B</p>
+      </div>
+    </div>
+
+    <!-- Semantic Colors -->
+    <h3 class="text-lg font-medium text-zinc-900 mb-6 tracking-tight" data-aos="fade-up">Semantic & Accent</h3>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-16" data-aos="fade-up">
+      <!-- Primary -->
+      <div class="bg-white rounded-2xl border border-zinc-100 p-5 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+        <div class="w-full aspect-[2/1] rounded-xl bg-zinc-900 mb-4 group-hover:scale-[1.02] transition-transform relative overflow-hidden">
+          <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        </div>
+        <p class="text-sm font-medium text-zinc-900">Primary</p>
+        <p class="text-[10px] font-mono text-zinc-400 mt-1">#18181B</p>
+        <p class="text-[10px] font-mono text-zinc-300">rgb(24, 24, 27)</p>
+        <p class="text-[10px] font-mono text-zinc-300">hsl(240, 6%, 10%)</p>
+        <p class="text-[10px] text-zinc-400 mt-2">Text, buttons, headers</p>
+      </div>
+      <!-- Accent -->
+      <div class="bg-white rounded-2xl border border-zinc-100 p-5 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+        <div class="w-full aspect-[2/1] rounded-xl bg-indigo-500 mb-4 group-hover:scale-[1.02] transition-transform relative overflow-hidden">
+          <div class="absolute inset-0 animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"></div>
+        </div>
+        <p class="text-sm font-medium text-zinc-900">Accent</p>
+        <p class="text-[10px] font-mono text-zinc-400 mt-1">#6366F1</p>
+        <p class="text-[10px] font-mono text-zinc-300">rgb(99, 102, 241)</p>
+        <p class="text-[10px] font-mono text-zinc-300">hsl(239, 84%, 67%)</p>
+        <p class="text-[10px] text-zinc-400 mt-2">Links, focus, badges</p>
+      </div>
+      <!-- Warm -->
+      <div class="bg-white rounded-2xl border border-zinc-100 p-5 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+        <div class="w-full aspect-[2/1] rounded-xl bg-amber-500 mb-4 group-hover:scale-[1.02] transition-transform"></div>
+        <p class="text-sm font-medium text-zinc-900">Warm</p>
+        <p class="text-[10px] font-mono text-zinc-400 mt-1">#F59E0B</p>
+        <p class="text-[10px] font-mono text-zinc-300">rgb(245, 158, 11)</p>
+        <p class="text-[10px] font-mono text-zinc-300">hsl(38, 92%, 50%)</p>
+        <p class="text-[10px] text-zinc-400 mt-2">Highlights, ratings</p>
+      </div>
+      <!-- Success -->
+      <div class="bg-white rounded-2xl border border-zinc-100 p-5 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+        <div class="w-full aspect-[2/1] rounded-xl bg-emerald-500 mb-4 group-hover:scale-[1.02] transition-transform"></div>
+        <p class="text-sm font-medium text-zinc-900">Success</p>
+        <p class="text-[10px] font-mono text-zinc-400 mt-1">#10B981</p>
+        <p class="text-[10px] font-mono text-zinc-300">rgb(16, 185, 129)</p>
+        <p class="text-[10px] text-zinc-400 mt-2">Status, confirmations</p>
+      </div>
+      <!-- Warning -->
+      <div class="bg-white rounded-2xl border border-zinc-100 p-5 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+        <div class="w-full aspect-[2/1] rounded-xl bg-yellow-500 mb-4 group-hover:scale-[1.02] transition-transform"></div>
+        <p class="text-sm font-medium text-zinc-900">Warning</p>
+        <p class="text-[10px] font-mono text-zinc-400 mt-1">#EAB308</p>
+        <p class="text-[10px] font-mono text-zinc-300">rgb(234, 179, 8)</p>
+        <p class="text-[10px] text-zinc-400 mt-2">Alerts, cautions</p>
+      </div>
+      <!-- Error -->
+      <div class="bg-white rounded-2xl border border-zinc-100 p-5 shadow-sm hover:shadow-md transition-all group cursor-pointer">
+        <div class="w-full aspect-[2/1] rounded-xl bg-red-500 mb-4 group-hover:scale-[1.02] transition-transform"></div>
+        <p class="text-sm font-medium text-zinc-900">Error</p>
+        <p class="text-[10px] font-mono text-zinc-400 mt-1">#EF4444</p>
+        <p class="text-[10px] font-mono text-zinc-300">rgb(239, 68, 68)</p>
+        <p class="text-[10px] text-zinc-400 mt-2">Errors, destructive</p>
+      </div>
+    </div>
+
+    <!-- Gradients -->
+    <h3 class="text-lg font-medium text-zinc-900 mb-6 tracking-tight" data-aos="fade-up">Gradients</h3>
+    <div class="grid md:grid-cols-3 gap-4" data-aos="fade-up">
+      <div class="group cursor-pointer">
+        <div class="aspect-[2/1] rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 animate-gradient p-6 flex items-end group-hover:scale-[1.02] transition-transform shadow-lg">
+          <span class="text-xs font-mono text-white/80">Accent Gradient</span>
+        </div>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-[2/1] rounded-2xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-6 flex items-end group-hover:scale-[1.02] transition-transform shadow-lg relative overflow-hidden">
+          <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+          <span class="text-xs font-mono text-white/80 relative z-10">Dark Surface</span>
+        </div>
+      </div>
+      <div class="group cursor-pointer">
+        <div class="aspect-[2/1] rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 p-6 flex items-end group-hover:scale-[1.02] transition-transform shadow-lg">
+          <span class="text-xs font-mono text-white/80">Warm Gradient</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: UI COMPONENTS -->
+<!-- ============================================================ -->
+<section class="py-32 bg-zinc-50 border-t border-zinc-100 relative overflow-hidden section-glow" id="components">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-20 right-0 w-[500px] h-[500px] bg-indigo-50/30 rounded-full blur-[150px] animate-breathe"></div>
+    <div class="absolute bottom-20 left-0 w-[400px] h-[400px] bg-blue-50/30 rounded-full blur-[120px] animate-breathe" style="animation-delay: 2s;"></div>
+    <div class="absolute inset-0 bg-dot-grid opacity-20"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="mb-20" data-aos="fade-up">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-zinc-200 mb-6 shadow-sm">
+        <span class="text-xs font-mono text-zinc-500 uppercase tracking-widest">04</span>
+        <span class="w-px h-3 bg-zinc-200"></span>
+        <span class="text-xs font-medium text-zinc-600 tracking-wide uppercase">Components</span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-medium text-zinc-900 tracking-tight mb-4">UI Components</h2>
+      <p class="text-zinc-500 font-light max-w-lg">Interactive elements with built-in animations, hover effects, and transitions.</p>
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="mb-20">
+      <h3 class="text-xl font-medium text-zinc-900 mb-2 tracking-tight" data-aos="fade-up">Buttons</h3>
+      <p class="text-sm text-zinc-500 mb-8" data-aos="fade-up">All button variants with shimmer, beam, glow, and hover animations.</p>
+
+      <div class="bg-white rounded-3xl border border-zinc-100 p-8 md:p-12 shadow-sm" data-aos="fade-up">
+        <div class="flex flex-wrap gap-6 items-center mb-12">
+          <!-- Primary -->
+          <button class="bg-zinc-900 text-white text-sm font-medium px-6 py-3 rounded-full hover:bg-zinc-800 transition-all shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 flex items-center gap-2 group relative overflow-hidden">
+            <span class="relative z-10">Primary</span>
+            <i class="w-4 h-4 relative z-10 group-hover:translate-x-0.5 transition-transform" data-lucide="arrow-right"></i>
+            <span class="absolute inset-0 overflow-hidden rounded-full"><span class="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100"></span></span>
+          </button>
+          <!-- Secondary -->
+          <button class="bg-white text-zinc-900 text-sm font-medium px-6 py-3 rounded-full border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 transition-all hover:shadow-md hover:scale-[1.02] active:scale-95">
+            Secondary
+          </button>
+          <!-- Ghost -->
+          <button class="text-zinc-900 text-sm font-medium px-6 py-3 rounded-full hover:bg-zinc-100 transition-all hover:scale-[1.02] active:scale-95">
+            Ghost
+          </button>
+          <!-- Accent -->
+          <button class="bg-indigo-500 text-white text-sm font-medium px-6 py-3 rounded-full hover:bg-indigo-600 transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-200 hover:scale-[1.02] active:scale-95">
+            Accent
+          </button>
+          <!-- Disabled -->
+          <button class="bg-zinc-100 text-zinc-400 text-sm font-medium px-6 py-3 rounded-full cursor-not-allowed" disabled>
+            Disabled
+          </button>
+        </div>
+
+        <!-- Beam Button (from gemini animations) -->
+        <div class="mb-12">
+          <p class="text-xs font-mono text-zinc-400 uppercase tracking-widest mb-4">Beam Animation Button</p>
+          <div class="group relative inline-flex">
+            <div class="-inset-1 group-hover:opacity-100 transition duration-500 bg-indigo-500/20 opacity-0 rounded-full absolute blur-xl"></div>
+            <button class="group relative z-10 flex items-center justify-center overflow-hidden rounded-full p-[1px]">
+              <span class="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0_340deg,#6366f1_360deg)]"></span>
+              <span class="relative flex h-full w-full items-center rounded-full bg-zinc-900 px-8 py-3.5 ring-1 ring-white/10">
+                <span class="absolute inset-0 overflow-hidden rounded-full"><span class="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100"></span></span>
+                <span class="relative z-10 text-sm font-medium text-white">Beam Effect</span>
+                <span class="relative z-10 ml-3 text-indigo-300 group-hover:translate-x-1 group-hover:text-white transition-all">
+                  <i class="w-4 h-4" data-lucide="sparkles"></i>
+                </span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Icon Buttons -->
+        <div>
+          <p class="text-xs font-mono text-zinc-400 uppercase tracking-widest mb-4">Icon Buttons</p>
+          <div class="flex gap-3">
+            <button class="w-10 h-10 rounded-full bg-zinc-900 text-white flex items-center justify-center hover:bg-zinc-800 hover:scale-110 active:scale-95 transition-all shadow-sm">
+              <i class="w-4 h-4" data-lucide="heart"></i>
+            </button>
+            <button class="w-10 h-10 rounded-full bg-white border border-zinc-200 text-zinc-600 flex items-center justify-center hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-900 hover:scale-110 active:scale-95 transition-all">
+              <i class="w-4 h-4" data-lucide="bookmark"></i>
+            </button>
+            <button class="w-10 h-10 rounded-full bg-white border border-zinc-200 text-zinc-600 flex items-center justify-center hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-900 hover:scale-110 active:scale-95 transition-all">
+              <i class="w-4 h-4" data-lucide="share-2"></i>
+            </button>
+            <button class="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 hover:scale-110 active:scale-95 transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-200">
+              <i class="w-4 h-4" data-lucide="plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUTS -->
+    <div class="mb-20">
+      <h3 class="text-xl font-medium text-zinc-900 mb-2 tracking-tight" data-aos="fade-up">Inputs</h3>
+      <p class="text-sm text-zinc-500 mb-8" data-aos="fade-up">Form elements with focus animations and validation states.</p>
+      <div class="bg-white rounded-3xl border border-zinc-100 p-8 md:p-12 shadow-sm" data-aos="fade-up">
+        <div class="grid md:grid-cols-2 gap-8">
+          <div>
+            <label class="block text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wide">Default Input</label>
+            <input class="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-zinc-300" placeholder="Enter destination..." type="text"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wide">With Icon</label>
+            <div class="relative">
+              <i class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" data-lucide="search"></i>
+              <input class="w-full pl-11 pr-4 py-3 bg-white border border-zinc-200 rounded-xl text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-zinc-300" placeholder="Search..." type="text"/>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-emerald-600 mb-2 uppercase tracking-wide">Success State</label>
+            <input class="w-full px-4 py-3 bg-emerald-50/50 border border-emerald-200 rounded-xl text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-emerald-100 transition-all" type="text" value="Valid input"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-red-500 mb-2 uppercase tracking-wide">Error State</label>
+            <input class="w-full px-4 py-3 bg-red-50/50 border border-red-200 rounded-xl text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-red-100 transition-all" type="text" value="Invalid input"/>
+            <p class="text-xs text-red-400 mt-2 flex items-center gap-1"><i class="w-3 h-3" data-lucide="alert-circle"></i> This field is required</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARDS -->
+    <div class="mb-20">
+      <h3 class="text-xl font-medium text-zinc-900 mb-2 tracking-tight" data-aos="fade-up">Cards</h3>
+      <p class="text-sm text-zinc-500 mb-8" data-aos="fade-up">Destination, feature, and content cards with hover interactions.</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 h-auto md:h-[550px]" data-aos="fade-up">
+        <!-- Large Card -->
+        <div class="md:col-span-2 md:row-span-2 group relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500">
+          <img alt="Santorini" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=1200"/>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-8 flex flex-col justify-end">
+            <span class="text-xs font-medium text-white/80 mb-2 uppercase tracking-wider">Greece</span>
+            <h3 class="text-2xl font-medium text-white tracking-tight">Santorini Sunset</h3>
+            <div class="h-0 overflow-hidden group-hover:h-12 transition-all duration-300">
+              <p class="text-sm text-white/90 mt-2 font-light">Private villas overlooking the caldera.</p>
+            </div>
+          </div>
+          <!-- Flashlight effect -->
+          <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style="background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.1), transparent 50%);" onmousemove="this.style.setProperty('--mouse-x', (event.offsetX / this.offsetWidth * 100) + '%'); this.style.setProperty('--mouse-y', (event.offsetY / this.offsetHeight * 100) + '%');"></div>
+        </div>
+        <!-- Small Card 1 -->
+        <div class="md:col-span-1 md:row-span-1 group relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500">
+          <img alt="Kyoto" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=800"/>
+          <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors p-6 flex flex-col justify-end">
+            <span class="text-xs font-medium text-white/80 mb-1 uppercase tracking-wider">Japan</span>
+            <h3 class="text-lg font-medium text-white tracking-tight">Autumn in Kyoto</h3>
+          </div>
+        </div>
+        <!-- Small Card 2 -->
+        <div class="md:col-span-1 md:row-span-1 group relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500">
+          <img alt="Alps" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&q=80&w=800"/>
+          <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors p-6 flex flex-col justify-end">
+            <span class="text-xs font-medium text-white/80 mb-1 uppercase tracking-wider">Italy</span>
+            <h3 class="text-lg font-medium text-white tracking-tight">Cinque Terre</h3>
+          </div>
+        </div>
+        <!-- Wide Card -->
+        <div class="md:col-span-2 md:row-span-1 group relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500">
+          <img alt="Maldives" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&q=80&w=1200"/>
+          <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors p-8 flex flex-col justify-end">
+            <span class="text-xs font-medium text-white/80 mb-2 uppercase tracking-wider">Maldives</span>
+            <h3 class="text-xl font-medium text-white tracking-tight">Ocean Paradise</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAVBAR COMPONENT -->
+    <div class="mb-20">
+      <h3 class="text-xl font-medium text-zinc-900 mb-2 tracking-tight" data-aos="fade-up">Navbar</h3>
+      <p class="text-sm text-zinc-500 mb-8" data-aos="fade-up">Glass morphism navigation with blur backdrop and animated links.</p>
+      <div class="bg-white rounded-3xl border border-zinc-100 p-4 shadow-sm overflow-hidden" data-aos="fade-up">
+        <!-- Light Nav Preview -->
+        <div class="bg-zinc-50 rounded-2xl p-4 mb-4">
+          <div class="bg-white/70 backdrop-blur-xl border border-zinc-200 rounded-2xl px-6 h-14 flex items-center justify-between">
+            <span class="text-zinc-900 font-semibold tracking-tighter text-sm uppercase flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-500"></span>TRPY
+            </span>
+            <div class="flex items-center gap-6">
+              <span class="text-xs text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer">Destinations</span>
+              <span class="text-xs text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer">Experiences</span>
+              <span class="text-xs text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer">About</span>
+              <button class="bg-zinc-900 text-white text-xs px-4 py-2 rounded-full hover:bg-zinc-800 transition-colors">Book</button>
+            </div>
+          </div>
+        </div>
+        <!-- Dark Nav Preview -->
+        <div class="bg-zinc-900 rounded-2xl p-4">
+          <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-6 h-14 flex items-center justify-between">
+            <span class="text-white font-semibold tracking-tighter text-sm uppercase flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>TRPY
+            </span>
+            <div class="flex items-center gap-6">
+              <span class="text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer">Destinations</span>
+              <span class="text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer">Experiences</span>
+              <button class="bg-white text-zinc-900 text-xs px-4 py-2 rounded-full hover:bg-zinc-200 transition-colors">Book</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BADGES & TOOLTIPS -->
+    <div class="mb-20">
+      <h3 class="text-xl font-medium text-zinc-900 mb-2 tracking-tight" data-aos="fade-up">Badges & Tooltips</h3>
+      <p class="text-sm text-zinc-500 mb-8" data-aos="fade-up">Status indicators, tags, and informational overlays.</p>
+      <div class="bg-white rounded-3xl border border-zinc-100 p-8 md:p-12 shadow-sm" data-aos="fade-up">
+        <div class="flex flex-wrap gap-4 mb-8">
+          <!-- Badges -->
+          <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600 text-xs font-medium">Default</span>
+          <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Accent
+          </span>
+          <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium">
+            <span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span></span>
+            Online
+          </span>
+          <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 text-amber-600 text-xs font-medium">Featured</span>
+          <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-50 text-red-600 text-xs font-medium">Sold Out</span>
+          <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900 text-white text-xs font-medium">Premium</span>
+        </div>
+
+        <!-- Tooltips -->
+        <p class="text-xs font-mono text-zinc-400 uppercase tracking-widest mb-4">Tooltip Positions</p>
+        <div class="flex gap-6">
+          <div class="relative group">
+            <button class="w-10 h-10 rounded-full bg-zinc-100 text-zinc-600 flex items-center justify-center hover:bg-zinc-200 transition-colors">
+              <i class="w-4 h-4" data-lucide="info"></i>
+            </button>
+            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none translate-y-1 group-hover:translate-y-0">
+              <div class="bg-zinc-900 text-white text-[10px] py-1.5 px-3 rounded-lg shadow-lg font-medium whitespace-nowrap">Tooltip Top</div>
+            </div>
+          </div>
+          <div class="relative group">
+            <button class="w-10 h-10 rounded-full bg-zinc-100 text-zinc-600 flex items-center justify-center hover:bg-zinc-200 transition-colors">
+              <i class="w-4 h-4" data-lucide="help-circle"></i>
+            </button>
+            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none -translate-y-1 group-hover:translate-y-0">
+              <div class="bg-zinc-900 text-white text-[10px] py-1.5 px-3 rounded-lg shadow-lg font-medium whitespace-nowrap">Tooltip Bottom</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODALS -->
+    <div class="mb-20">
+      <h3 class="text-xl font-medium text-zinc-900 mb-2 tracking-tight" data-aos="fade-up">Modals & Sections</h3>
+      <p class="text-sm text-zinc-500 mb-8" data-aos="fade-up">Overlay patterns and section layouts.</p>
+      <div class="bg-white rounded-3xl border border-zinc-100 p-8 md:p-12 shadow-sm" data-aos="fade-up">
+        <!-- Modal preview -->
+        <div class="relative bg-zinc-100 rounded-2xl p-8 md:p-16 flex items-center justify-center min-h-[300px]">
+          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-2xl"></div>
+          <div class="relative bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border border-zinc-100 animate-on-scroll [animation:animationIn_0.5s_ease-out_0s_both] animate">
+            <div class="flex items-center justify-between mb-6">
+              <h4 class="text-lg font-medium text-zinc-900 tracking-tight">Book Your Journey</h4>
+              <button class="w-8 h-8 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center hover:bg-zinc-200 hover:text-zinc-900 transition-all hover:rotate-90">
+                <i class="w-4 h-4" data-lucide="x"></i>
+              </button>
+            </div>
+            <p class="text-sm text-zinc-500 mb-6">Select your preferred dates and travelers to begin.</p>
+            <div class="space-y-4 mb-6">
+              <input class="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-zinc-300" placeholder="Destination" type="text"/>
+              <input class="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-zinc-300" placeholder="Select dates" type="text"/>
+            </div>
+            <button class="w-full bg-zinc-900 text-white text-sm font-medium py-3 rounded-xl hover:bg-zinc-800 transition-all group relative overflow-hidden">
+              <span class="relative z-10">Confirm Booking</span>
+              <span class="absolute inset-0 overflow-hidden rounded-xl"><span class="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100"></span></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLASHLIGHT CARDS (from Gemini) -->
+    <div class="mb-20">
+      <h3 class="text-xl font-medium text-zinc-900 mb-2 tracking-tight" data-aos="fade-up">Flashlight Cards</h3>
+      <p class="text-sm text-zinc-500 mb-8" data-aos="fade-up">Interactive cards with mouse-following light effect.</p>
+      <div class="bg-zinc-900 rounded-3xl p-8 md:p-12" data-aos="fade-up">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="flashlight-card relative rounded-2xl border border-white/5 bg-white/[0.02] p-8 flex flex-col group overflow-hidden" onmousemove="const rect = this.getBoundingClientRect(); this.style.setProperty('--mouse-x', `${event.clientX - rect.left}px`); this.style.setProperty('--mouse-y', `${event.clientY - rect.top}px`);">
+            <iconify-icon class="text-4xl text-zinc-500 mb-6 group-hover:text-indigo-400 transition-colors duration-500" icon="solar:compass-big-bold-duotone"></iconify-icon>
+            <h4 class="text-white font-medium mb-2">Navigate</h4>
+            <p class="text-sm text-zinc-500 leading-relaxed">AI-powered itineraries tailored to your travel style.</p>
+          </div>
+          <div class="flashlight-card relative rounded-2xl border border-white/5 bg-white/[0.02] p-8 flex flex-col group overflow-hidden" onmousemove="const rect = this.getBoundingClientRect(); this.style.setProperty('--mouse-x', `${event.clientX - rect.left}px`); this.style.setProperty('--mouse-y', `${event.clientY - rect.top}px`);">
+            <iconify-icon class="text-4xl text-zinc-500 mb-6 group-hover:text-amber-400 transition-colors duration-500" icon="solar:shield-check-bold-duotone"></iconify-icon>
+            <h4 class="text-white font-medium mb-2">Protected</h4>
+            <p class="text-sm text-zinc-500 leading-relaxed">24/7 concierge support across every timezone.</p>
+          </div>
+          <div class="flashlight-card relative rounded-2xl border border-white/5 bg-white/[0.02] p-8 flex flex-col group overflow-hidden" onmousemove="const rect = this.getBoundingClientRect(); this.style.setProperty('--mouse-x', `${event.clientX - rect.left}px`); this.style.setProperty('--mouse-y', `${event.clientY - rect.top}px`);">
+            <iconify-icon class="text-4xl text-zinc-500 mb-6 group-hover:text-emerald-400 transition-colors duration-500" icon="solar:stars-minimalistic-bold-duotone"></iconify-icon>
+            <h4 class="text-white font-medium mb-2">Exclusive</h4>
+            <p class="text-sm text-zinc-500 leading-relaxed">Access to off-market estates and VIP experiences.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: ICONS -->
+<!-- ============================================================ -->
+<section class="py-32 bg-white border-t border-zinc-100 relative overflow-hidden section-glow" id="icons">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-0 left-1/3 w-[500px] h-[500px] bg-indigo-50/30 rounded-full blur-[150px] animate-breathe"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="mb-20" data-aos="fade-up">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-zinc-200 mb-6 shadow-sm">
+        <span class="text-xs font-mono text-zinc-500 uppercase tracking-widest">05</span>
+        <span class="w-px h-3 bg-zinc-200"></span>
+        <span class="text-xs font-medium text-zinc-600 tracking-wide uppercase">Icons</span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-medium text-zinc-900 tracking-tight mb-4">Icon System</h2>
+      <p class="text-zinc-500 font-light max-w-lg">Lucide & Solar (Iconify) icon sets, optimized for travel UI.</p>
+    </div>
+
+    <!-- Lucide Icons -->
+    <h3 class="text-lg font-medium text-zinc-900 mb-6 tracking-tight" data-aos="fade-up">Lucide Icons</h3>
+    <div class="grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-3 mb-16" data-aos="fade-up">
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="map-pin"></i>
+        <span class="text-[10px] text-zinc-400 group-hover:text-zinc-600 transition-colors">map-pin</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="compass"></i>
+        <span class="text-[10px] text-zinc-400">compass</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="plane"></i>
+        <span class="text-[10px] text-zinc-400">plane</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="calendar"></i>
+        <span class="text-[10px] text-zinc-400">calendar</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="users"></i>
+        <span class="text-[10px] text-zinc-400">users</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="heart"></i>
+        <span class="text-[10px] text-zinc-400">heart</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="star"></i>
+        <span class="text-[10px] text-zinc-400">star</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="search"></i>
+        <span class="text-[10px] text-zinc-400">search</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="globe"></i>
+        <span class="text-[10px] text-zinc-400">globe</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="sparkles"></i>
+        <span class="text-[10px] text-zinc-400">sparkles</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="shield-check"></i>
+        <span class="text-[10px] text-zinc-400">shield</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <i class="w-6 h-6 text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" data-lucide="arrow-right"></i>
+        <span class="text-[10px] text-zinc-400">arrow-right</span>
+      </div>
+    </div>
+
+    <!-- Solar Icons (Iconify) -->
+    <h3 class="text-lg font-medium text-zinc-900 mb-6 tracking-tight" data-aos="fade-up">Solar Icons (Iconify)</h3>
+    <div class="grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-3" data-aos="fade-up">
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:compass-big-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">compass</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:map-point-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">map-point</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:stars-minimalistic-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">stars</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:shield-check-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">shield</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:routing-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">routing</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:airplane-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">airplane</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:wallet-money-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">wallet</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:camera-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">camera</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:heart-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">heart</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:globe-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">globe</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:sun-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">sun</span>
+      </div>
+      <div class="group flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-zinc-50 transition-colors cursor-pointer">
+        <iconify-icon class="text-2xl text-zinc-600 group-hover:text-zinc-900 group-hover:scale-110 transition-all" icon="solar:radar-bold-duotone"></iconify-icon>
+        <span class="text-[10px] text-zinc-400">radar</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: ANIMATIONS -->
+<!-- ============================================================ -->
+<section class="py-32 bg-zinc-950 text-white relative overflow-hidden" id="animations">
+  <!-- Background effects -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute inset-0 bg-dot-grid-dark opacity-30"></div>
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-500/5 rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px]"></div>
+    <!-- Spinning gradient ring -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] rounded-full animate-spin-slow opacity-[0.02]" style="background: conic-gradient(from 0deg, transparent 0deg, #6366f1 90deg, transparent 180deg);"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="mb-20" data-aos="fade-up">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6">
+        <span class="text-xs font-mono text-zinc-500 uppercase tracking-widest">06</span>
+        <span class="w-px h-3 bg-white/10"></span>
+        <span class="text-xs font-medium text-zinc-400 tracking-wide uppercase">Animations</span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-medium text-white tracking-tight mb-4">Motion Library</h2>
+      <p class="text-zinc-500 font-light max-w-lg">Scroll-triggered, hover, and continuous animations built for performance.</p>
+    </div>
+
+    <!-- Marquee Demo -->
+    <div class="mb-16" data-aos="fade-up">
+      <p class="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-6">Infinite Marquee Loop</p>
+      <div class="relative w-full py-10 border-y border-white/5 bg-white/[0.02]">
+        <div class="absolute left-0 top-0 bottom-0 w-24 z-10 bg-gradient-to-r from-zinc-950 to-transparent"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-24 z-10 bg-gradient-to-l from-zinc-950 to-transparent"></div>
+        <div class="flex overflow-hidden w-full">
+          <div class="flex animate-marquee whitespace-nowrap gap-16 items-center">
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:vercel"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:stripe"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:apple"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:figma"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:framer"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:linear"></iconify-icon>
+            <iconify-icon class="text-4xl text-zinc-500" icon="simple-icons:spacex"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:nvidia"></iconify-icon>
+            <!-- Duplicate set -->
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:vercel"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:stripe"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:apple"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:figma"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:framer"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:linear"></iconify-icon>
+            <iconify-icon class="text-4xl text-zinc-500" icon="simple-icons:spacex"></iconify-icon>
+            <iconify-icon class="text-3xl text-zinc-500" icon="simple-icons:nvidia"></iconify-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AnimationIn Demo -->
+    <div class="mb-16" data-aos="fade-up">
+      <p class="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-6">Scroll-Triggered Entrance</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="animate-on-scroll [animation:animationIn_0.8s_ease-out_0.1s_both] bg-white/[0.03] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.06] transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-4">
+            <iconify-icon class="text-2xl text-indigo-400" icon="solar:layers-minimalistic-bold-duotone"></iconify-icon>
+          </div>
+          <h4 class="text-white font-medium mb-2">Fade + Blur In</h4>
+          <p class="text-sm text-zinc-500">opacity: 0 -> 1, translateY(30px -> 0), blur(10px -> 0)</p>
+          <p class="text-xs font-mono text-zinc-600 mt-4">animationIn 0.8s ease-out</p>
+        </div>
+        <div class="animate-on-scroll [animation:animationIn_0.8s_ease-out_0.3s_both] bg-white/[0.03] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.06] transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-4">
+            <iconify-icon class="text-2xl text-amber-400" icon="solar:cpu-bold-duotone"></iconify-icon>
+          </div>
+          <h4 class="text-white font-medium mb-2">Staggered Delay</h4>
+          <p class="text-sm text-zinc-500">Each element enters sequentially with increasing delay.</p>
+          <p class="text-xs font-mono text-zinc-600 mt-4">delay: 0.3s, 0.5s, 0.7s...</p>
+        </div>
+        <div class="animate-on-scroll [animation:animationIn_0.8s_ease-out_0.5s_both] bg-white/[0.03] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.06] transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
+            <iconify-icon class="text-2xl text-emerald-400" icon="solar:database-bold-duotone"></iconify-icon>
+          </div>
+          <h4 class="text-white font-medium mb-2">IntersectionObserver</h4>
+          <p class="text-sm text-zinc-500">Triggers when element enters the viewport at 20% threshold.</p>
+          <p class="text-xs font-mono text-zinc-600 mt-4">threshold: 0.2, once: true</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shimmer & Beam Demo -->
+    <div class="mb-16" data-aos="fade-up">
+      <p class="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-6">Shimmer & Beam Effects</p>
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Shimmer Card -->
+        <div class="group bg-white/[0.03] border border-white/5 rounded-2xl p-8 overflow-hidden relative hover:bg-white/[0.06] transition-colors">
+          <h4 class="text-white font-medium mb-2">Hover Shimmer</h4>
+          <p class="text-sm text-zinc-500 mb-6">Light sweep that follows cursor interaction.</p>
+          <div class="h-16 bg-white/5 rounded-xl overflow-hidden relative">
+            <div class="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100"></div>
+          </div>
+          <p class="text-xs font-mono text-zinc-600 mt-4">@keyframes shimmer { translateX(-100%) -> translateX(200%) }</p>
+        </div>
+        <!-- Beam Card -->
+        <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-8 overflow-hidden relative hover:bg-white/[0.06] transition-colors">
+          <h4 class="text-white font-medium mb-2">Conic Beam</h4>
+          <p class="text-sm text-zinc-500 mb-6">Spinning conic-gradient border animation.</p>
+          <div class="flex justify-center">
+            <div class="relative p-[1px] rounded-full overflow-hidden">
+              <span class="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0_340deg,#6366f1_360deg)]"></span>
+              <div class="relative bg-zinc-900 rounded-full px-6 py-3">
+                <span class="text-sm text-white font-medium">Beam Border</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs font-mono text-zinc-600 mt-4">conic-gradient + spin 3s linear infinite</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pulse & Float Demo -->
+    <div class="mb-16" data-aos="fade-up">
+      <p class="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-6">Continuous Animations</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-6 text-center">
+          <div class="w-12 h-12 rounded-full bg-indigo-500/20 mx-auto mb-4 flex items-center justify-center animate-pulse">
+            <div class="w-4 h-4 rounded-full bg-indigo-500"></div>
+          </div>
+          <p class="text-xs font-mono text-zinc-500">animate-pulse</p>
+        </div>
+        <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-6 text-center">
+          <div class="w-12 h-12 rounded-full bg-emerald-500/20 mx-auto mb-4 flex items-center justify-center relative">
+            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+            <div class="absolute inset-0 rounded-full bg-emerald-500/30 animate-ping"></div>
+          </div>
+          <p class="text-xs font-mono text-zinc-500">animate-ping</p>
+        </div>
+        <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-6 text-center">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 mx-auto mb-4 flex items-center justify-center animate-float">
+            <iconify-icon class="text-xl text-amber-400" icon="solar:airplane-bold-duotone"></iconify-icon>
+          </div>
+          <p class="text-xs font-mono text-zinc-500">animate-float</p>
+        </div>
+        <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-6 text-center">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 mx-auto mb-4 flex items-center justify-center animate-breathe">
+            <iconify-icon class="text-xl text-purple-400" icon="solar:heart-bold-duotone"></iconify-icon>
+          </div>
+          <p class="text-xs font-mono text-zinc-500">animate-breathe</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Network Map (from luxury-travel) -->
+    <div data-aos="fade-up">
+      <p class="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-6">Animated Map Nodes</p>
+      <div class="relative w-full aspect-[4/3] md:aspect-[2.5/1] bg-zinc-900/50 rounded-3xl border border-white/5 overflow-hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-dot-grid-dark opacity-40"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#09090b_100%)]"></div>
+        <!-- Nodes -->
+        <div class="absolute top-[35%] left-[25%] group cursor-pointer">
+          <div class="w-2.5 h-2.5 bg-indigo-500 rounded-full relative z-10 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+          <div class="absolute inset-0 bg-indigo-500/20 rounded-full animate-ping"></div>
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-zinc-900 text-[10px] py-1.5 px-2.5 rounded shadow-lg font-medium uppercase tracking-widest whitespace-nowrap z-20">New York</div>
+        </div>
+        <div class="absolute top-[28%] left-[48%] group cursor-pointer">
+          <div class="w-2.5 h-2.5 bg-indigo-500 rounded-full relative z-10 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+          <div class="absolute inset-0 bg-indigo-500/20 rounded-full animate-ping" style="animation-delay: 0.5s;"></div>
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-zinc-900 text-[10px] py-1.5 px-2.5 rounded shadow-lg font-medium uppercase tracking-widest whitespace-nowrap z-20">London</div>
+        </div>
+        <div class="absolute top-[42%] left-[82%] group cursor-pointer">
+          <div class="w-2.5 h-2.5 bg-amber-500 rounded-full relative z-10 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+          <div class="absolute inset-0 bg-amber-500/20 rounded-full animate-ping" style="animation-delay: 1.2s;"></div>
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-zinc-900 text-[10px] py-1.5 px-2.5 rounded shadow-lg font-medium uppercase tracking-widest whitespace-nowrap z-20">Tokyo</div>
+        </div>
+        <div class="absolute top-[48%] left-[62%] group cursor-pointer">
+          <div class="w-2.5 h-2.5 bg-emerald-500 rounded-full relative z-10 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+          <div class="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping" style="animation-delay: 0.8s;"></div>
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-zinc-900 text-[10px] py-1.5 px-2.5 rounded shadow-lg font-medium uppercase tracking-widest whitespace-nowrap z-20">Dubai</div>
+        </div>
+        <div class="absolute top-[60%] left-[35%] group cursor-pointer">
+          <div class="w-2.5 h-2.5 bg-purple-500 rounded-full relative z-10 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
+          <div class="absolute inset-0 bg-purple-500/20 rounded-full animate-ping" style="animation-delay: 1.5s;"></div>
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-zinc-900 text-[10px] py-1.5 px-2.5 rounded shadow-lg font-medium uppercase tracking-widest whitespace-nowrap z-20">Rio</div>
+        </div>
+        <!-- Badge -->
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
+            <iconify-icon class="text-indigo-400 text-sm" icon="solar:radar-bold-duotone"></iconify-icon>
+            <span class="text-[10px] font-medium text-zinc-300 tracking-widest uppercase">Live Radar Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FINAL CTA -->
+<!-- ============================================================ -->
+<section class="py-32 bg-white relative overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-50/50 rounded-full blur-[150px] animate-breathe"></div>
+    <div class="absolute inset-0 bg-dot-grid opacity-20"></div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-6 text-center relative z-10" data-aos="fade-up">
+    <iconify-icon class="text-5xl text-zinc-200 mb-8" icon="solar:infinity-linear"></iconify-icon>
+    <h2 class="text-4xl md:text-6xl font-medium text-zinc-900 tracking-tight mb-6 leading-[1.05]">
+      Begin your journey.
+    </h2>
+    <p class="text-zinc-500 text-lg mb-10 max-w-xl mx-auto font-light">
+      A design system built for the future of travel experiences. Elegant, animated, and endlessly customizable.
+    </p>
+    <form class="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+      <div class="relative w-full">
+        <i class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" data-lucide="mail"></i>
+        <input class="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 text-sm rounded-full pl-11 pr-4 py-3.5 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-zinc-400 font-medium" placeholder="Enter your email" type="email"/>
+      </div>
+      <button class="w-full sm:w-auto bg-zinc-900 text-white px-8 py-3.5 rounded-full text-sm font-medium hover:bg-zinc-800 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap shadow-sm hover:shadow-md group relative overflow-hidden" type="button">
+        <span class="relative z-10">Get Access</span>
+        <span class="absolute inset-0 overflow-hidden rounded-full"><span class="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100"></span></span>
+      </button>
+    </form>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================ -->
+<!-- FOOTER -->
+<!-- ============================================================ -->
+<footer class="bg-white border-t border-zinc-100 pt-16 pb-8">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+      <div class="col-span-2 md:col-span-1">
+        <a class="text-zinc-900 font-semibold tracking-tighter text-base uppercase flex items-center gap-2 mb-6" href="#">
+          <span class="w-2 h-2 rounded-full bg-indigo-500"></span>TRPY
+        </a>
+        <p class="text-xs text-zinc-500 leading-relaxed max-w-xs">
+          A travel-inspired design system combining elegant aesthetics with sophisticated motion design.
+        </p>
+      </div>
+      <div>
+        <h4 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-4">System</h4>
+        <ul class="space-y-3">
+          <li><a class="text-sm text-zinc-500 hover:text-zinc-900 transition-colors" href="#typography">Typography</a></li>
+          <li><a class="text-sm text-zinc-500 hover:text-zinc-900 transition-colors" href="#colors">Colors</a></li>
+          <li><a class="text-sm text-zinc-500 hover:text-zinc-900 transition-colors" href="#components">Components</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-4">Resources</h4>
+        <ul class="space-y-3">
+          <li><a class="text-sm text-zinc-500 hover:text-zinc-900 transition-colors" href="#icons">Icons</a></li>
+          <li><a class="text-sm text-zinc-500 hover:text-zinc-900 transition-colors" href="#animations">Animations</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-4">Social</h4>
+        <div class="flex gap-4">
+          <a class="text-zinc-400 hover:text-zinc-900 transition-colors" href="#"><i class="w-5 h-5" data-lucide="instagram"></i></a>
+          <a class="text-zinc-400 hover:text-zinc-900 transition-colors" href="#"><i class="w-5 h-5" data-lucide="twitter"></i></a>
+          <a class="text-zinc-400 hover:text-zinc-900 transition-colors" href="#"><i class="w-5 h-5" data-lucide="github"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="border-t border-zinc-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-xs text-zinc-400">TRPY Design System v1.0</p>
+      <div class="flex gap-6">
+        <span class="text-xs text-zinc-400 flex items-center gap-1">
+          <span class="relative flex h-1.5 w-1.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+          </span>
+          All Systems Operational
+        </span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================ -->
+<!-- SCRIPTS -->
+<!-- ============================================================ -->
+<script>
+// Initialize Lucide icons
+lucide.createIcons();
+
+// Initialize AOS
+AOS.init({
+  once: true,
+  duration: 800,
+  offset: 50
+});
+
+// Scroll-triggered animations (IntersectionObserver)
+(function () {
+  const once = true;
+  if (!window.__inViewIO) {
+    window.__inViewIO = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate");
+          if (once) window.__inViewIO.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+  }
+
+  window.initInViewAnimations = function (selector = ".animate-on-scroll") {
+    document.querySelectorAll(selector).forEach((el) => {
+      window.__inViewIO.observe(el);
+    });
+  };
+
+  document.addEventListener("DOMContentLoaded", () => initInViewAnimations());
+})();
+
+// Navbar scroll effect
+(function() {
+  const navbar = document.getElementById('navbar');
+  let lastScroll = 0;
+  window.addEventListener('scroll', () => {
+    const currentScroll = window.scrollY;
+    if (currentScroll > 50) {
+      navbar.classList.add('shadow-sm');
+      navbar.style.borderBottomColor = 'rgba(228, 228, 231, 0.5)';
+    } else {
+      navbar.classList.remove('shadow-sm');
+      navbar.style.borderBottomColor = 'rgba(228, 228, 231, 1)';
+    }
+    lastScroll = currentScroll;
+  });
+})();
+</script>
+
+</body>
+</html>
