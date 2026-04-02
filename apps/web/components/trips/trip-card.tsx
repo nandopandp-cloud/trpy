@@ -15,18 +15,18 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, string> = {
-  PLANNING: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
-  ONGOING: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-  COMPLETED: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
-  CANCELLED: 'bg-red-500/20 text-red-300 border-red-500/30',
+  PLANNING: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20',
+  ONGOING: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+  COMPLETED: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20',
+  CANCELLED: 'bg-red-500/15 text-red-400 border-red-500/20',
 };
 
 const GRADIENT_FALLBACKS = [
+  'from-indigo-600 via-violet-600 to-purple-700',
+  'from-sky-600 via-blue-600 to-indigo-700',
   'from-emerald-600 via-teal-600 to-cyan-700',
-  'from-violet-600 via-purple-600 to-indigo-700',
-  'from-rose-600 via-pink-600 to-fuchsia-700',
   'from-amber-600 via-orange-500 to-red-600',
-  'from-blue-600 via-indigo-600 to-violet-700',
+  'from-rose-600 via-pink-600 to-fuchsia-700',
 ];
 
 interface TripCardProps {
@@ -47,7 +47,7 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
   const progressColor =
     progress >= 90 ? 'from-red-500 to-orange-400' :
     progress >= 70 ? 'from-amber-500 to-yellow-400' :
-    'from-emerald-500 to-teal-400';
+    'from-indigo-500 to-violet-400';
 
   return (
     <motion.div
@@ -59,17 +59,19 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
       onClick={onClick}
       className="cursor-pointer group"
     >
-      <div className="rounded-3xl overflow-hidden bg-card border border-border/60 card-shadow-lg transition-shadow duration-300 group-hover:shadow-card-xl">
+      <div className="rounded-2xl overflow-hidden bg-card border border-border shadow-card transition-all duration-300 group-hover:shadow-card-xl group-hover:border-primary/10">
         {/* Cover image */}
         <div className="relative h-44 overflow-hidden">
           {trip.coverImage ? (
             <img
               src={trip.coverImage}
               alt={trip.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
-            <div className={cn('w-full h-full bg-gradient-to-br', fallback)} />
+            <div className={cn('w-full h-full bg-gradient-to-br relative', fallback)}>
+              <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+            </div>
           )}
 
           {/* Overlay */}
@@ -78,13 +80,13 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
           {/* Top badges */}
           <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
             <span className={cn(
-              'text-[11px] font-semibold px-2.5 py-1 rounded-full border backdrop-blur-sm',
+              'text-[11px] font-medium px-2.5 py-1 rounded-full border backdrop-blur-sm',
               STATUS_STYLE[trip.status]
             )}>
               {STATUS_LABEL[trip.status]}
             </span>
             {trip.status === 'PLANNING' && daysLeft > 0 && (
-              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-black/40 text-white/90 border border-white/15 backdrop-blur-sm">
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-black/40 text-white/90 border border-white/15 backdrop-blur-sm">
                 {daysLeft}d
               </span>
             )}
@@ -92,7 +94,7 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
 
           {/* Bottom info overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="text-white font-bold text-lg leading-tight line-clamp-1">{trip.title}</h3>
+            <h3 className="text-white font-medium text-lg leading-tight line-clamp-1 tracking-tight">{trip.title}</h3>
             <div className="flex items-center gap-1 mt-1 text-white/75 text-xs">
               <MapPin className="w-3 h-3 shrink-0" />
               <span className="truncate">{trip.destination}</span>
@@ -119,7 +121,7 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
                 <Wallet className="w-3.5 h-3.5" />
                 Orçamento
               </span>
-              <span className="font-semibold text-foreground">
+              <span className="font-medium text-foreground">
                 {trip.currency} {spent.toLocaleString('pt-BR')}
                 <span className="text-muted-foreground font-normal"> / {budget.toLocaleString('pt-BR')}</span>
               </span>
@@ -149,7 +151,7 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
             <motion.button
               whileHover={{ x: 2 }}
               onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
             >
               Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
             </motion.button>

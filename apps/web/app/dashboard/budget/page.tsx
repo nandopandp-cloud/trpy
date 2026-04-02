@@ -1,8 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
   Wallet, TrendingUp, TrendingDown, PiggyBank,
   ArrowRight, AlertTriangle,
@@ -23,7 +21,7 @@ const stagger = {
 };
 
 const TRIP_COLORS = [
-  '#10B981', '#0891B2', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899',
+  '#6366f1', '#a855f7', '#f59e0b', '#10b981', '#ef4444', '#ec4899',
 ];
 
 const STATUS_LABEL: Record<string, string> = {
@@ -34,9 +32,9 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_BAR_COLOR: Record<string, string> = {
-  PLANNING: 'from-sky-500 to-blue-600',
+  PLANNING: 'from-indigo-500 to-violet-600',
   ONGOING: 'from-emerald-500 to-teal-600',
-  COMPLETED: 'from-slate-400 to-slate-500',
+  COMPLETED: 'from-zinc-400 to-zinc-500',
   CANCELLED: 'from-red-400 to-red-500',
 };
 
@@ -73,30 +71,28 @@ export default function BudgetPage() {
       label: 'Orçamento total',
       value: `R$ ${totalBudget.toLocaleString('pt-BR')}`,
       icon: Wallet,
-      gradient: 'from-emerald-500 to-teal-600',
-      glow: 'glow-teal',
+      color: 'text-indigo-400', bgColor: 'bg-indigo-500/10',
     },
     {
       label: 'Total gasto',
       value: `R$ ${totalSpent.toLocaleString('pt-BR')}`,
       icon: TrendingUp,
-      gradient: totalProgress >= 90 ? 'from-red-500 to-orange-500' : 'from-amber-500 to-orange-500',
-      glow: 'glow-amber',
+      color: totalProgress >= 90 ? 'text-red-400' : 'text-amber-400',
+      bgColor: totalProgress >= 90 ? 'bg-red-500/10' : 'bg-amber-500/10',
     },
     {
       label: 'Saldo restante',
       value: `R$ ${Math.max(totalRemaining, 0).toLocaleString('pt-BR')}`,
       icon: TrendingDown,
-      gradient: 'from-sky-500 to-blue-600',
-      glow: 'glow-blue',
+      color: 'text-emerald-400', bgColor: 'bg-emerald-500/10',
     },
     {
       label: 'Acima do orçamento',
       value: overBudgetTrips.length,
       suffix: ' viagens',
       icon: overBudgetTrips.length > 0 ? AlertTriangle : PiggyBank,
-      gradient: overBudgetTrips.length > 0 ? 'from-red-500 to-rose-600' : 'from-violet-500 to-purple-600',
-      glow: overBudgetTrips.length > 0 ? '' : 'glow-violet',
+      color: overBudgetTrips.length > 0 ? 'text-red-400' : 'text-purple-400',
+      bgColor: overBudgetTrips.length > 0 ? 'bg-red-500/10' : 'bg-purple-500/10',
     },
   ];
 
@@ -107,7 +103,7 @@ export default function BudgetPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl font-black text-foreground">Finanças</h1>
+        <h1 className="text-2xl font-medium text-foreground tracking-tight">Finanças</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Visão consolidada de orçamentos e gastos</p>
       </motion.div>
 
@@ -130,14 +126,14 @@ export default function BudgetPage() {
                 <motion.div
                   key={stat.label}
                   variants={stagger.item}
-                  className="relative rounded-3xl border border-border bg-card p-5 overflow-hidden card-lift group"
+                  className="relative rounded-2xl border border-border bg-card p-5 overflow-hidden card-lift group"
                 >
-                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full bg-gradient-to-br ${stat.gradient} opacity-10 blur-xl group-hover:opacity-20 transition-opacity`} />
-                  <div className={cn(`w-10 h-10 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-3`, stat.glow)}>
-                    <Icon className="w-5 h-5 text-white" />
+                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full ${stat.bgColor} blur-xl group-hover:scale-150 transition-transform duration-500`} />
+                  <div className={`w-10 h-10 rounded-xl ${stat.bgColor} flex items-center justify-center mb-3`}>
+                    <Icon className={`w-5 h-5 ${stat.color}`} />
                   </div>
                   <p className="text-xs text-muted-foreground mb-0.5">{stat.label}</p>
-                  <p className="text-xl font-black text-foreground leading-tight">
+                  <p className="text-xl font-medium text-foreground leading-tight tracking-tight">
                     {stat.value}
                     {'suffix' in stat && stat.suffix && (
                       <span className="text-sm font-normal text-muted-foreground">{stat.suffix}</span>
@@ -153,11 +149,11 @@ export default function BudgetPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="rounded-3xl border border-border bg-card p-5 shadow-card"
+            className="rounded-2xl border border-border bg-card p-5 shadow-card"
           >
             <div className="flex items-center justify-between mb-4">
-              <p className="font-bold text-foreground">Orçamento total utilizado</p>
-              <span className="text-sm font-bold text-foreground">{totalProgress.toFixed(0)}%</span>
+              <p className="font-medium text-foreground">Orçamento total utilizado</p>
+              <span className="text-sm font-medium text-foreground">{totalProgress.toFixed(0)}%</span>
             </div>
             <div className="h-3 bg-muted rounded-full overflow-hidden">
               <motion.div
@@ -165,7 +161,7 @@ export default function BudgetPage() {
                   'h-full rounded-full bg-gradient-to-r',
                   totalProgress >= 90 ? 'from-red-500 to-orange-400' :
                   totalProgress >= 70 ? 'from-amber-500 to-yellow-400' :
-                  'from-emerald-500 to-teal-400'
+                  'from-indigo-500 to-violet-400'
                 )}
                 initial={{ width: 0 }}
                 animate={{ width: `${totalProgress}%` }}
@@ -185,9 +181,9 @@ export default function BudgetPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="rounded-3xl border border-border bg-card p-5 shadow-card"
+                className="rounded-2xl border border-border bg-card p-5 shadow-card"
               >
-                <p className="font-bold text-foreground mb-4">Orçamento × Gasto por viagem</p>
+                <p className="font-medium text-foreground mb-4">Orçamento × Gasto por viagem</p>
                 {barData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={barData} barGap={4} barCategoryGap="30%">
@@ -213,8 +209,8 @@ export default function BudgetPage() {
                         }}
                         formatter={(value) => `R$ ${Number(value).toLocaleString('pt-BR')}`}
                       />
-                      <Bar dataKey="orçamento" fill="#10B98130" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="gasto" fill="#10B981" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="orçamento" fill="#6366f130" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="gasto" fill="#6366f1" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -229,9 +225,9 @@ export default function BudgetPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="rounded-3xl border border-border bg-card p-5 shadow-card"
+                className="rounded-2xl border border-border bg-card p-5 shadow-card"
               >
-                <p className="font-bold text-foreground mb-4">Distribuição de gastos</p>
+                <p className="font-medium text-foreground mb-4">Distribuição de gastos</p>
                 {pieData.length > 0 ? (
                   <div className="flex items-center gap-6">
                     <ResponsiveContainer width={140} height={140}>
@@ -267,7 +263,7 @@ export default function BudgetPage() {
                             <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
                             <span className="text-xs text-muted-foreground truncate">{entry.name}</span>
                           </div>
-                          <span className="text-xs font-semibold text-foreground shrink-0">
+                          <span className="text-xs font-medium text-foreground shrink-0">
                             R$ {entry.value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                           </span>
                         </div>
@@ -289,9 +285,9 @@ export default function BudgetPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="rounded-3xl border border-border bg-card p-5 shadow-card space-y-4"
+              className="rounded-2xl border border-border bg-card p-5 shadow-card space-y-4"
             >
-              <p className="font-bold text-foreground">Por viagem</p>
+              <p className="font-medium text-foreground">Por viagem</p>
               <div className="space-y-4">
                 {trips.map((trip) => {
                   const budget = Number(trip.budget);
@@ -305,7 +301,7 @@ export default function BudgetPage() {
                         <div className="flex items-center gap-2 min-w-0">
                           <button
                             onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
-                            className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate max-w-[200px]"
+                            className="text-sm font-medium text-foreground hover:text-primary transition-colors truncate max-w-[200px]"
                           >
                             {trip.title}
                           </button>
@@ -314,7 +310,7 @@ export default function BudgetPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
-                          <span className={cn('text-xs font-semibold', over ? 'text-red-400' : 'text-foreground')}>
+                          <span className={cn('text-xs font-medium', over ? 'text-red-400' : 'text-foreground')}>
                             R$ {spent.toLocaleString('pt-BR')}
                             <span className="text-muted-foreground font-normal"> / {budget.toLocaleString('pt-BR')}</span>
                           </span>
@@ -334,7 +330,7 @@ export default function BudgetPage() {
                             'h-full rounded-full bg-gradient-to-r',
                             over ? 'from-red-500 to-orange-400' :
                             pct >= 70 ? 'from-amber-500 to-yellow-400' :
-                            STATUS_BAR_COLOR[trip.status] ?? 'from-emerald-500 to-teal-400'
+                            STATUS_BAR_COLOR[trip.status] ?? 'from-indigo-500 to-violet-400'
                           )}
                           initial={{ width: 0 }}
                           animate={{ width: `${pct}%` }}
@@ -349,18 +345,18 @@ export default function BudgetPage() {
           )}
 
           {trips.length === 0 && (
-            <div className="rounded-3xl border border-dashed border-border p-14 text-center">
+            <div className="rounded-2xl border border-dashed border-border p-14 text-center">
               <div className="text-4xl mb-4">💰</div>
-              <p className="font-semibold text-foreground">Sem dados financeiros</p>
+              <p className="font-medium text-foreground">Sem dados financeiros</p>
               <p className="text-sm text-muted-foreground mt-1 mb-5">
                 Crie viagens e registre despesas para ver análises aqui.
               </p>
-              <Button
+              <button
                 onClick={() => router.push('/dashboard/trips/new')}
-                className="bg-ocean hover:opacity-90 border-0 glow-teal"
+                className="inline-flex items-center gap-2 bg-foreground text-background text-sm font-medium px-6 py-3 rounded-full hover:opacity-90 transition-all"
               >
                 Criar viagem
-              </Button>
+              </button>
             </div>
           )}
         </>

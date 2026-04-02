@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Plane, Loader2, SlidersHorizontal, X } from 'lucide-react';
+import { Plus, Loader2, X } from 'lucide-react';
 import type { TripStatus } from '@trpy/database';
 import { useTrips, useDeleteTrip } from '@/hooks/useTrips';
 import { TripCard } from '@/components/trips/trip-card';
@@ -44,7 +44,6 @@ export default function TripsPage() {
     [allTrips, search]
   );
 
-  // Suggestions based on existing destinations
   const suggestions = useMemo(() =>
     allTrips
       .filter(t =>
@@ -63,14 +62,14 @@ export default function TripsPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-6">
 
-      {/* ── Header ───────────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex items-end justify-between"
       >
         <div>
-          <h1 className="text-2xl font-black text-foreground">Minhas Viagens</h1>
+          <h1 className="text-2xl font-medium text-foreground tracking-tight">Minhas Viagens</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {data?.total ?? 0} viagem{(data?.total ?? 0) !== 1 ? 's' : ''} no total
           </p>
@@ -79,14 +78,17 @@ export default function TripsPage() {
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}
           onClick={() => router.push('/dashboard/trips/new')}
-          className="hidden sm:flex items-center gap-2 bg-ocean text-white font-bold text-sm px-4 py-2.5 rounded-2xl glow-teal hover:opacity-90 transition-opacity"
+          className="hidden sm:flex items-center gap-2 bg-foreground text-background font-medium text-sm px-5 py-2.5 rounded-full hover:opacity-90 transition-all shadow-sm group relative overflow-hidden"
         >
           <Plus className="w-4 h-4" />
           Nova viagem
+          <span className="absolute inset-0 overflow-hidden rounded-full">
+            <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+          </span>
         </motion.button>
       </motion.div>
 
-      {/* ── Search bar premium ───────────────────────────────────── */}
+      {/* ── Search ──────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -101,7 +103,7 @@ export default function TripsPage() {
         />
       </motion.div>
 
-      {/* ── Status filter pills ──────────────────────────────────── */}
+      {/* ── Filter pills ────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -114,9 +116,9 @@ export default function TripsPage() {
             whileTap={{ scale: 0.93 }}
             onClick={() => setActiveFilter(f.value)}
             className={cn(
-              'shrink-0 text-xs font-semibold px-4 py-2 rounded-full border transition-all duration-200',
+              'shrink-0 text-xs font-medium px-4 py-2 rounded-full border transition-all duration-200',
               activeFilter === f.value
-                ? 'bg-ocean text-white border-transparent glow-teal'
+                ? 'bg-foreground text-background border-transparent shadow-sm'
                 : 'bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
             )}
           >
@@ -124,7 +126,6 @@ export default function TripsPage() {
           </motion.button>
         ))}
 
-        {/* Active search badge */}
         <AnimatePresence>
           {search && (
             <motion.button
@@ -132,15 +133,15 @@ export default function TripsPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               onClick={() => setSearch('')}
-              className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-full bg-primary/10 text-primary border border-primary/25"
+              className="shrink-0 flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full bg-primary/10 text-primary border border-primary/25"
             >
-              "{search}" <X className="w-3 h-3" />
+              &ldquo;{search}&rdquo; <X className="w-3 h-3" />
             </motion.button>
           )}
         </AnimatePresence>
       </motion.div>
 
-      {/* ── Content ──────────────────────────────────────────────── */}
+      {/* ── Content ─────────────────────────────────────── */}
       {isLoading ? (
         <div className="space-y-6">
           <CardSkeleton className="h-72" />
@@ -156,7 +157,6 @@ export default function TripsPage() {
         <EmptyState search={search} onNew={() => router.push('/dashboard/trips/new')} />
       ) : (
         <div className="space-y-6">
-          {/* Featured hero card — only when no search/filter */}
           {featuredTrip && search === '' && activeFilter === 'ALL' && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -170,11 +170,10 @@ export default function TripsPage() {
             </motion.div>
           )}
 
-          {/* Grid of other trips */}
           {restTrips.length > 0 && (
             <div>
               {search === '' && activeFilter === 'ALL' && featuredTrip && (
-                <p className="text-sm font-bold text-foreground mb-4">Outras viagens</p>
+                <p className="text-sm font-medium text-foreground mb-4">Outras viagens</p>
               )}
               <AnimatePresence mode="popLayout">
                 <motion.div
@@ -225,7 +224,7 @@ export default function TripsPage() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         onClick={() => router.push('/dashboard/trips/new')}
-        className="sm:hidden fixed bottom-20 right-4 w-14 h-14 rounded-full bg-ocean text-white flex items-center justify-center shadow-teal-lg glow-teal z-30"
+        className="sm:hidden fixed bottom-20 right-4 w-14 h-14 rounded-full bg-foreground text-background flex items-center justify-center shadow-indigo-lg glow-indigo z-30"
       >
         <Plus className="w-6 h-6" />
       </motion.button>
@@ -243,11 +242,11 @@ function EmptyState({ search, onNew }: { search: string; onNew: () => void }) {
       <motion.div
         animate={{ y: [0, -8, 0] }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-5 text-3xl"
+        className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-5 text-3xl"
       >
         {search ? '🔍' : '✈️'}
       </motion.div>
-      <h3 className="text-lg font-bold text-foreground mb-1">
+      <h3 className="text-lg font-medium text-foreground mb-1">
         {search ? 'Nenhuma viagem encontrada' : 'Sem viagens ainda'}
       </h3>
       <p className="text-sm text-muted-foreground mb-6 max-w-xs">
@@ -256,9 +255,12 @@ function EmptyState({ search, onNew }: { search: string; onNew: () => void }) {
           : 'Crie sua primeira aventura e comece a planejar.'}
       </p>
       {!search && (
-        <Button onClick={onNew} className="gap-2 bg-ocean hover:opacity-90 border-0 glow-teal">
+        <button
+          onClick={onNew}
+          className="inline-flex items-center gap-2 bg-foreground text-background text-sm font-medium px-6 py-3 rounded-full hover:opacity-90 transition-all"
+        >
           <Plus className="w-4 h-4" /> Criar viagem
-        </Button>
+        </button>
       )}
     </motion.div>
   );

@@ -66,14 +66,6 @@ const MOCK_RESULT: GeneratedDay[] = [
   },
 ];
 
-const TYPE_ICON: Record<string, React.ElementType> = {
-  ACTIVITY: Zap,
-  RESTAURANT: Utensils,
-  HOTEL: Hotel,
-  TRANSPORT: Bus,
-  OTHER: Landmark,
-};
-
 export default function AIPage() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -109,12 +101,12 @@ export default function AIPage() {
         <motion.div
           animate={{ rotate: [0, 5, -5, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-ocean glow-teal animate-pulse-glow mx-auto"
+          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 glow-indigo animate-pulse-glow mx-auto"
         >
-          <Sparkles className="w-8 h-8 text-white" />
+          <Sparkles className="w-8 h-8 text-primary" />
         </motion.div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Planejar com IA</h1>
+          <h1 className="text-2xl font-medium text-foreground tracking-tight">Planejar com IA</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto leading-relaxed">
             Descreva sua viagem ideal e a IA cria um itinerário completo, com atividades, restaurantes e dicas.
           </p>
@@ -126,14 +118,14 @@ export default function AIPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-card border border-border rounded-3xl p-5 shadow-card"
+        className="bg-card border border-border rounded-2xl p-5 shadow-card"
       >
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Ex: 7 dias em Lisboa, Portugal — interesse em gastronomia, cultura e história. Orçamento médio de R$ 8.000..."
           rows={3}
-          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none leading-relaxed"
+          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 resize-none outline-none leading-relaxed"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleGenerate();
           }}
@@ -144,25 +136,27 @@ export default function AIPage() {
             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Destino</span>
             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Duração</span>
           </div>
-          <Button
+          <button
             onClick={() => handleGenerate()}
             disabled={!prompt.trim() || isGenerating}
-            size="sm"
-            className="gap-2 bg-ocean hover:opacity-90 border-0 glow-teal"
+            className="inline-flex items-center gap-2 bg-foreground text-background text-xs font-medium px-4 py-2 rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
           >
             {isGenerating ? (
               <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Gerando...</>
             ) : (
               <><Send className="w-3.5 h-3.5" /> Gerar</>
             )}
-          </Button>
+            <span className="absolute inset-0 overflow-hidden rounded-full">
+              <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+            </span>
+          </button>
         </div>
       </motion.div>
 
       {/* Suggestion pills */}
       {!result && !isGenerating && (
         <div className="space-y-2">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Experimente</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Experimente</p>
           <div className="flex flex-wrap gap-2">
             {SUGGESTIONS.map((s, i) => (
               <motion.button
@@ -193,17 +187,17 @@ export default function AIPage() {
             className="flex flex-col items-center gap-5 py-12"
           >
             <div className="relative">
-              <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <Sparkles className="w-10 h-10 text-primary" />
               </div>
               <motion.div
                 animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 rounded-3xl border-2 border-primary"
+                className="absolute inset-0 rounded-2xl border-2 border-primary"
               />
             </div>
             <div className="text-center space-y-1">
-              <p className="font-bold text-foreground">Criando seu itinerário...</p>
+              <p className="font-medium text-foreground">Criando seu itinerário...</p>
               <p className="text-sm text-muted-foreground">Analisando destino e personalizando cada detalhe</p>
             </div>
             <div className="flex gap-1.5">
@@ -233,11 +227,11 @@ export default function AIPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="flex items-center gap-4 bg-ocean/10 border border-primary/20 rounded-2xl px-4 py-3"
+              className="flex items-center gap-4 bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3"
             >
               <Sparkles className="w-5 h-5 text-primary shrink-0" />
               <div className="flex-1 flex flex-wrap gap-x-4 gap-y-0.5">
-                <span className="text-sm font-semibold text-foreground">{result.length} dias</span>
+                <span className="text-sm font-medium text-foreground">{result.length} dias</span>
                 <span className="text-sm text-muted-foreground">{totalActivities} atividades</span>
                 <span className="text-sm text-muted-foreground">
                   ~R$ {totalCost.toLocaleString('pt-BR')} estimado
@@ -260,18 +254,17 @@ export default function AIPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: di * 0.1 }}
-                className="rounded-3xl border border-border bg-card overflow-hidden shadow-card"
+                className="rounded-2xl border border-border bg-card overflow-hidden shadow-card"
               >
-                {/* Day header */}
                 <button
                   onClick={() => setExpandedDay(expandedDay === di ? null : di)}
                   className="w-full flex items-center gap-4 px-5 py-4 hover:bg-muted/30 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-2xl bg-ocean flex items-center justify-center text-white font-black text-sm shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center text-background font-medium text-sm shrink-0">
                     {day.day}
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-bold text-foreground">Dia {day.day}</p>
+                    <p className="text-sm font-medium text-foreground">Dia {day.day}</p>
                     <p className="text-xs text-muted-foreground">{day.theme}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -285,7 +278,6 @@ export default function AIPage() {
                   </div>
                 </button>
 
-                {/* Activities */}
                 <AnimatePresence initial={false}>
                   {expandedDay === di && (
                     <motion.div
@@ -321,18 +313,21 @@ export default function AIPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="rounded-3xl border border-primary/20 bg-primary/5 p-5 text-center space-y-3"
+              className="rounded-2xl border border-primary/20 bg-primary/5 p-5 text-center space-y-3"
             >
-              <p className="text-sm font-semibold text-foreground">Gostou do itinerário?</p>
+              <p className="text-sm font-medium text-foreground">Gostou do itinerário?</p>
               <p className="text-xs text-muted-foreground">
-                A integração com Claude API está chegando — em breve você poderá salvar diretamente na sua viagem! 🚀
+                A integração com Claude API está chegando — em breve você poderá salvar diretamente na sua viagem!
               </p>
-              <Button
-                className="bg-ocean hover:opacity-90 border-0 glow-teal"
+              <button
                 onClick={() => window.location.href = '/dashboard/trips/new'}
+                className="inline-flex items-center gap-2 bg-foreground text-background text-sm font-medium px-6 py-3 rounded-full hover:opacity-90 transition-all group relative overflow-hidden"
               >
-                Criar viagem manualmente
-              </Button>
+                <span className="relative z-10">Criar viagem manualmente</span>
+                <span className="absolute inset-0 overflow-hidden rounded-full">
+                  <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+                </span>
+              </button>
             </motion.div>
           </motion.div>
         )}
