@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Map, Wallet, LayoutDashboard, Settings,
+  Wallet, LayoutDashboard, Settings,
   ChevronLeft, Sparkles, PlaneTakeoff, Heart,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
@@ -35,13 +35,9 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-border shrink-0">
-        <motion.div
-          whileHover={{ rotate: [0, -10, 10, 0] }}
-          transition={{ duration: 0.5 }}
-          className="w-8 h-8 rounded-xl bg-ocean flex items-center justify-center shrink-0 glow-teal"
-        >
-          <Map className="w-4 h-4 text-white" />
-        </motion.div>
+        <div className="w-8 h-8 rounded-xl bg-foreground flex items-center justify-center shrink-0">
+          <span className="w-2 h-2 rounded-full bg-primary" />
+        </div>
         <AnimatePresence>
           {!collapsed && (
             <motion.span
@@ -49,9 +45,9 @@ export function Sidebar() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               transition={{ duration: 0.15 }}
-              className="font-bold text-lg text-gradient whitespace-nowrap"
+              className="font-semibold text-lg text-foreground tracking-tighter uppercase whitespace-nowrap"
             >
-              Trpy
+              TRPY
             </motion.span>
           )}
         </AnimatePresence>
@@ -84,7 +80,7 @@ export function Sidebar() {
 
                 <div className={cn(
                   'relative z-10 w-5 h-5 flex items-center justify-center shrink-0',
-                  active && 'drop-shadow-[0_0_6px_rgba(16,185,129,0.8)]'
+                  active && 'drop-shadow-[0_0_6px_rgba(99,102,241,0.8)]'
                 )}>
                   <Icon className="w-[18px] h-[18px]" />
                 </div>

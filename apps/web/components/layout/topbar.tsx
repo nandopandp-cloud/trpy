@@ -1,8 +1,8 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Bell, Map } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -25,7 +25,6 @@ function getTitle(pathname: string) {
 export function Topbar() {
   const pathname = usePathname();
   const title = getTitle(pathname);
-  const isHome = pathname === '/dashboard';
 
   return (
     <motion.header
@@ -37,12 +36,12 @@ export function Topbar() {
       {/* Logo on mobile */}
       <div className="flex items-center gap-3">
         <Link href="/dashboard" className="flex items-center gap-2 md:hidden">
-          <div className="w-7 h-7 rounded-lg bg-ocean flex items-center justify-center glow-teal">
-            <Map className="w-3.5 h-3.5 text-white" />
+          <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
           </div>
-          <span className="font-black text-gradient-ocean">Trpy</span>
+          <span className="font-semibold text-foreground tracking-tighter uppercase">TRPY</span>
         </Link>
-        <h2 className="hidden md:block font-bold text-foreground text-base">{title}</h2>
+        <h2 className="hidden md:block font-medium text-foreground text-base tracking-tight">{title}</h2>
       </div>
 
       <div className="flex items-center gap-2">
@@ -59,7 +58,7 @@ export function Topbar() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="w-8 h-8 rounded-xl bg-ocean flex items-center justify-center text-white text-xs font-bold ring-2 ring-primary/15 hover:ring-primary/35 transition-all"
+          className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center text-background text-xs font-medium ring-2 ring-primary/15 hover:ring-primary/35 transition-all"
         >
           D
         </motion.button>

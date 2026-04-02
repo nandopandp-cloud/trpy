@@ -22,7 +22,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden">
-      <div className="glass-dark border-t border-white/8 px-2 pb-safe">
+      <div className="bg-card/80 backdrop-blur-xl border-t border-border px-2 pb-safe">
         <div className="flex items-center justify-around py-2">
           {NAV.map((item) => {
             const active = isActive(item.href, item.exact);
@@ -36,7 +36,7 @@ export function BottomNav() {
                   {active && (
                     <motion.div
                       layoutId="bottom-active"
-                      className="absolute inset-0 rounded-2xl bg-primary/15"
+                      className="absolute inset-0 rounded-2xl bg-primary/10"
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.3 }}
                     />
                   )}

@@ -18,9 +18,9 @@ interface DestinationCardProps {
 }
 
 const DEFAULT_GRADIENTS = [
-  'from-emerald-600 to-teal-700',
+  'from-indigo-600 to-violet-700',
   'from-sky-600 to-blue-700',
-  'from-violet-600 to-purple-700',
+  'from-emerald-600 to-teal-700',
   'from-rose-600 to-pink-700',
   'from-amber-600 to-orange-700',
 ];
@@ -60,12 +60,12 @@ export function DestinationCard({
       className="cursor-pointer group shrink-0 w-44"
     >
       {/* Image / gradient */}
-      <div className="relative h-52 rounded-3xl overflow-hidden shadow-card-lg">
+      <div className="relative h-52 rounded-2xl overflow-hidden shadow-card-lg">
         {image ? (
           <img
             src={image}
             alt={name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
           <div className={cn('w-full h-full bg-gradient-to-br flex items-end pb-3 pl-3', bg)}>
@@ -77,7 +77,7 @@ export function DestinationCard({
         {/* Category badge */}
         {category && (
           <div className="absolute top-3 left-3">
-            <span className="text-[10px] font-bold text-white/90 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/15">
+            <span className="text-[10px] font-medium text-white/90 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/15 uppercase tracking-wider">
               {category}
             </span>
           </div>
@@ -86,12 +86,15 @@ export function DestinationCard({
         {/* Rating */}
         <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/30 backdrop-blur-sm px-1.5 py-0.5 rounded-full border border-white/15">
           <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-          <span className="text-[10px] font-semibold text-white">{rating.toFixed(1)}</span>
+          <span className="text-[10px] font-medium text-white">{rating.toFixed(1)}</span>
         </div>
 
-        {/* Name overlay */}
+        {/* Name overlay with reveal on hover */}
         <div className="absolute bottom-0 left-0 right-0 p-3">
-          <p className="text-sm font-black text-white leading-tight">{name}</p>
+          <p className="text-sm font-medium text-white leading-tight tracking-tight">{name}</p>
+          <div className="h-0 overflow-hidden group-hover:h-5 transition-all duration-300">
+            <p className="text-[11px] text-white/80 mt-0.5 font-light">{country}</p>
+          </div>
         </div>
       </div>
 

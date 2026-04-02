@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/ui/skeletons';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useRef, useCallback } from 'react';
 
 const TRENDING_DESTINATIONS = [
   { name: 'Bali', country: 'Indonésia', emoji: '🌊', gradient: 'from-emerald-600 to-teal-700', category: 'Praia', rating: 4.9 },
@@ -51,32 +52,34 @@ export default function DashboardPage() {
   const stats = [
     {
       label: 'Viagens', value: data?.total ?? 0, suffix: '',
-      icon: PlaneTakeoff, gradient: 'from-sky-500 to-blue-600', glow: 'glow-blue',
+      icon: PlaneTakeoff, color: 'text-indigo-400', bgColor: 'bg-indigo-500/10',
     },
     {
       label: 'Orçamento', value: `R$\u00a0${totalBudget.toLocaleString('pt-BR')}`, suffix: '',
-      icon: Wallet, gradient: 'from-emerald-500 to-teal-600', glow: 'glow-teal',
+      icon: Wallet, color: 'text-emerald-400', bgColor: 'bg-emerald-500/10',
     },
     {
       label: 'Gasto', value: `R$\u00a0${totalSpent.toLocaleString('pt-BR')}`, suffix: '',
-      icon: TrendingUp, gradient: 'from-amber-500 to-orange-500', glow: 'glow-amber',
+      icon: TrendingUp, color: 'text-amber-400', bgColor: 'bg-amber-500/10',
     },
     {
       label: 'Próxima', value: daysToNext !== null ? daysToNext : '—',
       suffix: daysToNext !== null ? ' dias' : '',
-      icon: CalendarDays, gradient: 'from-violet-500 to-purple-600', glow: 'glow-violet',
+      icon: CalendarDays, color: 'text-purple-400', bgColor: 'bg-purple-500/10',
     },
   ];
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* ── Hero banner ─────────────────────────────────────────── */}
-      <section className="relative overflow-hidden mx-4 md:mx-6 mt-4 md:mt-6 rounded-3xl">
+      {/* ── Hero banner ─────────────────────────────────── */}
+      <section className="relative overflow-hidden mx-4 md:mx-6 mt-4 md:mt-6 rounded-2xl">
         {/* Background */}
-        <div className="absolute inset-0 bg-ocean" />
-        <div className="absolute inset-0 dot-grid opacity-20" />
-        <div className="absolute -top-8 -right-8 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute -bottom-8 -left-8 w-48 h-48 rounded-full bg-black/15 blur-3xl" />
+        <div className="absolute inset-0 bg-foreground" />
+        <div className="absolute inset-0 bg-dot-grid-dark opacity-20" />
+        <div className="absolute -top-8 -right-8 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl" />
+        <div className="absolute -bottom-8 -left-8 w-48 h-48 rounded-full bg-primary/10 blur-3xl" />
+        {/* Spinning accent */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full animate-spin-slow opacity-[0.03]" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, #6366f1 90deg, transparent 180deg)' }} />
 
         <div className="relative px-6 py-8 md:py-10">
           <motion.div
@@ -86,13 +89,13 @@ export default function DashboardPage() {
             className="flex items-start justify-between gap-4"
           >
             <div>
-              <p className="text-emerald-100/80 text-sm font-medium mb-1">
+              <p className="text-zinc-400 text-sm font-medium mb-1">
                 {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
               </p>
-              <h1 className="text-2xl md:text-3xl font-black text-white leading-tight">
-                Olá, viajante ✈️
+              <h1 className="text-2xl md:text-3xl font-medium text-white leading-tight tracking-tight">
+                Olá, viajante
               </h1>
-              <p className="text-emerald-100/75 mt-1.5 text-sm max-w-xs">
+              <p className="text-zinc-500 mt-1.5 text-sm max-w-xs">
                 {nextTrip
                   ? `${nextTrip.destination} em ${daysToNext} dias. Mal podemos esperar!`
                   : 'Pronto para planejar sua próxima aventura?'}
@@ -103,10 +106,13 @@ export default function DashboardPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => router.push('/dashboard/trips/new')}
-              className="shrink-0 flex items-center gap-1.5 bg-white text-emerald-700 font-bold text-sm px-4 py-2.5 rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
+              className="shrink-0 flex items-center gap-1.5 bg-white text-zinc-900 font-medium text-sm px-4 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all group relative overflow-hidden"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Nova viagem</span>
+              <span className="absolute inset-0 overflow-hidden rounded-full">
+                <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-black/5 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+              </span>
             </motion.button>
           </motion.div>
 
@@ -116,23 +122,23 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.4 }}
               onClick={() => router.push(`/dashboard/trips/${nextTrip.id}`)}
-              className="mt-5 flex items-center gap-3 bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3 cursor-pointer hover:bg-white/20 transition-colors"
+              className="mt-5 flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors"
             >
-              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                <MapPin className="w-4 h-4 text-white" />
+              <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-indigo-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-sm truncate">{nextTrip.title}</p>
-                <p className="text-emerald-100/70 text-xs truncate">{nextTrip.destination}</p>
+                <p className="text-white font-medium text-sm truncate">{nextTrip.title}</p>
+                <p className="text-zinc-500 text-xs truncate">{nextTrip.destination}</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-white/60 shrink-0" />
+              <ChevronRight className="w-4 h-4 text-zinc-600 shrink-0" />
             </motion.div>
           )}
         </div>
       </section>
 
       <div className="px-4 md:px-6 py-6 space-y-8">
-        {/* ── Stats ──────────────────────────────────────────────── */}
+        {/* ── Stats ──────────────────────────────────────── */}
         <motion.div
           variants={stagger.container}
           initial="hidden"
@@ -147,12 +153,12 @@ export default function DashboardPage() {
                 variants={stagger.item}
                 className="relative rounded-2xl border border-border bg-card p-4 overflow-hidden card-lift group"
               >
-                <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full bg-gradient-to-br ${stat.gradient} opacity-10 blur-xl group-hover:opacity-20 transition-opacity`} />
-                <div className={cn(`w-9 h-9 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-3`, stat.glow)}>
-                  <Icon className="w-4 h-4 text-white" />
+                <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full ${stat.bgColor} blur-xl group-hover:scale-150 transition-transform duration-500`} />
+                <div className={`w-9 h-9 rounded-xl ${stat.bgColor} flex items-center justify-center mb-3`}>
+                  <Icon className={`w-4 h-4 ${stat.color}`} />
                 </div>
                 <p className="text-xs text-muted-foreground mb-0.5">{stat.label}</p>
-                <p className="text-xl font-black text-foreground leading-tight">
+                <p className="text-xl font-medium text-foreground leading-tight tracking-tight">
                   {stat.value}
                   {stat.suffix && <span className="text-sm font-normal text-muted-foreground">{stat.suffix}</span>}
                 </p>
@@ -161,9 +167,9 @@ export default function DashboardPage() {
           })}
         </motion.div>
 
-        {/* ── Categories ─────────────────────────────────────────── */}
+        {/* ── Categories ─────────────────────────────────── */}
         <div className="space-y-3">
-          <h2 className="text-base font-bold text-foreground">Explorar destinos</h2>
+          <h2 className="text-base font-medium text-foreground tracking-tight">Explorar destinos</h2>
           <div className="flex gap-3 scroll-x-hidden pb-1 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
             {CATEGORIES.map((cat, i) => (
               <motion.button
@@ -188,10 +194,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Trending destinations ──────────────────────────────── */}
+        {/* ── Trending destinations ──────────────────────── */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-foreground">Destinos em alta</h2>
+            <h2 className="text-base font-medium text-foreground tracking-tight">Destinos em alta</h2>
             <Link href="/dashboard/trips/new">
               <motion.span
                 whileHover={{ x: 2 }}
@@ -218,10 +224,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Recent trips ───────────────────────────────────────── */}
+        {/* ── Recent trips ───────────────────────────────── */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-foreground">Viagens recentes</h2>
+            <h2 className="text-base font-medium text-foreground tracking-tight">Viagens recentes</h2>
             <Link href="/dashboard/trips">
               <motion.div
                 whileHover={{ x: 2 }}
@@ -258,35 +264,39 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* ── AI CTA ─────────────────────────────────────────────── */}
+        {/* ── AI CTA ─────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.4 }}
-          className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-emerald-500/8 via-teal-500/6 to-cyan-500/8 p-6"
+          className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card p-6"
         >
-          <div className="absolute inset-0 dot-grid opacity-20" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-primary/8 blur-3xl pointer-events-none" />
+          <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
           <div className="relative flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-12 h-12 rounded-2xl bg-ocean flex items-center justify-center glow-teal animate-pulse-glow shrink-0"
+                className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center glow-indigo animate-pulse-glow shrink-0"
               >
-                <Sparkles className="w-6 h-6 text-white" />
+                <Sparkles className="w-6 h-6 text-primary" />
               </motion.div>
               <div>
-                <p className="font-bold text-foreground">Itinerário com IA</p>
+                <p className="font-medium text-foreground">Itinerário com IA</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   Descreva seu destino e deixe a IA planejar tudo.
                 </p>
               </div>
             </div>
             <Link href="/dashboard/ai">
-              <Button className="gap-2 shrink-0 bg-ocean hover:opacity-90 glow-teal border-0">
-                <Sparkles className="w-4 h-4" /> Experimentar
-              </Button>
+              <button className="shrink-0 bg-foreground text-background text-sm font-medium px-5 py-2.5 rounded-full hover:opacity-90 transition-all flex items-center gap-2 group relative overflow-hidden">
+                <Sparkles className="w-4 h-4" />
+                <span className="relative z-10">Experimentar</span>
+                <span className="absolute inset-0 overflow-hidden rounded-full">
+                  <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+                </span>
+              </button>
             </Link>
           </div>
         </motion.div>
@@ -300,18 +310,26 @@ function EmptyDashboard({ onNew }: { onNew: () => void }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="relative overflow-hidden rounded-3xl border border-dashed border-border p-14 text-center"
+      className="relative overflow-hidden rounded-2xl border border-dashed border-border p-14 text-center"
     >
-      <div className="absolute inset-0 mesh-bg" />
+      <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
       <div className="relative space-y-5">
         <div className="text-5xl animate-float inline-block">✈️</div>
         <div>
-          <p className="font-bold text-foreground text-lg">Sem viagens ainda</p>
+          <p className="font-medium text-foreground text-lg">Sem viagens ainda</p>
           <p className="text-sm text-muted-foreground mt-1">Crie sua primeira aventura e comece a planejar.</p>
         </div>
-        <Button onClick={onNew} className="gap-2 bg-ocean hover:opacity-90 border-0 glow-teal">
-          <Plus className="w-4 h-4" /> Criar viagem
-        </Button>
+        <button
+          onClick={onNew}
+          className="inline-flex items-center gap-2 bg-foreground text-background text-sm font-medium px-6 py-3 rounded-full hover:opacity-90 transition-all group relative overflow-hidden"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="relative z-10">Criar viagem</span>
+          <span className="absolute inset-0 overflow-hidden rounded-full">
+            <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+          </span>
+        </button>
       </div>
     </motion.div>
   );
