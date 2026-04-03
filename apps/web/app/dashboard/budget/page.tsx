@@ -71,28 +71,28 @@ export default function BudgetPage() {
       label: 'Orçamento total',
       value: `R$ ${totalBudget.toLocaleString('pt-BR')}`,
       icon: Wallet,
-      color: 'text-indigo-400', bgColor: 'bg-indigo-500/10',
+      color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
     },
     {
       label: 'Total gasto',
       value: `R$ ${totalSpent.toLocaleString('pt-BR')}`,
       icon: TrendingUp,
-      color: totalProgress >= 90 ? 'text-red-400' : 'text-amber-400',
-      bgColor: totalProgress >= 90 ? 'bg-red-500/10' : 'bg-amber-500/10',
+      color: totalProgress >= 90 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400',
+      bgColor: totalProgress >= 90 ? 'bg-red-50 dark:bg-red-500/10' : 'bg-amber-50 dark:bg-amber-500/10',
     },
     {
       label: 'Saldo restante',
       value: `R$ ${Math.max(totalRemaining, 0).toLocaleString('pt-BR')}`,
       icon: TrendingDown,
-      color: 'text-emerald-400', bgColor: 'bg-emerald-500/10',
+      color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
     },
     {
       label: 'Acima do orçamento',
       value: overBudgetTrips.length,
       suffix: ' viagens',
       icon: overBudgetTrips.length > 0 ? AlertTriangle : PiggyBank,
-      color: overBudgetTrips.length > 0 ? 'text-red-400' : 'text-purple-400',
-      bgColor: overBudgetTrips.length > 0 ? 'bg-red-500/10' : 'bg-purple-500/10',
+      color: overBudgetTrips.length > 0 ? 'text-red-600 dark:text-red-400' : 'text-purple-600 dark:text-purple-400',
+      bgColor: overBudgetTrips.length > 0 ? 'bg-red-50 dark:bg-red-500/10' : 'bg-purple-50 dark:bg-purple-500/10',
     },
   ];
 
@@ -346,7 +346,7 @@ export default function BudgetPage() {
 
           {trips.length === 0 && (
             <div className="rounded-2xl border border-border bg-card p-14 text-center shadow-card">
-              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-5">
+              <div className="w-16 h-16 rounded-2xl bg-zinc-50 dark:bg-muted flex items-center justify-center mx-auto mb-5">
                 <Wallet className="w-8 h-8 text-muted-foreground/40" />
               </div>
               <p className="font-medium text-foreground mb-1">Sem dados financeiros</p>

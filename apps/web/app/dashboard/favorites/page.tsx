@@ -87,7 +87,7 @@ function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: ()
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-card-lg hover:border-primary/10 transition-all"
+      className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all duration-300"
     >
       {/* Image or gradient */}
       <div className="relative h-36 overflow-hidden">
@@ -192,7 +192,7 @@ export default function FavoritesPage() {
                 'flex items-center gap-2 px-3 py-2 rounded-xl border transition-all',
                 activeTab === tab.type
                   ? 'border-primary/30 bg-primary/5'
-                  : 'border-border bg-card hover:border-border/80',
+                  : 'border-border bg-card hover:border-zinc-300 dark:hover:border-border/80 hover:bg-zinc-50 dark:hover:bg-muted/30',
               )}
             >
               <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center', colors.bg)}>
@@ -249,13 +249,15 @@ export default function FavoritesPage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center gap-3 py-16 text-center"
         >
-          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
-            <Heart className="w-8 h-8 text-muted-foreground" />
+          <div className="w-16 h-16 rounded-2xl bg-zinc-50 dark:bg-muted flex items-center justify-center mx-auto">
+            <Heart className="w-8 h-8 text-muted-foreground/40" />
           </div>
-          <p className="font-medium text-foreground">Nenhum favorito ainda</p>
-          <p className="text-sm text-muted-foreground max-w-xs">
-            Explore locais, restaurantes e atividades para salvar seus preferidos
-          </p>
+          <div>
+            <p className="font-medium text-foreground">Nenhum favorito ainda</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+              Explore locais, restaurantes e atividades para salvar seus preferidos
+            </p>
+          </div>
         </motion.div>
       ) : (
         <motion.div

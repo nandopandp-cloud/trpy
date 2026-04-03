@@ -36,7 +36,10 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-border shrink-0">
         <div className="w-8 h-8 rounded-xl bg-foreground flex items-center justify-center shrink-0">
-          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-50" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+            </span>
         </div>
         <AnimatePresence>
           {!collapsed && (
@@ -66,14 +69,14 @@ export function Sidebar() {
                 className={cn(
                   'relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150',
                   active
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                    ? 'bg-indigo-50 dark:bg-primary/10 text-indigo-600 dark:text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-zinc-50 dark:hover:bg-muted/60'
                 )}
               >
                 {active && (
                   <motion.div
                     layoutId="active-pill"
-                    className="absolute inset-0 rounded-xl bg-primary/10"
+                    className="absolute inset-0 rounded-xl bg-indigo-50 dark:bg-primary/10"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
                   />
                 )}
@@ -114,7 +117,7 @@ export function Sidebar() {
         <Link href="/dashboard/settings">
           <motion.div
             whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer transition-colors"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-zinc-50 dark:hover:bg-muted/60 cursor-pointer transition-colors"
           >
             <Settings className="w-[18px] h-[18px] shrink-0" />
             <AnimatePresence>
@@ -156,7 +159,7 @@ export function Sidebar() {
       {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed((c) => !c)}
-        className="absolute -right-3 top-[72px] z-20 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center hover:bg-muted transition-colors shadow-sm"
+        className="absolute -right-3 top-[72px] z-20 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center hover:bg-muted hover:scale-110 transition-all shadow-sm"
       >
         <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronLeft className="w-3 h-3 text-muted-foreground" />

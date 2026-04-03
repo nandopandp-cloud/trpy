@@ -49,20 +49,20 @@ export default function DashboardPage() {
   const stats = [
     {
       label: 'Viagens', value: data?.total ?? 0, suffix: '',
-      icon: PlaneTakeoff, color: 'text-indigo-400', bgColor: 'bg-indigo-500/10',
+      icon: PlaneTakeoff, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
     },
     {
       label: 'Orçamento', value: `R$\u00a0${totalBudget.toLocaleString('pt-BR')}`, suffix: '',
-      icon: Wallet, color: 'text-emerald-400', bgColor: 'bg-emerald-500/10',
+      icon: Wallet, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
     },
     {
       label: 'Gasto', value: `R$\u00a0${totalSpent.toLocaleString('pt-BR')}`, suffix: '',
-      icon: TrendingUp, color: 'text-amber-400', bgColor: 'bg-amber-500/10',
+      icon: TrendingUp, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-50 dark:bg-amber-500/10',
     },
     {
       label: 'Próxima', value: daysToNext !== null ? daysToNext : '—',
       suffix: daysToNext !== null ? ' dias' : '',
-      icon: CalendarDays, color: 'text-purple-400', bgColor: 'bg-purple-500/10',
+      icon: CalendarDays, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-500/10',
     },
   ];
 
@@ -148,7 +148,7 @@ export default function DashboardPage() {
               <motion.div
                 key={stat.label}
                 variants={stagger.item}
-                className="relative rounded-2xl border border-border bg-card p-4 overflow-hidden card-lift group"
+                className="relative rounded-2xl border border-border bg-card p-4 overflow-hidden card-lift group hover:shadow-md transition-all"
               >
                 <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full ${stat.bgColor} blur-xl group-hover:scale-150 transition-transform duration-500`} />
                 <div className={`w-9 h-9 rounded-xl ${stat.bgColor} flex items-center justify-center mb-3`}>
@@ -330,7 +330,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.4 }}
-          className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card p-6"
+          className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-primary/[0.03] p-6"
         >
           <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
@@ -351,7 +351,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <Link href="/dashboard/ai">
-              <button className="shrink-0 bg-foreground text-background text-sm font-medium px-5 py-2.5 rounded-full hover:opacity-90 transition-all flex items-center gap-2 group relative overflow-hidden">
+              <button className="shrink-0 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-medium px-5 py-2.5 rounded-full hover:opacity-90 transition-all flex items-center gap-2 group relative overflow-hidden">
                 <Sparkles className="w-4 h-4" />
                 <span className="relative z-10">Experimentar</span>
                 <span className="absolute inset-0 overflow-hidden rounded-full">
@@ -376,7 +376,9 @@ function EmptyDashboard({ onNew }: { onNew: () => void }) {
       <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
       <div className="relative space-y-5">
-        <div className="text-5xl animate-float inline-block">✈️</div>
+        <div className="w-16 h-16 rounded-2xl bg-zinc-50 dark:bg-muted flex items-center justify-center mx-auto mb-2 animate-float">
+            <PlaneTakeoff className="w-8 h-8 text-muted-foreground/50" />
+          </div>
         <div>
           <p className="font-medium text-foreground text-lg">Sem viagens ainda</p>
           <p className="text-sm text-muted-foreground mt-1">Crie sua primeira aventura e comece a planejar.</p>

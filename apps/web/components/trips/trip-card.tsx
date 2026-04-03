@@ -15,10 +15,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, string> = {
-  PLANNING: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20',
-  ONGOING: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  COMPLETED: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20',
-  CANCELLED: 'bg-red-500/15 text-red-400 border-red-500/20',
+  PLANNING: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/20',
+  ONGOING: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/20',
+  COMPLETED: 'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-500/15 dark:text-zinc-400 dark:border-zinc-500/20',
+  CANCELLED: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/20',
 };
 
 const GRADIENT_FALLBACKS = [
@@ -59,7 +59,7 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
       onClick={onClick}
       className="cursor-pointer group"
     >
-      <div className="rounded-2xl overflow-hidden bg-card border border-border shadow-card transition-all duration-300 group-hover:shadow-card-xl group-hover:border-primary/10">
+      <div className="rounded-2xl overflow-hidden bg-card border border-border shadow-sm transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1 group-hover:border-primary/20">
         {/* Cover image */}
         <div className="relative h-44 overflow-hidden">
           {trip.coverImage ? (
@@ -151,9 +151,9 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
             <motion.button
               whileHover={{ x: 2 }}
               onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-              className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors group relative overflow-hidden px-3 py-1.5 rounded-full hover:bg-primary/5"
             >
-              Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
+              <span className="relative z-10 flex items-center gap-1.5">Ver detalhes <ArrowRight className="w-3.5 h-3.5" /></span>
             </motion.button>
           </div>
         </div>
