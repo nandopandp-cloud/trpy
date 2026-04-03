@@ -70,8 +70,8 @@ export default function DashboardPage() {
     <div className="max-w-6xl mx-auto">
       {/* ── Hero banner ─────────────────────────────────── */}
       <section className="relative overflow-hidden mx-4 md:mx-6 mt-4 md:mt-6 rounded-2xl">
-        {/* Background */}
-        <div className="absolute inset-0 bg-foreground" />
+        {/* Background — explicit zinc-900 to stay dark in both light and dark mode */}
+        <div className="absolute inset-0 bg-zinc-900 dark:bg-zinc-950" />
         <div className="absolute inset-0 bg-dot-grid-dark opacity-20" />
         <div className="absolute -top-8 -right-8 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl" />
         <div className="absolute -bottom-8 -left-8 w-48 h-48 rounded-full bg-primary/10 blur-3xl" />

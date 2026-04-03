@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import {
   ArrowRight, Sparkles, MapPin, Calendar, Users, Search,
-  ChevronDown, Compass, Shield, Star as StarIcon,
+  Compass, Shield, Star as StarIcon,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 
@@ -73,11 +73,12 @@ const BENEFITS = [
 ];
 
 const TRAVEL_IMAGES = [
-  'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1507525428034-b723cf961d3c?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800',
+  { src: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=800', tall: true },
+  { src: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=800', tall: false },
+  { src: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800', tall: true },
+  { src: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800', tall: false },
+  { src: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=800', tall: true },
+  { src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3c?auto=format&fit=crop&q=80&w=800', tall: false },
 ];
 
 export default function HomePage() {
@@ -129,38 +130,28 @@ export default function HomePage() {
       </header>
 
       {/* ── Hero ────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden min-h-screen flex items-center">
+      <section className="relative pt-28 pb-16 md:pt-36 md:pb-20 overflow-hidden">
         {/* Animated background */}
         <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
-          <div className="absolute top-20 left-1/4 w-[600px] h-[600px] bg-indigo-500/5 dark:bg-indigo-500/[0.03] rounded-full blur-[120px] animate-breathe" />
-          <div className="absolute top-40 right-1/4 w-[500px] h-[500px] bg-blue-500/5 dark:bg-blue-500/[0.03] rounded-full blur-[120px] animate-breathe" style={{ animationDelay: '2s' }} />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-500/[0.03] rounded-full blur-[120px] animate-breathe" style={{ animationDelay: '4s' }} />
-          <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-30" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,hsl(var(--background))_70%)]" />
-          {/* Spinning gradient ring */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full animate-spin-slow opacity-[0.03]" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, #6366f1 60deg, transparent 120deg)' }} />
+          <div className="absolute top-0 left-1/4 w-[700px] h-[700px] bg-indigo-500/[0.07] dark:bg-indigo-500/[0.04] rounded-full blur-[130px] animate-breathe" />
+          <div className="absolute top-32 right-1/4 w-[500px] h-[500px] bg-purple-500/[0.04] dark:bg-purple-500/[0.03] rounded-full blur-[120px] animate-breathe" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-amber-500/[0.04] rounded-full blur-[100px] animate-breathe" style={{ animationDelay: '4s' }} />
+          <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-[0.25]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,transparent_0%,hsl(var(--background))_80%)]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full animate-spin-slow opacity-[0.025]" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, #6366f1 60deg, transparent 120deg)' }} />
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
+        <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
           <motion.div
             variants={stagger.container}
             initial="hidden"
             animate="show"
-            className="space-y-8"
+            className="space-y-7"
           >
-            {/* Badge */}
-            <motion.div variants={stagger.item} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card/80 backdrop-blur-md border border-border shadow-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-              </span>
-              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Planejador de viagens com IA</span>
-            </motion.div>
-
             {/* Heading */}
             <motion.h1
               variants={stagger.item}
-              className="text-5xl md:text-7xl lg:text-[6.5rem] font-medium text-foreground tracking-tight leading-[0.92] max-w-5xl mx-auto"
+              className="text-5xl md:text-7xl lg:text-8xl font-medium text-foreground tracking-tight leading-[0.93] max-w-4xl mx-auto"
             >
               Viaje com
               <br />
@@ -170,25 +161,26 @@ export default function HomePage() {
             {/* Subtitle */}
             <motion.p
               variants={stagger.item}
-              className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed"
+              className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto font-light leading-relaxed"
             >
-              Do itinerário ao orçamento, tudo em um só app. Deixe a IA fazer o trabalho pesado enquanto você sonha com o próximo destino.
+              Do itinerário ao orçamento, tudo em um só app.
+              <br className="hidden md:inline" /> Deixe a IA planejar enquanto você sonha com o próximo destino.
             </motion.p>
 
             {/* CTA Buttons */}
             <motion.div variants={stagger.item} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {/* Primary: Beam button */}
+              {/* Primary: Beam button — uses explicit zinc-900 so it stays dark in both themes */}
               <Link href="/dashboard">
                 <div className="group relative">
-                  <div className="-inset-1 group-hover:opacity-100 transition duration-500 bg-primary/20 opacity-0 rounded-full absolute blur-xl" />
+                  <div className="-inset-1 group-hover:opacity-100 transition duration-500 bg-indigo-500/20 opacity-0 rounded-full absolute blur-xl" />
                   <button className="group relative z-10 flex items-center justify-center overflow-hidden rounded-full p-[1px] leading-none">
                     <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0_340deg,#6366f1_360deg)]" />
-                    <span className="relative flex h-full w-full items-center rounded-full bg-foreground px-8 py-4 ring-1 ring-background/10">
+                    <span className="relative flex h-full w-full items-center rounded-full bg-zinc-900 px-8 py-4 ring-1 ring-white/10">
                       <span className="absolute inset-0 overflow-hidden rounded-full">
                         <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                       </span>
-                      <span className="relative z-10 text-base font-medium tracking-wide text-background">Começar grátis</span>
-                      <span className="relative z-10 ml-3 flex items-center text-primary transition duration-200 group-hover:translate-x-1 group-hover:text-background">
+                      <span className="relative z-10 text-base font-medium tracking-wide text-white">Começar grátis</span>
+                      <span className="relative z-10 ml-3 flex items-center text-indigo-300 transition duration-200 group-hover:translate-x-1 group-hover:text-white">
                         <ArrowRight className="w-5 h-5" />
                       </span>
                     </span>
@@ -198,16 +190,16 @@ export default function HomePage() {
 
               {/* Secondary */}
               <Link href="/dashboard/ai">
-                <button className="px-8 py-4 rounded-full text-sm font-medium text-foreground border border-border bg-card hover:bg-muted hover:border-muted-foreground/20 transition-all hover:shadow-md flex items-center gap-2 group">
+                <button className="px-8 py-4 rounded-full text-sm font-medium text-foreground border border-border bg-card/80 hover:bg-muted hover:border-muted-foreground/30 transition-all hover:shadow-md flex items-center gap-2 group backdrop-blur-sm">
                   <Sparkles className="w-4 h-4 text-primary" />
                   Ver IA em ação
-                  <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
                 </button>
               </Link>
             </motion.div>
 
             {/* Social proof */}
-            <motion.div variants={stagger.item} className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+            <motion.div variants={stagger.item} className="flex items-center justify-center gap-4 text-sm text-muted-foreground pt-1">
               <div className="flex -space-x-2">
                 {['🧑‍🦱', '👩‍🦰', '🧔', '👩'].map((e, i) => (
                   <div key={i} className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">
@@ -215,6 +207,7 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
+              <div className="w-px h-5 bg-border" />
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
                   <StarIcon key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
@@ -224,57 +217,75 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
 
-          {/* Search Widget */}
+          {/* Search Widget — redesigned, all columns link to dashboard */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-4xl mx-auto mt-14 bg-card p-2 rounded-3xl shadow-card-lg border border-border flex flex-col md:flex-row items-center gap-2 animate-pulse-glow"
+            transition={{ delay: 0.7, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-3xl mx-auto mt-12"
           >
-            <div className="flex-1 w-full px-4 py-3 hover:bg-muted rounded-2xl transition-colors cursor-pointer group">
-              <label className="block text-xs font-medium text-muted-foreground mb-1 tracking-wide uppercase">Onde</label>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-foreground" />
-                <input
-                  className="w-full bg-transparent border-none p-0 text-sm font-medium text-foreground placeholder-muted-foreground/50 focus:ring-0 outline-none"
-                  placeholder="Buscar destinos..."
-                  type="text"
-                  readOnly
-                />
+            <div className="bg-card border border-border rounded-2xl shadow-card-lg p-1.5">
+              <div className="flex flex-col sm:flex-row items-stretch">
+                <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
+                  <div className="px-4 py-3.5 hover:bg-muted rounded-xl transition-colors cursor-pointer">
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1 tracking-widest uppercase">Destino</p>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-foreground shrink-0" />
+                      <span className="text-sm font-medium text-foreground truncate">Para onde vamos?</span>
+                    </div>
+                  </div>
+                </Link>
+                <div className="hidden sm:block w-px my-2 bg-border shrink-0" />
+                <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
+                  <div className="px-4 py-3.5 hover:bg-muted rounded-xl transition-colors cursor-pointer">
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1 tracking-widest uppercase">Quando</p>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-foreground shrink-0" />
+                      <span className="text-sm font-medium text-muted-foreground/70 truncate">Datas flexíveis</span>
+                    </div>
+                  </div>
+                </Link>
+                <div className="hidden sm:block w-px my-2 bg-border shrink-0" />
+                <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
+                  <div className="px-4 py-3.5 hover:bg-muted rounded-xl transition-colors cursor-pointer">
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1 tracking-widest uppercase">Viajantes</p>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-foreground shrink-0" />
+                      <span className="text-sm font-medium text-foreground truncate">2 pessoas</span>
+                    </div>
+                  </div>
+                </Link>
+                <div className="pt-1.5 sm:pt-0 sm:pl-1.5 shrink-0">
+                  <Link href="/dashboard/trips/new">
+                    <button className="w-full sm:w-auto h-full min-h-[52px] px-5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-medium text-sm hover:opacity-90 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 group relative overflow-hidden">
+                      <Search className="w-4 h-4" />
+                      <span className="hidden sm:inline">Buscar</span>
+                      <span className="absolute inset-0 overflow-hidden rounded-xl">
+                        <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+                      </span>
+                    </button>
+                  </Link>
+                </div>
               </div>
             </div>
-            <div className="w-px h-10 bg-border hidden md:block" />
-            <div className="flex-1 w-full px-4 py-3 hover:bg-muted rounded-2xl transition-colors cursor-pointer">
-              <label className="block text-xs font-medium text-muted-foreground mb-1 tracking-wide uppercase">Quando</label>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-foreground" />
-                <span className="text-sm font-medium text-muted-foreground/60">Datas flexíveis</span>
-              </div>
-            </div>
-            <div className="w-px h-10 bg-border hidden md:block" />
-            <div className="flex-1 w-full px-4 py-3 hover:bg-muted rounded-2xl transition-colors cursor-pointer">
-              <label className="block text-xs font-medium text-muted-foreground mb-1 tracking-wide uppercase">Quem</label>
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-foreground" />
-                <span className="text-sm font-medium text-foreground">2 Viajantes</span>
-              </div>
-            </div>
-            <Link href="/dashboard/trips/new" className="w-full md:w-auto">
-              <button className="w-full md:w-auto bg-foreground text-background p-4 rounded-2xl hover:opacity-90 transition-all shadow-lg hover:scale-[1.02] active:scale-95">
-                <Search className="w-5 h-5 mx-auto" />
-              </button>
-            </Link>
           </motion.div>
         </div>
+      </section>
 
-        {/* Image Marquee */}
-        <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
-          <div className="mt-20 flex gap-4 overflow-hidden select-none opacity-60 fade-mask">
-            <div className="flex gap-4 animate-marquee-fast whitespace-nowrap min-w-full justify-center">
-              {[...TRAVEL_IMAGES, ...TRAVEL_IMAGES].map((src, i) => (
-                <div key={i} className={`w-64 h-80 md:w-80 md:h-96 rounded-2xl overflow-hidden shrink-0 relative ${i % 2 === 1 ? 'mt-12' : ''}`}>
-                  <img alt="Travel" className="object-cover w-full h-full" src={src} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+      {/* ── Destination Image Strip (separate from hero, no overlap) ── */}
+      <section className="pb-12 bg-background overflow-hidden">
+        <div className="relative w-full">
+          {/* Fade masks on sides */}
+          <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 z-10 bg-gradient-to-r from-background to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 z-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+          <div className="flex overflow-hidden select-none">
+            <div className="flex gap-4 animate-marquee-fast flex-shrink-0 min-w-full items-end">
+              {[...TRAVEL_IMAGES, ...TRAVEL_IMAGES].map((item, i) => (
+                <div
+                  key={i}
+                  className={`rounded-2xl overflow-hidden shrink-0 opacity-75 hover:opacity-100 transition-opacity duration-300 ${item.tall ? 'w-52 h-72' : 'w-52 h-52'}`}
+                >
+                  <img src={item.src} alt="" className="w-full h-full object-cover" loading="lazy" />
                 </div>
               ))}
             </div>
@@ -282,11 +293,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Features (Flashlight Cards) ────────────────── */}
-      <section className="py-32 bg-foreground text-background relative overflow-hidden">
+      {/* ── Features (Flashlight Cards) — explicit zinc-900 so it stays dark in both light+dark mode ── */}
+      <section className="py-32 bg-zinc-900 dark:bg-zinc-950 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-dot-grid-dark opacity-30" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-500/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/[0.03] rounded-full blur-[100px]" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] rounded-full animate-spin-slow opacity-[0.02]" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, #6366f1 90deg, transparent 180deg)' }} />
         </div>
 
@@ -303,7 +315,7 @@ export default function HomePage() {
               <span className="w-px h-3 bg-white/10" />
               <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">Funcionalidades</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-medium tracking-tight mb-4">
+            <h2 className="text-4xl md:text-5xl font-medium text-white tracking-tight mb-4">
               Tudo que você precisa,{' '}
               <span className="text-gradient-accent">num só lugar.</span>
             </h2>
@@ -322,13 +334,13 @@ export default function HomePage() {
                   transition={{ delay: i * 0.1, duration: 0.6 }}
                   ref={(el) => { flashlightRef.current[i] = el; }}
                   onMouseMove={(e) => handleMouseMove(e, i)}
-                  className="flashlight-card relative rounded-2xl border border-white/5 bg-white/[0.02] p-8 flex flex-col group overflow-hidden hover:bg-white/[0.06] transition-colors"
+                  className="flashlight-card relative rounded-2xl border border-white/8 bg-white/[0.03] p-8 flex flex-col group overflow-hidden hover:bg-white/[0.07] transition-colors"
                 >
-                  <div className={`w-12 h-12 rounded-xl ${f.bgColor} flex items-center justify-center mb-6`}>
+                  <div className={`w-12 h-12 rounded-xl ${f.bgColor} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className={`w-6 h-6 ${f.color}`} />
                   </div>
-                  <h3 className="text-white font-medium mb-2">{f.label}</h3>
-                  <p className="text-sm text-zinc-500 leading-relaxed">{f.desc}</p>
+                  <h3 className="text-white font-medium mb-2 text-lg tracking-tight">{f.label}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed font-light">{f.desc}</p>
                 </motion.div>
               );
             })}
