@@ -72,13 +72,24 @@ const BENEFITS = [
   },
 ];
 
-const TRAVEL_IMAGES = [
-  { src: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=800', tall: true },
-  { src: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=800', tall: false },
-  { src: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800', tall: true },
-  { src: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800', tall: false },
-  { src: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=800', tall: true },
-  { src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3c?auto=format&fit=crop&q=80&w=800', tall: false },
+// Row 1 — portrait/tall images, scroll left
+const MARQUEE_ROW1 = [
+  'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=600&h=800',  // Santorini
+  'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=600&h=800',  // Kyoto
+  'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600&h=800',  // Paris
+  'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600&h=800',  // Bali
+  'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80&w=600&h=800',  // Dubai
+  'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&q=80&w=600&h=800',  // Cinque Terre
+];
+
+// Row 2 — landscape images, scroll right
+const MARQUEE_ROW2 = [
+  'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=900&h=600',  // Mountain road
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3c?auto=format&fit=crop&q=80&w=900&h=600',  // Beach
+  'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=80&w=900&h=600',  // Patagonia aerial
+  'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=900&h=600',  // Santorini blue domes
+  'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&q=80&w=900&h=600',  // Coastal town
+  'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&q=80&w=900&h=600',  // Infinity pool
 ];
 
 export default function HomePage() {
@@ -139,6 +150,47 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-[0.25]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,transparent_0%,hsl(var(--background))_80%)]" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full animate-spin-slow opacity-[0.025]" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, #6366f1 60deg, transparent 120deg)' }} />
+        </div>
+
+        {/* Floating destination cards — only on very wide screens */}
+        <div className="hidden xl:block absolute left-6 2xl:left-16 top-1/2 -translate-y-1/2 pointer-events-none z-0 space-y-4">
+          <motion.div
+            initial={{ opacity: 0, x: -40, rotate: -8 }}
+            animate={{ opacity: 0.55, x: 0, rotate: -8 }}
+            transition={{ delay: 1, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="w-44 h-60 rounded-2xl overflow-hidden shadow-2xl animate-float-slow"
+            style={{ transformOrigin: 'center' }}
+          >
+            <img src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=400&h=550" alt="" className="w-full h-full object-cover" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -30, rotate: -4 }}
+            animate={{ opacity: 0.35, x: 0, rotate: -4 }}
+            transition={{ delay: 1.3, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="w-36 h-48 rounded-2xl overflow-hidden shadow-xl ml-10 animate-float"
+          >
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3c?auto=format&fit=crop&q=80&w=350&h=480" alt="" className="w-full h-full object-cover" />
+          </motion.div>
+        </div>
+
+        <div className="hidden xl:block absolute right-6 2xl:right-16 top-1/2 -translate-y-1/2 pointer-events-none z-0 space-y-4">
+          <motion.div
+            initial={{ opacity: 0, x: 40, rotate: 8 }}
+            animate={{ opacity: 0.55, x: 0, rotate: 8 }}
+            transition={{ delay: 1.1, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="w-44 h-60 rounded-2xl overflow-hidden shadow-2xl animate-float"
+            style={{ transformOrigin: 'center' }}
+          >
+            <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=400&h=550" alt="" className="w-full h-full object-cover" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 30, rotate: 5 }}
+            animate={{ opacity: 0.35, x: 0, rotate: 5 }}
+            transition={{ delay: 1.4, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="w-36 h-48 rounded-2xl overflow-hidden shadow-xl mr-10 animate-float-slow"
+          >
+            <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=350&h=480" alt="" className="w-full h-full object-cover" />
+          </motion.div>
         </div>
 
         <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
@@ -272,20 +324,30 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Destination Image Strip (separate from hero, no overlap) ── */}
-      <section className="pb-12 bg-background overflow-hidden">
-        <div className="relative w-full">
-          {/* Fade masks on sides */}
-          <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 z-10 bg-gradient-to-r from-background to-transparent pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 z-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-          <div className="flex overflow-hidden select-none">
+      {/* ── Destination Image Strip ── */}
+      <section className="pb-16 bg-background overflow-hidden space-y-4">
+        {/* Side fade masks shared across both rows */}
+        <div className="relative">
+          <div className="absolute left-0 top-0 bottom-0 w-24 md:w-48 z-10 bg-gradient-to-r from-background to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 md:w-48 z-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+
+          {/* Row 1 — portrait images, scroll left */}
+          <div className="flex overflow-hidden select-none mb-4">
             <div className="flex gap-4 animate-marquee-fast flex-shrink-0 min-w-full items-end">
-              {[...TRAVEL_IMAGES, ...TRAVEL_IMAGES].map((item, i) => (
-                <div
-                  key={i}
-                  className={`rounded-2xl overflow-hidden shrink-0 opacity-75 hover:opacity-100 transition-opacity duration-300 ${item.tall ? 'w-52 h-72' : 'w-52 h-52'}`}
-                >
-                  <img src={item.src} alt="" className="w-full h-full object-cover" loading="lazy" />
+              {[...MARQUEE_ROW1, ...MARQUEE_ROW1].map((src, i) => (
+                <div key={i} className="w-64 h-80 md:w-72 md:h-96 rounded-2xl overflow-hidden shrink-0 opacity-80 hover:opacity-100 transition-all duration-500 hover:scale-[1.02]">
+                  <img src={src} alt="" className="w-full h-full object-cover" loading="lazy" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 — landscape images, scroll right */}
+          <div className="flex overflow-hidden select-none">
+            <div className="flex gap-4 animate-marquee-reverse flex-shrink-0 min-w-full items-start">
+              {[...MARQUEE_ROW2, ...MARQUEE_ROW2].map((src, i) => (
+                <div key={i} className="w-80 h-48 md:w-96 md:h-56 rounded-2xl overflow-hidden shrink-0 opacity-80 hover:opacity-100 transition-all duration-500 hover:scale-[1.02]">
+                  <img src={src} alt="" className="w-full h-full object-cover" loading="lazy" />
                 </div>
               ))}
             </div>
