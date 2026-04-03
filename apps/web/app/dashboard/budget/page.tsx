@@ -345,17 +345,22 @@ export default function BudgetPage() {
           )}
 
           {trips.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border p-14 text-center">
-              <div className="text-4xl mb-4">💰</div>
-              <p className="font-medium text-foreground">Sem dados financeiros</p>
-              <p className="text-sm text-muted-foreground mt-1 mb-5">
+            <div className="rounded-2xl border border-border bg-card p-14 text-center shadow-card">
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-5">
+                <Wallet className="w-8 h-8 text-muted-foreground/40" />
+              </div>
+              <p className="font-medium text-foreground mb-1">Sem dados financeiros</p>
+              <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
                 Crie viagens e registre despesas para ver análises aqui.
               </p>
               <button
                 onClick={() => router.push('/dashboard/trips/new')}
-                className="inline-flex items-center gap-2 bg-foreground text-background text-sm font-medium px-6 py-3 rounded-full hover:opacity-90 transition-all"
+                className="inline-flex items-center gap-2 bg-foreground text-background text-sm font-medium px-6 py-3 rounded-full hover:opacity-90 transition-all hover:scale-[1.02] active:scale-95 group relative overflow-hidden"
               >
-                Criar viagem
+                <span className="relative z-10">Criar viagem</span>
+                <span className="absolute inset-0 overflow-hidden rounded-full">
+                  <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+                </span>
               </button>
             </div>
           )}

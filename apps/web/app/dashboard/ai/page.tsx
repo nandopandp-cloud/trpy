@@ -313,10 +313,13 @@ export default function AIPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="rounded-2xl border border-primary/20 bg-primary/5 p-5 text-center space-y-3"
+              className="rounded-2xl border border-border bg-card p-6 text-center space-y-3 shadow-card"
             >
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mx-auto">
+                <Sparkles className="w-5 h-5 text-emerald-500" />
+              </div>
               <p className="text-sm font-medium text-foreground">Gostou do itinerário?</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                 A integração com Claude API está chegando — em breve você poderá salvar diretamente na sua viagem!
               </p>
               <button

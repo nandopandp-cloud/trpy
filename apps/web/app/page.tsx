@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import {
@@ -9,7 +8,6 @@ import {
   ChevronDown, Compass, Shield, Star as StarIcon,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
-import { Button } from '@/components/ui/button';
 
 const stagger = {
   container: { hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } } },
@@ -40,6 +38,37 @@ const FEATURES = [
     desc: 'Descreva o destino dos sonhos e a IA planeja tudo para você.',
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/10',
+  },
+];
+
+const BENEFITS = [
+  {
+    icon: Users,
+    label: 'Planejamento colaborativo',
+    desc: 'Convide amigos e família para planejar juntos. Todos editam o roteiro em tempo real.',
+    color: 'text-indigo-500',
+    bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
+  },
+  {
+    icon: MapPin,
+    label: 'Mapas interativos',
+    desc: 'Visualize todos os pontos do seu roteiro no mapa. Calcule distâncias automaticamente.',
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-50 dark:bg-amber-500/10',
+  },
+  {
+    icon: Shield,
+    label: 'Dados seguros',
+    desc: 'Seus documentos e informações de viagem protegidos com criptografia de ponta a ponta.',
+    color: 'text-emerald-500',
+    bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
+  },
+  {
+    icon: StarIcon,
+    label: 'Memórias organizadas',
+    desc: 'Salve fotos, anotações e lembranças de cada viagem em um único lugar.',
+    color: 'text-purple-500',
+    bgColor: 'bg-purple-50 dark:bg-purple-500/10',
   },
 ];
 
@@ -307,6 +336,114 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Benefits ───────────────────────────────────── */}
+      <section className="py-32 bg-background relative overflow-hidden section-glow">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-indigo-500/[0.03] rounded-full blur-[150px] animate-breathe" />
+          <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border mb-6 shadow-sm">
+              <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">02</span>
+              <span className="w-px h-3 bg-border" />
+              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Por que o TRPY</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-medium text-foreground tracking-tight mb-4">
+              Tudo que você precisa,{' '}
+              <span className="text-gradient-accent">num só lugar.</span>
+            </h2>
+            <p className="text-muted-foreground font-light max-w-lg">Do planejamento à memória, cada etapa da sua jornada coberta.</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-5">
+            {BENEFITS.map((b, i) => {
+              const Icon = b.icon;
+              return (
+                <motion.div
+                  key={b.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08, duration: 0.5 }}
+                  className="bg-card rounded-2xl p-7 border border-border shadow-card hover:shadow-card-lg hover:border-primary/10 transition-all group"
+                >
+                  <div className="flex items-start gap-5">
+                    <div className={`w-12 h-12 rounded-xl ${b.bgColor} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className={`w-5 h-5 ${b.color}`} />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-medium text-foreground tracking-tight mb-1.5">{b.label}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed font-light">{b.desc}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Product Preview ─────────────────────────────── */}
+      <section className="py-12 bg-background">
+        <div className="max-w-5xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="bg-card border border-border rounded-3xl p-2 shadow-card-lg animate-pulse-glow"
+          >
+            <div className="bg-muted rounded-2xl p-6 relative overflow-hidden">
+              <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
+              <div className="relative z-10">
+                {/* Fake dashboard preview */}
+                <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+                  <div className="bg-card/70 backdrop-blur-xl border-b border-border px-6 h-12 flex items-center justify-between">
+                    <span className="text-foreground font-semibold tracking-tighter text-xs uppercase flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />TRPY
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-muted" />
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-5">
+                      <h4 className="text-sm font-medium text-foreground">Minhas Viagens</h4>
+                      <button className="bg-foreground text-background text-[10px] px-3 py-1.5 rounded-full">+ Nova</button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { src: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=400', name: 'Tokyo', date: 'Mai 2025' },
+                        { src: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=400', name: 'Paris', date: 'Jul 2025' },
+                        { src: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=400', name: 'Bali', date: 'Set 2024' },
+                      ].map((item) => (
+                        <div key={item.name} className="rounded-xl overflow-hidden border border-border group cursor-pointer hover:shadow-md transition-all">
+                          <div className="h-20 overflow-hidden">
+                            <img alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={item.src} />
+                          </div>
+                          <div className="p-2.5">
+                            <p className="text-xs font-medium text-foreground">{item.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{item.date}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ── Destination Gallery ─────────────────────────── */}
       <section className="py-32 bg-background relative overflow-hidden section-glow">
         <div className="absolute inset-0 pointer-events-none">
@@ -323,7 +460,7 @@ export default function HomePage() {
             className="mb-16"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border mb-6 shadow-sm">
-              <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">02</span>
+              <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">03</span>
               <span className="w-px h-3 bg-border" />
               <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Destinos</span>
             </div>
@@ -383,29 +520,45 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
         </div>
 
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+        <div className="max-w-4xl mx-auto px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="space-y-8"
+            className="bg-card rounded-3xl border border-border shadow-card-xl overflow-hidden relative"
           >
-            <div className="text-6xl animate-float inline-block">✈️</div>
-            <h2 className="text-4xl md:text-6xl font-medium text-foreground tracking-tight leading-[1.05]">
-              Comece sua jornada.
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto font-light">
-              Grátis, elegante e com inteligência artificial. Planeje sua próxima aventura agora.
-            </p>
-            <Link href="/dashboard">
-              <button className="bg-foreground text-background px-8 py-4 rounded-full text-sm font-medium hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all shadow-sm hover:shadow-md group relative overflow-hidden">
-                <span className="relative z-10">Começar agora</span>
-                <span className="absolute inset-0 overflow-hidden rounded-full">
-                  <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
-                </span>
-              </button>
-            </Link>
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/[0.06] rounded-full blur-[100px] animate-breathe" />
+              <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
+            </div>
+            <div className="relative z-10 px-8 py-20 text-center">
+              <div className="text-6xl animate-float inline-block mb-8">✈️</div>
+              <h2 className="text-4xl md:text-5xl font-medium text-foreground tracking-tight leading-[1.05] mb-5">
+                Comece sua próxima aventura.
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-xl mx-auto font-light mb-10">
+                Crie sua conta gratuita e comece a planejar viagens incríveis hoje mesmo.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+                <div className="relative w-full">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    className="w-full bg-muted border border-border text-foreground text-sm rounded-full pl-11 pr-4 py-3.5 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/60"
+                    placeholder="Seu melhor email"
+                    type="email"
+                  />
+                </div>
+                <Link href="/dashboard" className="w-full sm:w-auto">
+                  <button className="w-full sm:w-auto bg-foreground text-background px-8 py-3.5 rounded-full text-sm font-medium hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap shadow-sm hover:shadow-md group relative overflow-hidden">
+                    <span className="relative z-10">Começar grátis</span>
+                    <span className="absolute inset-0 overflow-hidden rounded-full">
+                      <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+                    </span>
+                  </button>
+                </Link>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>

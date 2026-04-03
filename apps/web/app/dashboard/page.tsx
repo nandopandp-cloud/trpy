@@ -6,16 +6,13 @@ import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Plus, PlaneTakeoff, Wallet, TrendingUp, CalendarDays,
-  ArrowRight, Sparkles, ChevronRight, MapPin,
+  ArrowRight, Sparkles, ChevronRight, MapPin, Calendar,
 } from 'lucide-react';
 import { useTrips } from '@/hooks/useTrips';
-import { TripCard } from '@/components/trips/trip-card';
 import { DestinationCard } from '@/components/cards/destination-card';
-import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/ui/skeletons';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useRef, useCallback } from 'react';
 
 const TRENDING_DESTINATIONS = [
   { name: 'Bali', country: 'Indonésia', emoji: '🌊', gradient: 'from-emerald-600 to-teal-700', category: 'Praia', rating: 4.9 },
@@ -239,28 +236,92 @@ export default function DashboardPage() {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map(i => <CardSkeleton key={i} />)}
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-4 p-5 border-b border-border last:border-0">
+                  <div className="w-14 h-14 rounded-2xl bg-muted animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+                    <div className="h-3 bg-muted animate-pulse rounded w-1/3" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : trips.length === 0 ? (
             <EmptyDashboard onNew={() => router.push('/dashboard/trips/new')} />
           ) : (
-            <motion.div
-              variants={stagger.container}
-              initial="hidden"
-              animate="show"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
-              {trips.map((trip, i) => (
-                <TripCard
-                  key={trip.id}
-                  trip={trip}
-                  index={i}
-                  onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
-                  onEdit={() => router.push(`/dashboard/trips/${trip.id}/edit`)}
-                />
-              ))}
-            </motion.div>
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-card">
+              <div className="divide-y divide-border">
+                {trips.map((trip, i) => {
+                  const isActive = trip.status === 'ONGOING';
+                  const STATUS_LABEL: Record<string, string> = {
+                    PLANNING: 'Planejando',
+                    ONGOING: 'Em andamento',
+                    COMPLETED: 'Concluída',
+                    CANCELLED: 'Cancelada',
+                  };
+                  const GRADIENT_FALLBACKS = [
+                    'from-indigo-600 via-violet-600 to-purple-700',
+                    'from-sky-600 via-blue-600 to-indigo-700',
+                    'from-emerald-600 via-teal-600 to-cyan-700',
+                    'from-amber-600 via-orange-500 to-red-600',
+                  ];
+                  const fallback = GRADIENT_FALLBACKS[i % GRADIENT_FALLBACKS.length];
+
+                  return (
+                    <motion.div
+                      key={trip.id}
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.06, duration: 0.3 }}
+                      className="flex items-center gap-5 p-5 hover:bg-muted/30 transition-colors cursor-pointer group"
+                      onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
+                    >
+                      {/* Image thumbnail */}
+                      <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0">
+                        {trip.coverImage ? (
+                          <img src={trip.coverImage} alt={trip.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        ) : (
+                          <div className={cn('w-full h-full bg-gradient-to-br', fallback)} />
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-foreground tracking-tight truncate">{trip.title}</h4>
+                        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                          <Calendar className="w-3 h-3 shrink-0" />
+                          {format(new Date(trip.startDate), "d MMM", { locale: ptBR })}
+                          {' — '}
+                          {format(new Date(trip.endDate), "d MMM yyyy", { locale: ptBR })}
+                        </p>
+                      </div>
+
+                      {/* Status badge */}
+                      <span className={cn(
+                        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium shrink-0',
+                        isActive
+                          ? 'bg-emerald-500/10 text-emerald-500'
+                          : trip.status === 'PLANNING'
+                            ? 'bg-indigo-500/10 text-indigo-400'
+                            : 'bg-muted text-muted-foreground',
+                      )}>
+                        {isActive && (
+                          <span className="relative flex h-1.5 w-1.5 shrink-0">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                          </span>
+                        )}
+                        {STATUS_LABEL[trip.status]}
+                      </span>
+
+                      {/* Chevron */}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
 

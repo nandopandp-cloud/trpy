@@ -176,8 +176,8 @@ export default function FavoritesPage() {
         <p className="text-sm text-muted-foreground">{total} itens salvos</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+      {/* Stats — compact row */}
+      <div className="flex items-center gap-3 flex-wrap">
         {TABS.slice(1).map((tab) => {
           const count = (stats as Record<string, number>)[tab.type] ?? 0;
           const Icon = tab.icon;
@@ -185,54 +185,53 @@ export default function FavoritesPage() {
           return (
             <motion.button
               key={tab.type}
-              whileHover={{ y: -2 }}
+              whileHover={{ y: -1 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => setActiveTab(tab.type)}
               className={cn(
-                'flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all',
+                'flex items-center gap-2 px-3 py-2 rounded-xl border transition-all',
                 activeTab === tab.type
                   ? 'border-primary/30 bg-primary/5'
-                  : 'border-border bg-card hover:border-primary/20',
+                  : 'border-border bg-card hover:border-border/80',
               )}
             >
-              <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center', colors.bg)}>
-                <Icon className={cn('w-4 h-4', colors.text)} />
+              <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center', colors.bg)}>
+                <Icon className={cn('w-3.5 h-3.5', colors.text)} />
               </div>
-              <span className="text-lg font-medium text-foreground">{count}</span>
-              <span className="text-xs text-muted-foreground">{tab.label}</span>
+              <span className="text-sm font-medium text-foreground">{count}</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline">{tab.label}</span>
             </motion.button>
           );
         })}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scroll-x-hidden">
+      <div className="flex gap-6 border-b border-border overflow-x-auto scroll-x-hidden -mb-px">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const count = tab.type === 'ALL' ? total : ((stats as Record<string, number>)[tab.type] ?? 0);
           return (
-            <motion.button
+            <button
               key={tab.type}
-              whileTap={{ scale: 0.95 }}
               onClick={() => setActiveTab(tab.type)}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all',
+                'flex items-center gap-1.5 pb-3 text-sm font-medium whitespace-nowrap transition-all border-b-2 shrink-0',
                 activeTab === tab.type
-                  ? 'bg-foreground text-background'
-                  : 'bg-muted text-muted-foreground hover:text-foreground',
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground',
               )}
             >
-              <Icon className="w-3 h-3" />
+              <Icon className="w-3.5 h-3.5" />
               {tab.label}
               {count > 0 && (
                 <span className={cn(
-                  'text-[10px] rounded-full px-1.5 py-0.5',
-                  activeTab === tab.type ? 'bg-white/20' : 'bg-border',
+                  'text-[10px] rounded-full px-1.5 py-0.5 font-normal',
+                  activeTab === tab.type ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
                 )}>
                   {count}
                 </span>
               )}
-            </motion.button>
+            </button>
           );
         })}
       </div>

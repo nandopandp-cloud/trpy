@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Loader2, X } from 'lucide-react';
+import { Plus, Loader2, X, LayoutGrid, List, Calendar, ChevronRight } from 'lucide-react';
 import type { TripStatus } from '@trpy/database';
 import { useTrips, useDeleteTrip } from '@/hooks/useTrips';
 import { TripCard } from '@/components/trips/trip-card';
@@ -12,6 +12,8 @@ import { SearchBarPremium } from '@/components/forms/search-bar-premium';
 import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/ui/skeletons';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const STATUS_FILTERS = [
   { label: 'Todas', value: 'ALL' },
@@ -20,10 +22,26 @@ const STATUS_FILTERS = [
   { label: 'Concluídas', value: 'COMPLETED' },
 ];
 
+const STATUS_LABEL: Record<string, string> = {
+  PLANNING: 'Planejando',
+  ONGOING: 'Em andamento',
+  COMPLETED: 'Concluída',
+  CANCELLED: 'Cancelada',
+};
+
+const GRADIENT_FALLBACKS = [
+  'from-indigo-600 via-violet-600 to-purple-700',
+  'from-sky-600 via-blue-600 to-indigo-700',
+  'from-emerald-600 via-teal-600 to-cyan-700',
+  'from-amber-600 via-orange-500 to-red-600',
+  'from-rose-600 via-pink-600 to-fuchsia-700',
+];
+
 export default function TripsPage() {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const { data, isLoading, isError } = useTrips({
     status: activeFilter !== 'ALL' ? (activeFilter as TripStatus) : undefined,
@@ -74,18 +92,36 @@ export default function TripsPage() {
             {data?.total ?? 0} viagem{(data?.total ?? 0) !== 1 ? 's' : ''} no total
           </p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
-          onClick={() => router.push('/dashboard/trips/new')}
-          className="hidden sm:flex items-center gap-2 bg-foreground text-background font-medium text-sm px-5 py-2.5 rounded-full hover:opacity-90 transition-all shadow-sm group relative overflow-hidden"
-        >
-          <Plus className="w-4 h-4" />
-          Nova viagem
-          <span className="absolute inset-0 overflow-hidden rounded-full">
-            <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
-          </span>
-        </motion.button>
+        <div className="hidden sm:flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex items-center bg-muted rounded-full p-1 border border-border">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={cn('w-7 h-7 rounded-full flex items-center justify-center transition-all', viewMode === 'grid' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={cn('w-7 h-7 rounded-full flex items-center justify-center transition-all', viewMode === 'list' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => router.push('/dashboard/trips/new')}
+            className="flex items-center gap-2 bg-foreground text-background font-medium text-sm px-5 py-2.5 rounded-full hover:opacity-90 transition-all shadow-sm group relative overflow-hidden"
+          >
+            <Plus className="w-4 h-4" />
+            Nova viagem
+            <span className="absolute inset-0 overflow-hidden rounded-full">
+              <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+            </span>
+          </motion.button>
+        </div>
       </motion.div>
 
       {/* ── Search ──────────────────────────────────────── */}
@@ -175,27 +211,90 @@ export default function TripsPage() {
               {search === '' && activeFilter === 'ALL' && featuredTrip && (
                 <p className="text-sm font-medium text-foreground mb-4">Outras viagens</p>
               )}
-              <AnimatePresence mode="popLayout">
-                <motion.div
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                  initial={false}
-                >
-                  {restTrips.map((trip, i) => (
-                    <TripCard
-                      key={trip.id}
-                      trip={trip}
-                      index={i}
-                      onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
-                      onEdit={() => router.push(`/dashboard/trips/${trip.id}/edit`)}
-                      onDelete={() => {
-                        if (confirm(`Excluir "${trip.title}"?`)) {
-                          deleteTrip.mutate(trip.id);
-                        }
-                      }}
-                    />
-                  ))}
-                </motion.div>
-              </AnimatePresence>
+
+              {viewMode === 'grid' ? (
+                <AnimatePresence mode="popLayout">
+                  <motion.div
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                    initial={false}
+                  >
+                    {restTrips.map((trip, i) => (
+                      <TripCard
+                        key={trip.id}
+                        trip={trip}
+                        index={i}
+                        onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
+                        onEdit={() => router.push(`/dashboard/trips/${trip.id}/edit`)}
+                        onDelete={() => {
+                          if (confirm(`Excluir "${trip.title}"?`)) {
+                            deleteTrip.mutate(trip.id);
+                          }
+                        }}
+                      />
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-card">
+                  <div className="divide-y divide-border">
+                    <AnimatePresence mode="popLayout">
+                      {restTrips.map((trip, i) => {
+                        const isActive = trip.status === 'ONGOING';
+                        const fallback = GRADIENT_FALLBACKS[i % GRADIENT_FALLBACKS.length];
+                        return (
+                          <motion.div
+                            key={trip.id}
+                            initial={{ opacity: 0, x: -12 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 12 }}
+                            transition={{ delay: i * 0.04, duration: 0.25 }}
+                            className="flex items-center gap-5 p-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                            onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
+                          >
+                            <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0">
+                              {trip.coverImage ? (
+                                <img src={trip.coverImage} alt={trip.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              ) : (
+                                <div className={cn('w-full h-full bg-gradient-to-br', fallback)} />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium text-foreground tracking-tight truncate">{trip.title}</h4>
+                              <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                <Calendar className="w-3 h-3 shrink-0" />
+                                {format(new Date(trip.startDate), "d MMM", { locale: ptBR })} — {format(new Date(trip.endDate), "d MMM yyyy", { locale: ptBR })}
+                              </p>
+                            </div>
+                            <span className={cn(
+                              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium shrink-0',
+                              isActive ? 'bg-emerald-500/10 text-emerald-500' :
+                              trip.status === 'PLANNING' ? 'bg-indigo-500/10 text-indigo-400' :
+                              'bg-muted text-muted-foreground'
+                            )}>
+                              {isActive && (
+                                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                                </span>
+                              )}
+                              {STATUS_LABEL[trip.status]}
+                            </span>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/trips/${trip.id}/edit`); }}
+                                className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-muted"
+                              >
+                                Editar
+                              </button>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all" />
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
