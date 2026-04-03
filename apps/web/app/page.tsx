@@ -169,7 +169,7 @@ export default function HomePage() {
             transition={{ delay: 1.3, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             className="w-36 h-48 rounded-2xl overflow-hidden shadow-xl ml-10 animate-float"
           >
-            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3c?auto=format&fit=crop&q=80&w=350&h=480" alt="" className="w-full h-full object-cover" />
+            <img src="https://plus.unsplash.com/premium_photo-1691338312403-e9f7f7984eeb?q=80&w=928&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" className="w-full h-full object-cover" />
           </motion.div>
         </div>
 
