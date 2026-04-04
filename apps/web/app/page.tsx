@@ -110,12 +110,35 @@ export default function HomePage() {
       <header className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-xl border-b border-border/50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center shrink-0">
-            <img
-              src="/logos/logo.png"
-              alt="TRPY"
-              className="h-10 sm:h-12 w-auto object-contain"
-            />
+          <Link href="/" className="flex items-center shrink-0 gap-2 group">
+            {/* Icon: Stylized compass */}
+            <div className="relative w-8 h-8 sm:w-10 sm:h-10">
+              <svg
+                viewBox="0 0 24 24"
+                className="w-full h-full"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+              >
+                {/* Outer circle */}
+                <circle cx="12" cy="12" r="9.5" stroke="#6366f1" strokeWidth="1.5" opacity="0.6" />
+
+                {/* Compass star - 4 points */}
+                {/* Top */}
+                <path d="M 12 3.5 L 13.2 8.5 L 12 12 Z" fill="#6366f1" />
+                {/* Right */}
+                <path d="M 20.5 12 L 15.5 13.2 L 12 12 Z" fill="#6366f1" />
+                {/* Bottom */}
+                <path d="M 12 20.5 L 10.8 15.5 L 12 12 Z" fill="#6366f1" />
+                {/* Left */}
+                <path d="M 3.5 12 L 8.5 10.8 L 12 12 Z" fill="#6366f1" />
+
+                {/* Center dot */}
+                <circle cx="12" cy="12" r="1.5" fill="#6366f1" />
+              </svg>
+            </div>
+
+            {/* Text: TRPY */}
+            <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground">TRPY</span>
           </Link>
 
           {/* Right side — Theme toggle + Login */}
