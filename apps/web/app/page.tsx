@@ -108,29 +108,31 @@ export default function HomePage() {
 
       {/* ── Navbar ──────────────────────────────────────── */}
       <header className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-xl border-b border-border/50 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-foreground font-semibold tracking-tighter text-lg uppercase flex items-center gap-2 group">
-            <span className="w-2 h-2 rounded-full bg-primary group-hover:scale-150 transition-transform duration-300" />
-            <span className="group-hover:tracking-normal transition-all duration-300">TRPY</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+          {/* Logo — Video */}
+          <Link href="/" className="flex items-center shrink-0">
+            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden group">
+              {/* Light mode video background */}
+              <div className="absolute inset-0 bg-white dark:bg-transparent rounded-lg" />
+              {/* Dark mode video background */}
+              <div className="absolute inset-0 bg-zinc-900 dark:bg-white/10 rounded-lg" />
+              {/* Video logo */}
+              <video
+                autoPlay muted loop playsInline preload="auto"
+                className="absolute inset-0 w-full h-full object-contain p-1 sm:p-1.5 rounded-lg"
+                src="/logos/whisk-logo.mp4"
+              />
+            </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
-            {['Funcionalidades', 'Destinos', 'Sobre'].map((item) => (
-              <span
-                key={item}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary after:transition-all hover:after:w-full"
-              >
-                {item}
-              </span>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-4">
+          {/* Right side — Theme toggle + Login */}
+          <div className="flex items-center gap-2 sm:gap-4">
             <ThemeToggle />
             <Link href="/dashboard">
-              <button className="group bg-foreground text-background text-xs md:text-sm font-medium px-5 py-2.5 rounded-full hover:opacity-90 transition-all shadow-sm hover:shadow-md flex items-center gap-2 relative overflow-hidden">
-                <span className="relative z-10">Entrar</span>
-                <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
+              <button className="group bg-foreground text-background text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:opacity-90 transition-all shadow-sm hover:shadow-md flex items-center gap-2 relative overflow-hidden">
+                <span className="relative z-10 hidden sm:inline">Entrar</span>
+                <span className="relative z-10 sm:hidden text-xs">Entrar</span>
+                <ArrowRight className="w-3.5 sm:w-4 h-3.5 sm:h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                 <span className="absolute inset-0 overflow-hidden rounded-full">
                   <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                 </span>
@@ -141,7 +143,7 @@ export default function HomePage() {
       </header>
 
       {/* ── Hero ────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex flex-col overflow-hidden">
+      <section className="relative min-h-screen flex flex-col overflow-hidden pt-14 sm:pt-16">
         {/* Video background layer */}
         <div className="absolute inset-0 z-0">
           {/* Fade-in wrapper for smooth video entry */}
@@ -162,7 +164,7 @@ export default function HomePage() {
           <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/40 to-transparent" />
         </div>
 
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 py-8">
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 py-4 sm:py-8">
 
           <motion.div
             variants={stagger.container}
@@ -173,7 +175,7 @@ export default function HomePage() {
             {/* Heading */}
             <motion.h1
               variants={stagger.item}
-              className="text-5xl md:text-7xl lg:text-8xl font-medium text-white tracking-tight leading-[0.93] max-w-4xl mx-auto"
+              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-medium text-white tracking-tight leading-[0.93] max-w-4xl mx-auto"
             >
               Viaje com
               <br />
@@ -183,7 +185,7 @@ export default function HomePage() {
             {/* Subtitle */}
             <motion.p
               variants={stagger.item}
-              className="text-base md:text-lg text-white/70 max-w-xl mx-auto font-light leading-relaxed"
+              className="text-sm sm:text-base md:text-lg text-white/70 max-w-xl mx-auto font-light leading-relaxed"
             >
               Do itinerário ao orçamento, tudo em um só app.
               <br className="hidden md:inline" /> Deixe a IA planejar enquanto você sonha com o próximo destino.
