@@ -162,58 +162,7 @@ export default function HomePage() {
           <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/40 to-transparent" />
         </div>
 
-        {/* Floating destination cards — only on very wide screens */}
-        <div className="hidden xl:block absolute left-6 2xl:left-16 top-1/2 -translate-y-1/2 pointer-events-none z-0 space-y-4">
-          <motion.div
-            initial={{ opacity: 0, x: -40, rotate: -8 }}
-            animate={{ opacity: 0.55, x: 0, rotate: -8 }}
-            transition={{ delay: 1, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="w-44 h-60 rounded-2xl overflow-hidden shadow-2xl animate-float-slow"
-            style={{ transformOrigin: 'center' }}
-          >
-            <img src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=400&h=550" alt="" className="w-full h-full object-cover" />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: -30, rotate: -4 }}
-            animate={{ opacity: 0.35, x: 0, rotate: -4 }}
-            transition={{ delay: 1.3, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="w-36 h-48 rounded-2xl overflow-hidden shadow-xl ml-10 animate-float"
-          >
-            <img src="https://plus.unsplash.com/premium_photo-1691338312403-e9f7f7984eeb?q=80&w=928&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" className="w-full h-full object-cover" />
-          </motion.div>
-        </div>
-
-        <div className="hidden xl:block absolute right-6 2xl:right-16 top-1/2 -translate-y-1/2 pointer-events-none z-0 space-y-4">
-          <motion.div
-            initial={{ opacity: 0, x: 40, rotate: 8 }}
-            animate={{ opacity: 0.55, x: 0, rotate: 8 }}
-            transition={{ delay: 1.1, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="w-44 h-60 rounded-2xl overflow-hidden shadow-2xl animate-float"
-            style={{ transformOrigin: 'center' }}
-          >
-            <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=400&h=550" alt="" className="w-full h-full object-cover" />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: 30, rotate: 5 }}
-            animate={{ opacity: 0.35, x: 0, rotate: 5 }}
-            transition={{ delay: 1.4, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="w-36 h-48 rounded-2xl overflow-hidden shadow-xl mr-10 animate-float-slow"
-          >
-            <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=350&h=480" alt="" className="w-full h-full object-cover" />
-          </motion.div>
-        </div>
-
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 py-8">
-          {/* Eyebrow badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.6 }}
-            className="mb-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-            <span className="text-xs font-medium text-white/80 tracking-wide uppercase">Planejamento inteligente</span>
-          </motion.div>
 
           <motion.div
             variants={stagger.container}
@@ -271,71 +220,66 @@ export default function HomePage() {
               </Link>
             </motion.div>
 
-            {/* Social proof */}
-            <motion.div variants={stagger.item} className="flex items-center justify-center gap-4 text-sm text-white/60 pt-1">
-              <div className="flex -space-x-2">
-                {['🧑‍🦱', '👩‍🦰', '🧔', '👩'].map((e, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center text-sm">
-                    {e}
-                  </div>
-                ))}
-              </div>
-              <div className="w-px h-5 bg-white/20" />
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <StarIcon key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <span>+2k viagens planejadas</span>
-            </motion.div>
           </motion.div>
         </div>
 
-        {/* Search Widget — glassmorphism dark */}
-        <div className="relative z-10 pb-12 md:pb-20 px-4">
+        {/* Search Widget — glassmorphism dark, mobile-optimized */}
+        <div className="relative z-10 pb-12 md:pb-20 px-4 w-full">
           <motion.div
             initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-3xl mx-auto"
           >
-            <div className="bg-white/[0.08] border border-white/20 backdrop-blur-xl rounded-2xl shadow-2xl p-1.5">
-              <div className="flex flex-col sm:flex-row items-stretch">
+            <div className="bg-white/[0.08] border border-white/20 backdrop-blur-xl rounded-3xl shadow-2xl p-4 sm:p-2">
+              {/* Mobile: Vertical layout, Desktop: Horizontal */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-stretch">
+                {/* Destination field */}
                 <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
-                  <div className="px-4 py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">Destino</p>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-white/70 shrink-0" />
-                      <span className="text-sm font-medium text-white truncate">Para onde vamos?</span>
+                  <div className="px-4 py-4 sm:py-3.5 hover:bg-white/10 rounded-2xl sm:rounded-xl transition-colors cursor-pointer">
+                    <p className="text-[10px] font-semibold text-white/50 mb-2 sm:mb-1 tracking-widest uppercase">Destino</p>
+                    <div className="flex items-center gap-3 sm:gap-2">
+                      <MapPin className="w-5 h-5 sm:w-4 sm:h-4 text-white/70 shrink-0" />
+                      <span className="text-sm sm:text-sm font-medium text-white truncate">Para onde vamos?</span>
                     </div>
                   </div>
                 </Link>
+
+                {/* Divider — hidden on mobile */}
                 <div className="hidden sm:block w-px my-2 bg-white/10 shrink-0" />
+
+                {/* Date field */}
                 <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
-                  <div className="px-4 py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">Quando</p>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-white/70 shrink-0" />
-                      <span className="text-sm font-medium text-white/70 truncate">Datas flexíveis</span>
+                  <div className="px-4 py-4 sm:py-3.5 hover:bg-white/10 rounded-2xl sm:rounded-xl transition-colors cursor-pointer">
+                    <p className="text-[10px] font-semibold text-white/50 mb-2 sm:mb-1 tracking-widest uppercase">Quando</p>
+                    <div className="flex items-center gap-3 sm:gap-2">
+                      <Calendar className="w-5 h-5 sm:w-4 sm:h-4 text-white/70 shrink-0" />
+                      <span className="text-sm sm:text-sm font-medium text-white/70 truncate">Datas flexíveis</span>
                     </div>
                   </div>
                 </Link>
+
+                {/* Divider — hidden on mobile */}
                 <div className="hidden sm:block w-px my-2 bg-white/10 shrink-0" />
+
+                {/* Travelers field */}
                 <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
-                  <div className="px-4 py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">Viajantes</p>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-white/70 shrink-0" />
-                      <span className="text-sm font-medium text-white truncate">2 pessoas</span>
+                  <div className="px-4 py-4 sm:py-3.5 hover:bg-white/10 rounded-2xl sm:rounded-xl transition-colors cursor-pointer">
+                    <p className="text-[10px] font-semibold text-white/50 mb-2 sm:mb-1 tracking-widest uppercase">Viajantes</p>
+                    <div className="flex items-center gap-3 sm:gap-2">
+                      <Users className="w-5 h-5 sm:w-4 sm:h-4 text-white/70 shrink-0" />
+                      <span className="text-sm sm:text-sm font-medium text-white truncate">2 pessoas</span>
                     </div>
                   </div>
                 </Link>
-                <div className="pt-1.5 sm:pt-0 sm:pl-1.5 shrink-0">
-                  <Link href="/dashboard/trips/new">
-                    <button className="w-full sm:w-auto h-full min-h-[52px] px-5 bg-white text-zinc-900 rounded-xl font-medium text-sm hover:opacity-90 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 group relative overflow-hidden">
-                      <Search className="w-4 h-4" />
-                      <span className="hidden sm:inline">Buscar</span>
-                      <span className="absolute inset-0 overflow-hidden rounded-xl">
+
+                {/* Search button — full-width on mobile, auto on desktop */}
+                <div className="sm:pl-1.5 sm:shrink-0">
+                  <Link href="/dashboard/trips/new" className="block">
+                    <button className="w-full sm:w-auto h-full sm:min-h-[52px] px-6 sm:px-5 py-4 sm:py-0 bg-white text-zinc-900 rounded-2xl sm:rounded-xl font-medium text-sm hover:opacity-90 active:scale-95 transition-all hover:scale-[1.02] sm:hover:scale-100 flex items-center justify-center gap-2 group relative overflow-hidden">
+                      <Search className="w-5 sm:w-4 h-5 sm:h-4" />
+                      <span>Buscar</span>
+                      <span className="absolute inset-0 overflow-hidden rounded-2xl sm:rounded-xl">
                         <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                       </span>
                     </button>
