@@ -109,20 +109,13 @@ export default function HomePage() {
       {/* ── Navbar ──────────────────────────────────────── */}
       <header className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-xl border-b border-border/50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-          {/* Logo — Video */}
+          {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
-            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden group">
-              {/* Light mode video background */}
-              <div className="absolute inset-0 bg-white dark:bg-transparent rounded-lg" />
-              {/* Dark mode video background */}
-              <div className="absolute inset-0 bg-zinc-900 dark:bg-white/10 rounded-lg" />
-              {/* Video logo */}
-              <video
-                autoPlay muted loop playsInline preload="auto"
-                className="absolute inset-0 w-full h-full object-contain p-1 sm:p-1.5 rounded-lg"
-                src="/logos/whisk-logo.mp4"
-              />
-            </div>
+            <img
+              src="/logos/logo.png"
+              alt="TRPY"
+              className="h-10 sm:h-12 w-auto object-contain"
+            />
           </Link>
 
           {/* Right side — Theme toggle + Login */}
