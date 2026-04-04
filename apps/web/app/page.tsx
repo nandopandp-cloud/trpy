@@ -141,15 +141,25 @@ export default function HomePage() {
       </header>
 
       {/* ── Hero ────────────────────────────────────────── */}
-      <section className="relative pt-28 pb-16 md:pt-36 md:pb-20 overflow-hidden">
-        {/* Animated background */}
-        <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/4 w-[700px] h-[700px] bg-indigo-500/[0.07] dark:bg-indigo-500/[0.04] rounded-full blur-[130px] animate-breathe" />
-          <div className="absolute top-32 right-1/4 w-[500px] h-[500px] bg-purple-500/[0.04] dark:bg-purple-500/[0.03] rounded-full blur-[120px] animate-breathe" style={{ animationDelay: '2s' }} />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-amber-500/[0.04] rounded-full blur-[100px] animate-breathe" style={{ animationDelay: '4s' }} />
-          <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-[0.25]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,transparent_0%,hsl(var(--background))_80%)]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full animate-spin-slow opacity-[0.025]" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, #6366f1 60deg, transparent 120deg)' }} />
+      <section className="relative min-h-screen flex flex-col overflow-hidden">
+        {/* Video background layer */}
+        <div className="absolute inset-0 z-0">
+          {/* Fade-in wrapper for smooth video entry */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.5 }} className="absolute inset-0">
+            <video
+              autoPlay muted loop playsInline preload="auto"
+              className="absolute inset-0 w-full h-full object-cover"
+              src="/videos/hero-background.mp4"
+            />
+          </motion.div>
+          {/* Dark base overlay */}
+          <div className="absolute inset-0 bg-black/50" />
+          {/* Vignette — darkens edges for cinematic look */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.55)_100%)]" />
+          {/* Bottom gradient — fades to page background */}
+          <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-background to-transparent" />
+          {/* Top gradient — adds contrast behind navbar */}
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/40 to-transparent" />
         </div>
 
         {/* Floating destination cards — only on very wide screens */}
@@ -193,7 +203,18 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-        <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 py-8">
+          {/* Eyebrow badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.6 }}
+            className="mb-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+            <span className="text-xs font-medium text-white/80 tracking-wide uppercase">Planejamento inteligente</span>
+          </motion.div>
+
           <motion.div
             variants={stagger.container}
             initial="hidden"
@@ -203,7 +224,7 @@ export default function HomePage() {
             {/* Heading */}
             <motion.h1
               variants={stagger.item}
-              className="text-5xl md:text-7xl lg:text-8xl font-medium text-foreground tracking-tight leading-[0.93] max-w-4xl mx-auto"
+              className="text-5xl md:text-7xl lg:text-8xl font-medium text-white tracking-tight leading-[0.93] max-w-4xl mx-auto"
             >
               Viaje com
               <br />
@@ -213,7 +234,7 @@ export default function HomePage() {
             {/* Subtitle */}
             <motion.p
               variants={stagger.item}
-              className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto font-light leading-relaxed"
+              className="text-base md:text-lg text-white/70 max-w-xl mx-auto font-light leading-relaxed"
             >
               Do itinerário ao orçamento, tudo em um só app.
               <br className="hidden md:inline" /> Deixe a IA planejar enquanto você sonha com o próximo destino.
@@ -221,7 +242,7 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <motion.div variants={stagger.item} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {/* Primary: Beam button — uses explicit zinc-900 so it stays dark in both themes */}
+              {/* Primary: Beam button — unchanged */}
               <Link href="/dashboard">
                 <div className="group relative">
                   <div className="-inset-1 group-hover:opacity-100 transition duration-500 bg-indigo-500/20 opacity-0 rounded-full absolute blur-xl" />
@@ -240,26 +261,26 @@ export default function HomePage() {
                 </div>
               </Link>
 
-              {/* Secondary */}
+              {/* Secondary — glassmorphism dark */}
               <Link href="/dashboard/ai">
-                <button className="px-8 py-4 rounded-full text-sm font-medium text-foreground border border-border bg-card/80 hover:bg-muted hover:border-muted-foreground/30 transition-all hover:shadow-md flex items-center gap-2 group backdrop-blur-sm">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                <button className="px-8 py-4 rounded-full text-sm font-medium text-white border border-white/20 bg-white/10 hover:bg-white/20 transition-all hover:shadow-lg flex items-center gap-2 group backdrop-blur-sm">
+                  <Sparkles className="w-4 h-4 text-indigo-300" />
                   Ver IA em ação
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+                  <ArrowRight className="w-4 h-4 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
                 </button>
               </Link>
             </motion.div>
 
             {/* Social proof */}
-            <motion.div variants={stagger.item} className="flex items-center justify-center gap-4 text-sm text-muted-foreground pt-1">
+            <motion.div variants={stagger.item} className="flex items-center justify-center gap-4 text-sm text-white/60 pt-1">
               <div className="flex -space-x-2">
                 {['🧑‍🦱', '👩‍🦰', '🧔', '👩'].map((e, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">
+                  <div key={i} className="w-8 h-8 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center text-sm">
                     {e}
                   </div>
                 ))}
               </div>
-              <div className="w-px h-5 bg-border" />
+              <div className="w-px h-5 bg-white/20" />
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
                   <StarIcon key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
@@ -268,52 +289,54 @@ export default function HomePage() {
               <span>+2k viagens planejadas</span>
             </motion.div>
           </motion.div>
+        </div>
 
-          {/* Search Widget — redesigned, all columns link to dashboard */}
+        {/* Search Widget — glassmorphism dark */}
+        <div className="relative z-10 pb-12 md:pb-20 px-4">
           <motion.div
             initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-3xl mx-auto mt-12"
+            className="max-w-3xl mx-auto"
           >
-            <div className="bg-card border border-border rounded-2xl shadow-card-lg p-1.5">
+            <div className="bg-white/[0.08] border border-white/20 backdrop-blur-xl rounded-2xl shadow-2xl p-1.5">
               <div className="flex flex-col sm:flex-row items-stretch">
                 <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
-                  <div className="px-4 py-3.5 hover:bg-muted rounded-xl transition-colors cursor-pointer">
-                    <p className="text-[10px] font-semibold text-muted-foreground mb-1 tracking-widest uppercase">Destino</p>
+                  <div className="px-4 py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
+                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">Destino</p>
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-foreground shrink-0" />
-                      <span className="text-sm font-medium text-foreground truncate">Para onde vamos?</span>
+                      <MapPin className="w-4 h-4 text-white/70 shrink-0" />
+                      <span className="text-sm font-medium text-white truncate">Para onde vamos?</span>
                     </div>
                   </div>
                 </Link>
-                <div className="hidden sm:block w-px my-2 bg-border shrink-0" />
+                <div className="hidden sm:block w-px my-2 bg-white/10 shrink-0" />
                 <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
-                  <div className="px-4 py-3.5 hover:bg-muted rounded-xl transition-colors cursor-pointer">
-                    <p className="text-[10px] font-semibold text-muted-foreground mb-1 tracking-widest uppercase">Quando</p>
+                  <div className="px-4 py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
+                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">Quando</p>
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-foreground shrink-0" />
-                      <span className="text-sm font-medium text-muted-foreground/70 truncate">Datas flexíveis</span>
+                      <Calendar className="w-4 h-4 text-white/70 shrink-0" />
+                      <span className="text-sm font-medium text-white/70 truncate">Datas flexíveis</span>
                     </div>
                   </div>
                 </Link>
-                <div className="hidden sm:block w-px my-2 bg-border shrink-0" />
+                <div className="hidden sm:block w-px my-2 bg-white/10 shrink-0" />
                 <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
-                  <div className="px-4 py-3.5 hover:bg-muted rounded-xl transition-colors cursor-pointer">
-                    <p className="text-[10px] font-semibold text-muted-foreground mb-1 tracking-widest uppercase">Viajantes</p>
+                  <div className="px-4 py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
+                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">Viajantes</p>
                     <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-foreground shrink-0" />
-                      <span className="text-sm font-medium text-foreground truncate">2 pessoas</span>
+                      <Users className="w-4 h-4 text-white/70 shrink-0" />
+                      <span className="text-sm font-medium text-white truncate">2 pessoas</span>
                     </div>
                   </div>
                 </Link>
                 <div className="pt-1.5 sm:pt-0 sm:pl-1.5 shrink-0">
                   <Link href="/dashboard/trips/new">
-                    <button className="w-full sm:w-auto h-full min-h-[52px] px-5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-medium text-sm hover:opacity-90 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 group relative overflow-hidden">
+                    <button className="w-full sm:w-auto h-full min-h-[52px] px-5 bg-white text-zinc-900 rounded-xl font-medium text-sm hover:opacity-90 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 group relative overflow-hidden">
                       <Search className="w-4 h-4" />
                       <span className="hidden sm:inline">Buscar</span>
                       <span className="absolute inset-0 overflow-hidden rounded-xl">
-                        <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+                        <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                       </span>
                     </button>
                   </Link>
