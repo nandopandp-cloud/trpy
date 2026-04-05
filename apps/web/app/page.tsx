@@ -680,15 +680,6 @@ export default function HomePage() {
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-8"
           >
-            {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500" />
-              </span>
-              <span className="text-xs font-medium text-zinc-400 tracking-wide">Comece gratuitamente hoje</span>
-            </div>
-
             {/* Headline */}
             <div className="space-y-3">
               <h2 className="text-5xl md:text-6xl lg:text-7xl font-medium text-white tracking-tight leading-[0.95]">
@@ -728,17 +719,6 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Trust line */}
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
-              {['Sem cartão de crédito', 'Cancele quando quiser', 'Dados protegidos'].map((item, i) => (
-                <span key={item} className="flex items-center gap-1.5 text-xs text-zinc-600">
-                  <svg viewBox="0 0 12 12" className="w-3 h-3 text-indigo-500/70" fill="none">
-                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {item}
-                </span>
-              ))}
-            </div>
           </motion.div>
         </div>
 
@@ -770,14 +750,6 @@ export default function HomePage() {
               <p className="text-sm text-zinc-500 leading-relaxed max-w-xs font-light">
                 O super-app de viagens que combina planejamento inteligente, IA generativa e controle financeiro em um só lugar.
               </p>
-              {/* Status */}
-              <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/8">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                </span>
-                <span className="text-xs text-zinc-500">Todos os sistemas operacionais</span>
-              </div>
             </div>
 
             {/* Produto */}
