@@ -450,55 +450,139 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Product Preview ─────────────────────────────── */}
-      <section className="py-12 bg-background">
-        <div className="max-w-5xl mx-auto px-6">
+      {/* ── How It Works ──────────────────────────────── */}
+      <section className="py-32 bg-zinc-950 relative overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-dot-grid-dark opacity-20" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-indigo-500/[0.05] rounded-full blur-[160px]" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/[0.03] rounded-full blur-[120px]" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="bg-card border border-border rounded-3xl p-2 shadow-card-lg animate-pulse-glow"
+            transition={{ duration: 0.5 }}
+            className="mb-20 text-center"
           >
-            <div className="bg-muted rounded-2xl p-6 relative overflow-hidden">
-              <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
-              <div className="relative z-10">
-                {/* Fake dashboard preview */}
-                <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-                  <div className="bg-card/70 backdrop-blur-xl border-b border-border px-6 h-12 flex items-center justify-between">
-                    <span className="text-foreground font-semibold tracking-tighter text-xs uppercase flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />TRPY
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-muted" />
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-center justify-between mb-5">
-                      <h4 className="text-sm font-medium text-foreground">Minhas Viagens</h4>
-                      <button className="bg-foreground text-background text-[10px] px-3 py-1.5 rounded-full">+ Nova</button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { src: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=400', name: 'Tokyo', date: 'Mai 2025' },
-                        { src: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=400', name: 'Paris', date: 'Jul 2025' },
-                        { src: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=400', name: 'Bali', date: 'Set 2024' },
-                      ].map((item) => (
-                        <div key={item.name} className="rounded-xl overflow-hidden border border-border group cursor-pointer hover:shadow-md transition-all">
-                          <div className="h-20 overflow-hidden">
-                            <img alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={item.src} />
-                          </div>
-                          <div className="p-2.5">
-                            <p className="text-xs font-medium text-foreground">{item.name}</p>
-                            <p className="text-[10px] text-muted-foreground">{item.date}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6">
+              <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">03</span>
+              <span className="w-px h-3 bg-white/10" />
+              <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">Como funciona</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-medium text-white tracking-tight mb-4">
+              Do sonho à{' '}
+              <span className="text-gradient-accent">realidade.</span>
+            </h2>
+            <p className="text-zinc-500 font-light max-w-lg mx-auto">Três passos simples para transformar sua ideia de viagem em um roteiro completo e organizado.</p>
+          </motion.div>
+
+          {/* Steps grid */}
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-10 relative">
+            {/* Connecting line — desktop only */}
+            <div className="hidden md:block absolute top-14 left-[calc(33.33%+1.5rem)] right-[calc(33.33%+1.5rem)] h-px">
+              <div className="w-full h-full bg-gradient-to-r from-indigo-500/40 via-indigo-400/20 to-indigo-500/40" />
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-indigo-500/60" />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-indigo-500/60" />
+            </div>
+
+            {/* Step 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex flex-col items-center text-center group"
+            >
+              <div className="relative mb-8">
+                <div className="w-28 h-28 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/15 group-hover:border-indigo-500/40 transition-all duration-300 group-hover:scale-105">
+                  <MapPin className="w-10 h-10 text-indigo-400" />
+                </div>
+                <div className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-indigo-500 border-2 border-zinc-950 flex items-center justify-center shadow-lg">
+                  <span className="text-white text-xs font-bold font-mono">01</span>
                 </div>
               </div>
-            </div>
+              <h3 className="text-white font-medium text-xl tracking-tight mb-3">Escolha o destino</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed font-light max-w-xs">
+                Informe para onde quer ir, as datas e quantas pessoas. Deixe a sua imaginação guiar.
+              </p>
+              <div className="mt-6 inline-flex items-center gap-1.5 text-xs text-indigo-400/70 font-medium">
+                <span className="w-1 h-1 rounded-full bg-indigo-400/50" />
+                <span>30 segundos</span>
+              </div>
+            </motion.div>
+
+            {/* Step 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex flex-col items-center text-center group"
+            >
+              <div className="relative mb-8">
+                <div className="w-28 h-28 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-hover:bg-amber-500/15 group-hover:border-amber-500/40 transition-all duration-300 group-hover:scale-105">
+                  <Sparkles className="w-10 h-10 text-amber-400" />
+                </div>
+                <div className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-amber-500 border-2 border-zinc-950 flex items-center justify-center shadow-lg">
+                  <span className="text-zinc-900 text-xs font-bold font-mono">02</span>
+                </div>
+              </div>
+              <h3 className="text-white font-medium text-xl tracking-tight mb-3">A IA planeja tudo</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed font-light max-w-xs">
+                Nossa IA gera um itinerário completo: atividades, restaurantes, hospedagem e orçamento.
+              </p>
+              <div className="mt-6 inline-flex items-center gap-1.5 text-xs text-amber-400/70 font-medium">
+                <span className="w-1 h-1 rounded-full bg-amber-400/50" />
+                <span>Menos de 2 minutos</span>
+              </div>
+            </motion.div>
+
+            {/* Step 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex flex-col items-center text-center group"
+            >
+              <div className="relative mb-8">
+                <div className="w-28 h-28 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500/15 group-hover:border-emerald-500/40 transition-all duration-300 group-hover:scale-105">
+                  <Compass className="w-10 h-10 text-emerald-400" />
+                </div>
+                <div className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-emerald-500 border-2 border-zinc-950 flex items-center justify-center shadow-lg">
+                  <span className="text-zinc-900 text-xs font-bold font-mono">03</span>
+                </div>
+              </div>
+              <h3 className="text-white font-medium text-xl tracking-tight mb-3">Viaje sem preocupações</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed font-light max-w-xs">
+                Acesse seu roteiro offline, acompanhe os gastos e guarde memórias da sua aventura.
+              </p>
+              <div className="mt-6 inline-flex items-center gap-1.5 text-xs text-emerald-400/70 font-medium">
+                <span className="w-1 h-1 rounded-full bg-emerald-400/50" />
+                <span>Disponível no celular</span>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Bottom CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="mt-20 flex justify-center"
+          >
+            <Link href="/dashboard/ai">
+              <button className="group inline-flex items-center gap-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/30 text-white text-sm font-medium px-8 py-4 rounded-full transition-all duration-300">
+                <Sparkles className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
+                <span>Ver IA gerando um roteiro</span>
+                <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </button>
+            </Link>
           </motion.div>
         </div>
       </section>
@@ -519,7 +603,7 @@ export default function HomePage() {
             className="mb-16"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border mb-6 shadow-sm">
-              <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">03</span>
+              <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">04</span>
               <span className="w-px h-3 bg-border" />
               <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Destinos</span>
             </div>
