@@ -656,96 +656,199 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Final CTA ──────────────────────────────────── */}
-      <section className="py-32 bg-background relative overflow-hidden">
+      {/* ── Final CTA + Footer ─────────────────────────── */}
+      <section className="relative bg-zinc-950 overflow-hidden">
+
+        {/* Ambient background */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/[0.04] rounded-full blur-[150px] animate-breathe" />
-          <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
+          <div className="absolute inset-0 bg-dot-grid-dark opacity-[0.18]" />
+          {/* Main glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-indigo-500/[0.07] rounded-full blur-[180px]" />
+          {/* Side glows */}
+          <div className="absolute bottom-1/3 left-0 w-[400px] h-[400px] bg-indigo-600/[0.04] rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/3 right-0 w-[400px] h-[400px] bg-purple-600/[0.04] rounded-full blur-[120px]" />
+          {/* Horizontal glow line */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
         </div>
 
-        <div className="max-w-4xl mx-auto px-6 relative z-10">
+        {/* ── CTA Content ── */}
+        <div className="relative z-10 max-w-4xl mx-auto px-6 pt-32 pb-24 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="bg-card rounded-3xl border border-border shadow-card-xl overflow-hidden relative"
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-8"
           >
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/[0.06] rounded-full blur-[100px] animate-breathe" />
-              <div className="absolute inset-0 bg-dot-grid dark:bg-dot-grid-dark opacity-20" />
+            {/* Eyebrow */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500" />
+              </span>
+              <span className="text-xs font-medium text-zinc-400 tracking-wide">Comece gratuitamente hoje</span>
             </div>
-            <div className="relative z-10 px-8 py-20 text-center">
-              <div className="text-6xl animate-float inline-block mb-8">✈️</div>
-              <h2 className="text-4xl md:text-5xl font-medium text-foreground tracking-tight leading-[1.05] mb-5">
-                Comece sua próxima aventura.
+
+            {/* Headline */}
+            <div className="space-y-3">
+              <h2 className="text-5xl md:text-6xl lg:text-7xl font-medium text-white tracking-tight leading-[0.95]">
+                Sua próxima viagem<br />
+                <span className="text-gradient-accent">começa aqui.</span>
               </h2>
-              <p className="text-muted-foreground text-lg max-w-xl mx-auto font-light mb-10">
-                Crie sua conta gratuita e comece a planejar viagens incríveis hoje mesmo.
+              <p className="text-zinc-400 text-lg md:text-xl font-light max-w-xl mx-auto leading-relaxed">
+                Planeie, organize e viva cada aventura com mais intenção. Grátis para sempre.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
-                <div className="relative w-full">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    className="w-full bg-muted border border-border text-foreground text-sm rounded-full pl-11 pr-4 py-3.5 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/60"
-                    placeholder="Seu melhor email"
-                    type="email"
-                  />
-                </div>
-                <Link href="/dashboard" className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto bg-foreground text-background px-8 py-3.5 rounded-full text-sm font-medium hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap shadow-sm hover:shadow-md group relative overflow-hidden">
-                    <span className="relative z-10">Começar grátis</span>
-                    <span className="absolute inset-0 overflow-hidden rounded-full">
-                      <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-2">
+              <Link href="/dashboard">
+                <div className="group relative">
+                  <div className="-inset-1 group-hover:opacity-100 transition duration-500 bg-indigo-500/20 opacity-0 rounded-full absolute blur-xl" />
+                  <button className="group relative z-10 flex items-center justify-center overflow-hidden rounded-full p-[1px] leading-none">
+                    <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0_340deg,#6366f1_360deg)]" />
+                    <span className="relative flex h-full w-full items-center rounded-full bg-zinc-900 px-8 py-4 ring-1 ring-white/10">
+                      <span className="absolute inset-0 overflow-hidden rounded-full">
+                        <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+                      </span>
+                      <span className="relative z-10 text-base font-medium tracking-wide text-white">Começar grátis</span>
+                      <span className="relative z-10 ml-3 flex items-center text-indigo-300 transition duration-200 group-hover:translate-x-1 group-hover:text-white">
+                        <ArrowRight className="w-5 h-5" />
+                      </span>
                     </span>
                   </button>
-                </Link>
-              </div>
+                </div>
+              </Link>
+              <Link href="/dashboard/ai">
+                <button className="px-8 py-4 rounded-full text-sm font-medium text-zinc-400 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300 flex items-center gap-2 group">
+                  <Sparkles className="w-4 h-4 text-indigo-400" />
+                  Ver demo da IA
+                  <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
+                </button>
+              </Link>
+            </div>
+
+            {/* Trust line */}
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
+              {['Sem cartão de crédito', 'Cancele quando quiser', 'Dados protegidos'].map((item, i) => (
+                <span key={item} className="flex items-center gap-1.5 text-xs text-zinc-600">
+                  <svg viewBox="0 0 12 12" className="w-3 h-3 text-indigo-500/70" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {item}
+                </span>
+              ))}
             </div>
           </motion.div>
         </div>
-      </section>
 
-      {/* ── Footer ─────────────────────────────────────── */}
-      <footer className="bg-background border-t border-border pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
-            <div className="col-span-2 md:col-span-1">
-              <span className="text-foreground font-semibold tracking-tighter text-base uppercase flex items-center gap-2 mb-6">
-                <span className="w-2 h-2 rounded-full bg-primary" />TRPY
-              </span>
-              <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
-                Um super-app de viagens combinando estética elegante com IA e gestão financeira.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">Produto</h4>
-              <ul className="space-y-3">
-                <li><Link className="text-sm text-muted-foreground hover:text-foreground transition-colors" href="/dashboard">Dashboard</Link></li>
-                <li><Link className="text-sm text-muted-foreground hover:text-foreground transition-colors" href="/dashboard/ai">IA</Link></li>
-                <li><Link className="text-sm text-muted-foreground hover:text-foreground transition-colors" href="/dashboard/trips">Viagens</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">Recursos</h4>
-              <ul className="space-y-3">
-                <li><Link className="text-sm text-muted-foreground hover:text-foreground transition-colors" href="/dashboard/budget">Finanças</Link></li>
-                <li><Link className="text-sm text-muted-foreground hover:text-foreground transition-colors" href="/dashboard/favorites">Favoritos</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-muted-foreground">TRPY — Design System v2.0</p>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-              </span>
-              Todos os sistemas operacionais
-            </span>
-          </div>
+        {/* ── Divider ── */}
+        <div className="relative z-10 max-w-7xl mx-auto px-6">
+          <div className="h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
         </div>
-      </footer>
+
+        {/* ── Footer ── */}
+        <footer className="relative z-10 max-w-7xl mx-auto px-6 pt-16 pb-10">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-16">
+
+            {/* Brand column */}
+            <div className="col-span-2">
+              {/* Logo */}
+              <Link href="/" className="inline-flex items-center gap-2 mb-5 group">
+                <div className="w-8 h-8">
+                  <svg viewBox="0 0 24 24" className="w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none">
+                    <circle cx="12" cy="12" r="9.5" stroke="#6366f1" strokeWidth="1.5" opacity="0.6" />
+                    <path d="M 12 3.5 L 13.2 8.5 L 12 12 Z" fill="#6366f1" />
+                    <path d="M 20.5 12 L 15.5 13.2 L 12 12 Z" fill="#6366f1" />
+                    <path d="M 12 20.5 L 10.8 15.5 L 12 12 Z" fill="#6366f1" />
+                    <path d="M 3.5 12 L 8.5 10.8 L 12 12 Z" fill="#6366f1" />
+                    <circle cx="12" cy="12" r="1.5" fill="#6366f1" />
+                  </svg>
+                </div>
+                <span className="text-lg font-bold tracking-tight text-white">TRPY</span>
+              </Link>
+              <p className="text-sm text-zinc-500 leading-relaxed max-w-xs font-light">
+                O super-app de viagens que combina planejamento inteligente, IA generativa e controle financeiro em um só lugar.
+              </p>
+              {/* Status */}
+              <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/8">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                <span className="text-xs text-zinc-500">Todos os sistemas operacionais</span>
+              </div>
+            </div>
+
+            {/* Produto */}
+            <div>
+              <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-5">Produto</h5>
+              <ul className="space-y-3">
+                {[
+                  { label: 'Dashboard', href: '/dashboard' },
+                  { label: 'Planejar com IA', href: '/dashboard/ai' },
+                  { label: 'Minhas viagens', href: '/dashboard/trips' },
+                  { label: 'Orçamento', href: '/dashboard/budget' },
+                ].map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="text-sm text-zinc-500 hover:text-white transition-colors duration-200">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Recursos */}
+            <div>
+              <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-5">Recursos</h5>
+              <ul className="space-y-3">
+                {[
+                  { label: 'Favoritos', href: '/dashboard/favorites' },
+                  { label: 'Destinos', href: '/dashboard' },
+                  { label: 'Configurações', href: '/dashboard/settings' },
+                ].map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="text-sm text-zinc-500 hover:text-white transition-colors duration-200">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-5">Legal</h5>
+              <ul className="space-y-3">
+                {[
+                  { label: 'Privacidade', href: '#' },
+                  { label: 'Termos de uso', href: '#' },
+                  { label: 'Cookies', href: '#' },
+                ].map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="text-sm text-zinc-500 hover:text-white transition-colors duration-200">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/[0.06]">
+            <p className="text-xs text-zinc-600 order-2 md:order-1">
+              © {new Date().getFullYear()} TRPY. Todos os direitos reservados.
+            </p>
+            <div className="flex items-center gap-1.5 order-1 md:order-2">
+              <span className="text-xs text-zinc-600">Feito com</span>
+              <span className="text-xs text-indigo-500/70">✦</span>
+              <span className="text-xs text-zinc-600">para viajantes do mundo todo</span>
+            </div>
+          </div>
+        </footer>
+      </section>
     </div>
   );
 }
