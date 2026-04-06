@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Basic email format check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return NextResponse.json(
         { error: 'Formato de email inválido.' },
@@ -40,7 +39,6 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingUser) {
-      // Generic error to prevent email enumeration
       return NextResponse.json(
         { error: 'Não foi possível criar a conta. Tente outro email.' },
         { status: 409 }
@@ -69,7 +67,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('[signup] Error:', error);
+    console.error('[signup] Error:', JSON.stringify(error, Object.getOwnPropertyNames(error as object)));
     return NextResponse.json(
       { error: 'Erro interno. Tente novamente.' },
       { status: 500 }
