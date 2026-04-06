@@ -6,7 +6,8 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@trpy/database';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as NextAuthOptions['adapter'],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adapter: PrismaAdapter(prisma as any) as NextAuthOptions['adapter'],
 
   providers: [
     // ── Google OAuth ──────────────────────────────────────
