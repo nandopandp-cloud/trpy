@@ -152,7 +152,7 @@ export default function HomePage() {
           {/* Right side — Theme toggle + Login */}
           <div className="flex items-center gap-2 sm:gap-4">
             <ThemeToggle />
-            <Link href="/dashboard">
+            <Link href="/login">
               <button className="group bg-foreground text-background text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:opacity-90 transition-all shadow-sm hover:shadow-md flex items-center gap-2 relative overflow-hidden">
                 <span className="relative z-10 hidden sm:inline">Entrar</span>
                 <span className="relative z-10 sm:hidden text-xs">Entrar</span>

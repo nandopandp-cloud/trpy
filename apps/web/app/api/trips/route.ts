@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { TripStatus } from '@trpy/database';
 import { prisma } from '@/lib/prisma';
 import { ok, err, handleError } from '@/lib/api';
+import { getCurrentUserId } from '@/lib/auth-utils';
 
 const createTripSchema = z.object({
   title: z.string().min(1).max(100),
@@ -15,29 +16,19 @@ const createTripSchema = z.object({
   currency: z.string().length(3).default('BRL'),
 });
 
-// TODO: substituir pelo userId real vindo do NextAuth
-const DEMO_USER_ID = 'demo-user-id';
-
-async function getOrCreateDemoUser() {
-  return prisma.user.upsert({
-    where: { email: 'demo@trpy.app' },
-    update: {},
-    create: { email: 'demo@trpy.app', name: 'Demo User' },
-  });
-}
-
 // GET /api/trips
 export async function GET(req: NextRequest) {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
+
     const { searchParams } = req.nextUrl;
     const status = searchParams.get('status') as TripStatus | null;
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '12'), 50);
     const offset = parseInt(searchParams.get('offset') ?? '0');
 
-    const user = await getOrCreateDemoUser();
-
     const where = {
-      userId: user.id,
+      userId,
       isDeleted: false,
       ...(status ? { status } : {}),
     };
@@ -61,10 +52,11 @@ export async function GET(req: NextRequest) {
 // POST /api/trips
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
+
     const body = await req.json();
     const data = createTripSchema.parse(body);
-
-    const user = await getOrCreateDemoUser();
 
     const start = new Date(data.startDate);
     const end = new Date(data.endDate);
@@ -75,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     const trip = await prisma.trip.create({
       data: {
-        userId: user.id,
+        userId,
         title: data.title,
         destination: data.destination,
         startDate: start,

@@ -1,20 +1,14 @@
-import { handleError } from '@/lib/api';
-import { ok } from '@/lib/api';
+export const dynamic = 'force-dynamic';
+import { ok, handleError, err } from '@/lib/api';
 import { getFavoriteStats } from '@/lib/services/favorites-service';
-import { prisma } from '@/lib/prisma';
-
-async function getDemoUser() {
-  return prisma.user.upsert({
-    where: { email: 'demo@trpy.app' },
-    update: {},
-    create: { email: 'demo@trpy.app', name: 'Demo User' },
-  });
-}
+import { getCurrentUserId } from '@/lib/auth-utils';
 
 export async function GET() {
   try {
-    const user = await getDemoUser();
-    const stats = await getFavoriteStats(user.id);
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
+
+    const stats = await getFavoriteStats(userId);
     return ok(stats);
   } catch (error) {
     return handleError(error);

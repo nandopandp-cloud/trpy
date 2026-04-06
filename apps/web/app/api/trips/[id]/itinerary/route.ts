@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ItemType } from '@trpy/database';
 import { prisma } from '@/lib/prisma';
 import { ok, err, handleError } from '@/lib/api';
+import { getCurrentUserId } from '@/lib/auth-utils';
 import { geocodeAddress } from '@/lib/integrations/google/places-service';
 
 const addItemSchema = z.object({
@@ -24,21 +25,14 @@ const addDaySchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-async function getOrCreateDemoUser() {
-  return prisma.user.upsert({
-    where: { email: 'demo@trpy.app' },
-    update: {},
-    create: { email: 'demo@trpy.app', name: 'Demo User' },
-  });
-}
-
 // GET /api/trips/[id]/itinerary
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getOrCreateDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
 
     const trip = await prisma.trip.findFirst({
-      where: { id: params.id, userId: user.id, isDeleted: false },
+      where: { id: params.id, userId, isDeleted: false },
     });
     if (!trip) return err('Viagem não encontrada', 404);
 
@@ -57,10 +51,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 // POST /api/trips/[id]/itinerary — adicionar dia ou item
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getOrCreateDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
 
     const trip = await prisma.trip.findFirst({
-      where: { id: params.id, userId: user.id, isDeleted: false },
+      where: { id: params.id, userId, isDeleted: false },
     });
     if (!trip) return err('Viagem não encontrada', 404);
 

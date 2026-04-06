@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ExpenseCategory } from '@trpy/database';
 import { prisma } from '@/lib/prisma';
 import { ok, err, handleError } from '@/lib/api';
+import { getCurrentUserId } from '@/lib/auth-utils';
 
 const updateExpenseSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -11,14 +12,6 @@ const updateExpenseSchema = z.object({
   date: z.string().datetime().optional(),
   notes: z.string().max(500).nullable().optional(),
 });
-
-async function getOrCreateDemoUser() {
-  return prisma.user.upsert({
-    where: { email: 'demo@trpy.app' },
-    update: {},
-    create: { email: 'demo@trpy.app', name: 'Demo User' },
-  });
-}
 
 async function recalcTotalSpent(tripId: string) {
   const agg = await prisma.expense.aggregate({
@@ -34,13 +27,14 @@ async function recalcTotalSpent(tripId: string) {
 // PUT /api/expenses/[id]
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getOrCreateDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
 
     const expense = await prisma.expense.findFirst({
       where: { id: params.id },
       include: { trip: { select: { userId: true } } },
     });
-    if (!expense || expense.trip.userId !== user.id) return err('Despesa não encontrada', 404);
+    if (!expense || expense.trip.userId !== userId) return err('Despesa não encontrada', 404);
 
     const body = await req.json();
     const data = updateExpenseSchema.parse(body);
@@ -66,13 +60,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 // DELETE /api/expenses/[id]
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getOrCreateDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
 
     const expense = await prisma.expense.findFirst({
       where: { id: params.id },
       include: { trip: { select: { userId: true } } },
     });
-    if (!expense || expense.trip.userId !== user.id) return err('Despesa não encontrada', 404);
+    if (!expense || expense.trip.userId !== userId) return err('Despesa não encontrada', 404);
 
     await prisma.expense.delete({ where: { id: params.id } });
     await recalcTotalSpent(expense.tripId);

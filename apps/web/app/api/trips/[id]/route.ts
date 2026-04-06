@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { ok, err, handleError } from '@/lib/api';
+import { getCurrentUserId } from '@/lib/auth-utils';
 
 const updateTripSchema = z.object({
   title: z.string().min(1).max(100).optional(),
@@ -15,21 +16,14 @@ const updateTripSchema = z.object({
   status: z.enum(['PLANNING', 'ONGOING', 'COMPLETED', 'CANCELLED']).optional(),
 });
 
-async function getOrCreateDemoUser() {
-  return prisma.user.upsert({
-    where: { email: 'demo@trpy.app' },
-    update: {},
-    create: { email: 'demo@trpy.app', name: 'Demo User' },
-  });
-}
-
 // GET /api/trips/[id]
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getOrCreateDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
 
     const trip = await prisma.trip.findFirst({
-      where: { id: params.id, userId: user.id, isDeleted: false },
+      where: { id: params.id, userId, isDeleted: false },
       include: {
         itineraryDays: {
           orderBy: { dayNumber: 'asc' },
@@ -52,10 +46,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 // PUT /api/trips/[id]
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getOrCreateDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
 
     const existing = await prisma.trip.findFirst({
-      where: { id: params.id, userId: user.id, isDeleted: false },
+      where: { id: params.id, userId, isDeleted: false },
     });
     if (!existing) return err('Viagem não encontrada', 404);
 
@@ -93,10 +88,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 // DELETE /api/trips/[id]
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getOrCreateDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
 
     const existing = await prisma.trip.findFirst({
-      where: { id: params.id, userId: user.id, isDeleted: false },
+      where: { id: params.id, userId, isDeleted: false },
     });
     if (!existing) return err('Viagem não encontrada', 404);
 

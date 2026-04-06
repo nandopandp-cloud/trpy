@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { User, Bell, Palette, Globe, ShieldCheck, LogOut } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,10 @@ const SECTIONS = [
 ];
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
+  const user = session?.user;
+  const initials = user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() ?? '?';
+
   return (
     <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -43,12 +48,16 @@ export default function SettingsPage() {
         className="rounded-3xl border border-border bg-card p-5 shadow-card"
       >
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-ocean flex items-center justify-center text-white text-xl font-black glow-teal shrink-0">
-            D
-          </div>
+          {user?.image ? (
+            <img src={user.image} alt="" className="w-14 h-14 rounded-2xl object-cover shrink-0" />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white text-xl font-black shrink-0">
+              {initials}
+            </div>
+          )}
           <div>
-            <p className="font-bold text-foreground">Demo User</p>
-            <p className="text-sm text-muted-foreground">demo@trpy.app</p>
+            <p className="font-bold text-foreground">{user?.name ?? 'Usuário'}</p>
+            <p className="text-sm text-muted-foreground">{user?.email ?? ''}</p>
           </div>
         </div>
       </motion.div>
@@ -134,7 +143,10 @@ export default function SettingsPage() {
         <div className="px-5 py-4 border-b border-border">
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sessão</p>
         </div>
-        <button className="w-full px-5 py-4 flex items-center gap-3 text-destructive hover:bg-destructive/5 transition-colors">
+        <button
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="w-full px-5 py-4 flex items-center gap-3 text-destructive hover:bg-destructive/5 transition-colors"
+        >
           <div className="w-9 h-9 rounded-2xl bg-destructive/10 flex items-center justify-center">
             <LogOut className="w-4 h-4" />
           </div>

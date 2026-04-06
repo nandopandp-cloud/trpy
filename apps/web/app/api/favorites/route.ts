@@ -3,15 +3,7 @@ import { z } from 'zod';
 import { FavoriteType } from '@trpy/database';
 import { ok, err, handleError } from '@/lib/api';
 import { addFavorite, removeFavorite, getAllFavorites, getFavoritesByType } from '@/lib/services/favorites-service';
-import { prisma } from '@/lib/prisma';
-
-async function getDemoUser() {
-  return prisma.user.upsert({
-    where: { email: 'demo@trpy.app' },
-    update: {},
-    create: { email: 'demo@trpy.app', name: 'Demo User' },
-  });
-}
+import { getCurrentUserId } from '@/lib/auth-utils';
 
 const addSchema = z.object({
   type: z.nativeEnum(FavoriteType),
@@ -33,12 +25,14 @@ const removeSchema = z.object({
 // GET /api/favorites?type=PLACE
 export async function GET(req: NextRequest) {
   try {
-    const user = await getDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
+
     const type = req.nextUrl.searchParams.get('type') as FavoriteType | null;
 
     const favorites = type
-      ? await getFavoritesByType(user.id, type)
-      : await getAllFavorites(user.id);
+      ? await getFavoritesByType(userId, type)
+      : await getAllFavorites(userId);
 
     return ok(favorites);
   } catch (error) {
@@ -49,10 +43,12 @@ export async function GET(req: NextRequest) {
 // POST /api/favorites
 export async function POST(req: NextRequest) {
   try {
-    const user = await getDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
+
     const body = await req.json();
     const data = addSchema.parse(body);
-    const favorite = await addFavorite({ userId: user.id, ...data });
+    const favorite = await addFavorite({ userId, ...data });
     return ok(favorite, 201);
   } catch (error) {
     return handleError(error);
@@ -62,10 +58,12 @@ export async function POST(req: NextRequest) {
 // DELETE /api/favorites
 export async function DELETE(req: NextRequest) {
   try {
-    const user = await getDemoUser();
+    const userId = await getCurrentUserId();
+    if (!userId) return err('Não autenticado', 401);
+
     const body = await req.json();
     const data = removeSchema.parse(body);
-    await removeFavorite(user.id, data.type, data.externalId);
+    await removeFavorite(userId, data.type, data.externalId);
     return ok({ removed: true });
   } catch (error) {
     return handleError(error);
