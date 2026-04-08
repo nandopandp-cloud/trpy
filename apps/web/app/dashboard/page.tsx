@@ -9,7 +9,7 @@ import {
   Plus, PlaneTakeoff, Wallet, CalendarDays,
   ArrowRight, ChevronRight, MapPin, Calendar,
   Globe, Compass, Flame, Star, TrendingUp, Target,
-  Plane, Mountain, Palmtree, Building2, UtensilsCrossed,
+  Plane,
 } from 'lucide-react';
 import { useTrips } from '@/hooks/useTrips';
 import { TripStories } from '@/components/dashboard/trip-stories';
@@ -166,19 +166,22 @@ function TiltCard({ children, className, onClick }: { children: React.ReactNode;
 /* ── Data ─────────────────────────────────────────────── */
 
 const TRENDING = [
-  { name: 'Bali', country: 'Indonésia', emoji: '🌊', gradient: 'from-emerald-500 to-teal-600', icon: Palmtree, rating: 4.9 },
-  { name: 'Paris', country: 'França', emoji: '🗼', gradient: 'from-sky-500 to-indigo-600', icon: Building2, rating: 4.8 },
-  { name: 'Patagônia', country: 'Argentina', emoji: '🏔️', gradient: 'from-slate-500 to-slate-700', icon: Mountain, rating: 4.9 },
-  { name: 'Tóquio', country: 'Japão', emoji: '🎌', gradient: 'from-rose-500 to-pink-600', icon: Star, rating: 4.8 },
-  { name: 'Santorini', country: 'Grécia', emoji: '🏝️', gradient: 'from-blue-500 to-cyan-600', icon: Compass, rating: 4.7 },
+  { name: 'Bali', country: 'Indonésia', emoji: '🌊', gradient: 'from-emerald-500 to-teal-600', tag: 'Natureza', rating: 4.9 },
+  { name: 'Paris', country: 'França', emoji: '🗼', gradient: 'from-sky-500 to-indigo-600', tag: 'Cultura', rating: 4.8 },
+  { name: 'Patagônia', country: 'Argentina', emoji: '🏔️', gradient: 'from-slate-500 to-slate-700', tag: 'Aventura', rating: 4.9 },
+  { name: 'Tóquio', country: 'Japão', emoji: '🎌', gradient: 'from-rose-500 to-pink-600', tag: 'Urbano', rating: 4.8 },
+  { name: 'Santorini', country: 'Grécia', emoji: '🏝️', gradient: 'from-blue-500 to-cyan-600', tag: 'Romance', rating: 4.7 },
 ];
 
 const CATEGORIES = [
-  { label: 'Praias', emoji: '🏖️', gradient: 'from-sky-400 to-blue-500', icon: Palmtree },
-  { label: 'Montanhas', emoji: '🏔️', gradient: 'from-emerald-500 to-teal-600', icon: Mountain },
-  { label: 'Cidades', emoji: '🌆', gradient: 'from-violet-500 to-purple-600', icon: Building2 },
-  { label: 'Aventura', emoji: '🧗', gradient: 'from-amber-400 to-orange-500', icon: Compass },
-  { label: 'Gastronomia', emoji: '🍜', gradient: 'from-orange-400 to-red-500', icon: UtensilsCrossed },
+  { label: 'Praias', emoji: '🏖️', gradient: 'from-sky-400 to-cyan-500', desc: 'Mar, sol e areia' },
+  { label: 'Montanhas', emoji: '⛰️', gradient: 'from-emerald-500 to-green-700', desc: 'Trilhas e altitudes' },
+  { label: 'Cidades', emoji: '🏙️', gradient: 'from-violet-500 to-indigo-700', desc: 'Arte e arquitetura' },
+  { label: 'Aventura', emoji: '🪂', gradient: 'from-amber-400 to-orange-600', desc: 'Adrenalina pura' },
+  { label: 'Gastronomia', emoji: '🍣', gradient: 'from-rose-500 to-red-600', desc: 'Culinária do mundo' },
+  { label: 'Cultura', emoji: '🏛️', gradient: 'from-purple-500 to-violet-700', desc: 'História e tradição' },
+  { label: 'Relax', emoji: '🧖', gradient: 'from-teal-400 to-cyan-600', desc: 'Spa e descanso' },
+  { label: 'Família', emoji: '👨‍👩‍👧', gradient: 'from-pink-400 to-fuchsia-600', desc: 'Para toda família' },
 ];
 
 const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string }> = {
@@ -581,7 +584,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* EXPLORE — Tactile Category Discovery Cards         */}
+      {/* EXPLORE — Category Grid                            */}
       {/* ═══════════════════════════════════════════════════ */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -589,62 +592,44 @@ export default function DashboardPage() {
         transition={{ delay: 0.35 }}
         className="space-y-4"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Compass className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-base font-semibold text-foreground tracking-tight">Explorar</h2>
-          </div>
-          <Link href="/dashboard/destinations" className="text-xs text-primary font-medium hover:text-primary/80 transition-colors flex items-center gap-1">
-            Ver todos <ArrowRight className="w-3 h-3" />
-          </Link>
+        <div className="flex items-center gap-2.5">
+          <Compass className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-base font-semibold text-foreground tracking-tight">Explorar por categoria</h2>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-3 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory">
+        <div className="grid grid-cols-4 gap-2.5 md:grid-cols-8">
           {CATEGORIES.map((cat, i) => (
             <motion.button
               key={cat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ y: -8, scale: 1.04 }}
-              whileTap={{ scale: 0.94 }}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.35 + i * 0.04, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ scale: 1.06, y: -3 }}
+              whileTap={{ scale: 0.93 }}
               onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
-              className="relative shrink-0 snap-start group cursor-pointer"
+              className="group flex flex-col items-center gap-2 cursor-pointer"
             >
-              {/* Glow halo on hover */}
+              {/* Icon bubble */}
               <div className={cn(
-                'absolute -inset-1 rounded-3xl opacity-0 group-hover:opacity-60 blur-xl transition-opacity duration-500 bg-gradient-to-br',
-                cat.gradient
-              )} />
-
-              <div className={cn(
-                'relative w-[110px] h-[136px] rounded-2xl bg-gradient-to-br flex flex-col overflow-hidden',
-                'shadow-lg group-hover:shadow-2xl transition-shadow duration-300',
+                'relative w-full aspect-square rounded-2xl bg-gradient-to-br overflow-hidden',
+                'shadow-md group-hover:shadow-lg transition-all duration-300',
                 cat.gradient
               )}>
-                {/* Animated shimmer layer */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/20" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-                {/* Moving highlight */}
-                <div className="absolute -inset-full top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent skew-y-12 group-hover:translate-y-full transition-transform duration-700 ease-out" />
-
-                {/* Emoji with micro-animation */}
-                <div className="flex-1 flex items-center justify-center pt-4">
-                  <motion.span
-                    className="text-[2.8rem] drop-shadow-lg select-none"
-                    whileHover={{ rotate: [0, -10, 10, -6, 0], scale: 1.15 }}
-                    transition={{ duration: 0.5 }}
-                  >
+                {/* Gloss top */}
+                <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/25 to-transparent rounded-t-2xl" />
+                {/* Bottom shade */}
+                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent" />
+                {/* Emoji */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl md:text-3xl select-none drop-shadow transition-transform duration-300 group-hover:scale-125">
                     {cat.emoji}
-                  </motion.span>
-                </div>
-
-                {/* Label area */}
-                <div className="px-3 pb-4">
-                  <span className="block text-[11px] font-bold text-white tracking-wide leading-tight">{cat.label}</span>
-                  <span className="block text-[9px] text-white/60 mt-0.5 font-medium uppercase tracking-wider">Explorar →</span>
+                  </span>
                 </div>
               </div>
+              {/* Label */}
+              <span className="text-[10px] md:text-[11px] font-semibold text-foreground/80 group-hover:text-foreground transition-colors leading-tight text-center">
+                {cat.label}
+              </span>
             </motion.button>
           ))}
         </div>
@@ -659,91 +644,110 @@ export default function DashboardPage() {
         transition={{ delay: 0.4 }}
         className="space-y-4"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Flame className="w-4 h-4 text-amber-500" />
-            <h2 className="text-base font-semibold text-foreground tracking-tight">Em alta</h2>
-            <span className="text-[9px] font-bold text-amber-500/80 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider border border-amber-500/20">
-              Esta semana
-            </span>
-          </div>
-          <Link href="/dashboard/destinations" className="text-xs text-primary font-medium hover:text-primary/80 transition-colors flex items-center gap-1">
-            Ver todos <ArrowRight className="w-3 h-3" />
-          </Link>
+        <div className="flex items-center gap-2.5">
+          <Flame className="w-4 h-4 text-amber-500" />
+          <h2 className="text-base font-semibold text-foreground tracking-tight">Em alta</h2>
+          <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider border border-amber-500/20">
+            Esta semana
+          </span>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-3 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory">
-          {TRENDING.map((dest, i) => {
+        {/* First card prominent, rest in scrollable row */}
+        <div className="space-y-3">
+          {/* Hero card — first trending dest */}
+          {(() => {
+            const dest = TRENDING[0];
             const photo = trendingPhotos[dest.name];
-
             return (
               <motion.div
-                key={dest.name}
-                initial={{ opacity: 0, x: 28 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + i * 0.07, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
-                className="shrink-0 snap-start cursor-pointer group"
-                style={{ width: 200 }}
+                className="relative h-[200px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg hover:shadow-2xl transition-shadow duration-500"
               >
-                <div className="relative h-[272px] rounded-2xl overflow-hidden shadow-lg group-hover:shadow-2xl transition-shadow duration-500">
+                {photo ? (
+                  <img src={photo} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                ) : (
+                  <div className={cn('absolute inset-0 bg-gradient-to-br', dest.gradient)} />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
-                  {/* Photo layer — fills card with zoom on hover */}
-                  {photo ? (
-                    <img
-                      src={photo}
-                      alt={dest.name}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                  ) : (
-                    /* Gradient fallback while photo loads */
-                    <div className={cn('absolute inset-0 bg-gradient-to-br', dest.gradient)}>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-7xl opacity-25 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500 select-none">
-                          {dest.emoji}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Cinematic dark overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  {/* Subtle vignette */}
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.3)_100%)]" />
-
-                  {/* Featured badge on first card */}
-                  {i === 0 && (
-                    <div className="absolute top-3 left-3 flex items-center gap-1 bg-amber-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                {/* Content positioned left */}
+                <div className="absolute inset-0 flex flex-col justify-between p-5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 bg-amber-500 px-2.5 py-1 rounded-full">
                       <Flame className="w-3 h-3 text-white" />
-                      <span className="text-[10px] font-bold text-white uppercase tracking-wide">Em alta</span>
+                      <span className="text-[10px] font-bold text-white uppercase tracking-wide">Destaque</span>
                     </div>
-                  )}
-
-                  {/* Rating badge */}
-                  <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/15">
-                    <Star className="w-3 h-3 text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.7)]" />
-                    <span className="text-[11px] font-bold text-white">{dest.rating}</span>
+                    <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/15">
+                      <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                      <span className="text-[11px] font-bold text-white">{dest.rating}</span>
+                    </div>
                   </div>
-
-                  {/* Bottom info */}
-                  <div className="absolute bottom-0 inset-x-0 p-4">
-                    <p className="text-lg font-bold text-white leading-tight tracking-tight">{dest.name}</p>
-                    <p className="text-xs text-white/65 flex items-center gap-1 mt-1">
-                      <MapPin className="w-3 h-3 shrink-0" />
+                  <div>
+                    <span className="text-[10px] font-semibold text-white/60 uppercase tracking-widest">{dest.tag}</span>
+                    <h3 className="text-2xl font-black text-white leading-tight tracking-tight mt-0.5">{dest.name}</h3>
+                    <p className="text-sm text-white/70 flex items-center gap-1 mt-1">
+                      <MapPin className="w-3.5 h-3.5 shrink-0" />
                       {dest.country}
                     </p>
-                    {/* CTA hint */}
-                    <div className="mt-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                      <span className="text-[10px] font-semibold text-white/80 uppercase tracking-widest">Explorar destino</span>
-                      <ArrowRight className="w-3 h-3 text-white/80" />
-                    </div>
                   </div>
+                </div>
+
+                {/* Arrow */}
+                <div className="absolute right-5 bottom-5 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                  <ArrowRight className="w-4 h-4 text-white" />
                 </div>
               </motion.div>
             );
-          })}
+          })()}
+
+          {/* Remaining 4 — horizontal scroll */}
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+            {TRENDING.slice(1).map((dest, i) => {
+              const photo = trendingPhotos[dest.name];
+              return (
+                <motion.div
+                  key={dest.name}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.45 + i * 0.07 }}
+                  whileHover={{ y: -6, scale: 1.03 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
+                  className="shrink-0 cursor-pointer group"
+                  style={{ width: 148 }}
+                >
+                  <div className="relative h-[188px] rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-shadow duration-400">
+                    {photo ? (
+                      <img src={photo} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-600 group-hover:scale-110" />
+                    ) : (
+                      <div className={cn('absolute inset-0 bg-gradient-to-br', dest.gradient)}>
+                        <span className="absolute inset-0 flex items-center justify-center text-5xl opacity-20 select-none">{dest.emoji}</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+
+                    {/* Rating */}
+                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded-full border border-white/10">
+                      <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                      <span className="text-[10px] font-bold text-white">{dest.rating}</span>
+                    </div>
+
+                    {/* Info */}
+                    <div className="absolute bottom-0 inset-x-0 p-3">
+                      <p className="text-sm font-bold text-white leading-tight">{dest.name}</p>
+                      <p className="text-[10px] text-white/60 mt-0.5">{dest.country}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </motion.section>
 
