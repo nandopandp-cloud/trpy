@@ -270,6 +270,94 @@
   .scroll-x-hidden::-webkit-scrollbar {
     display: none;
   }
+
+  /* ── 3D Perspective & Tilt ───────────────────────────── */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  /* ── Mesh Gradient Backgrounds ─────────────────────── */
+  .mesh-gradient-1 {
+    background:
+      radial-gradient(at 40% 20%, hsla(239, 84%, 67%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(280, 65%, 60%, 0.2) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsla(38, 92%, 50%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, hsla(340, 65%, 55%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(160, 84%, 39%, 0.15) 0px, transparent 50%);
+  }
+  .mesh-gradient-dark {
+    background:
+      radial-gradient(at 40% 20%, hsla(239, 84%, 67%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(280, 65%, 60%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsla(38, 92%, 50%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, hsla(340, 65%, 55%, 0.08) 0px, transparent 50%);
+  }
+
+  /* ── Aurora / Northern Lights ──────────────────────── */
+  .aurora {
+    background: linear-gradient(
+      120deg,
+      hsla(239, 84%, 67%, 0.4) 0%,
+      hsla(280, 65%, 60%, 0.3) 25%,
+      hsla(160, 84%, 44%, 0.3) 50%,
+      hsla(38, 92%, 50%, 0.2) 75%,
+      hsla(239, 84%, 67%, 0.4) 100%
+    );
+    background-size: 400% 400%;
+    animation: aurora-flow 8s ease infinite;
+    filter: blur(60px);
+  }
+
+  /* ── Animated Gradient Border ──────────────────────── */
+  .animated-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+      from var(--border-angle, 0deg),
+      transparent 25%,
+      #6366f1 50%,
+      transparent 75%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: border-rotate 4s linear infinite;
+  }
+
+  /* ── Stripe Gradient (progress bars) ──────────────── */
+  .stripe-gradient {
+    background-image: linear-gradient(
+      45deg,
+      rgba(255,255,255,0.15) 25%, transparent 25%,
+      transparent 50%, rgba(255,255,255,0.15) 50%,
+      rgba(255,255,255,0.15) 75%, transparent 75%, transparent
+    );
+    background-size: 1rem 1rem;
+    animation: stripe-move 1s linear infinite;
+  }
+
+  /* ── Bento Card Base ──────────────────────────────── */
+  .bento-card {
+    @apply relative overflow-hidden rounded-3xl border border-border/60 bg-card/80 backdrop-blur-xl;
+    transition: transform 0.4s cubic-bezier(0.03, 0.98, 0.52, 0.99), box-shadow 0.4s ease;
+  }
+  .bento-card:hover {
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(99, 102, 241, 0.08);
+  }
+  .dark .bento-card:hover {
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(99, 102, 241, 0.15);
+  }
 }
 
 /* ── Animations ──────────────────────────────────────── */
@@ -353,3 +441,37 @@
 .animate-slide-up-fade     { animation: slide-up-fade 0.5s ease-out forwards; }
 .animate-scale-bounce      { animation: scale-bounce 0.4s ease-out forwards; }
 .animate-slide-in-right    { animation: slide-in-right 0.4s ease-out forwards; }
+
+@keyframes aurora-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes border-rotate {
+  to { --border-angle: 360deg; }
+}
+
+@keyframes stripe-move {
+  to { background-position: 1rem 0; }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(var(--orbit-radius, 80px)) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(var(--orbit-radius, 80px)) rotate(-360deg); }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@property --border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.animate-aurora        { animation: aurora-flow 8s ease infinite; background-size: 400% 400%; }
+.animate-orbit         { animation: orbit var(--orbit-duration, 20s) linear infinite; }
+.animate-count-up      { animation: count-up 0.6s ease-out forwards; }
