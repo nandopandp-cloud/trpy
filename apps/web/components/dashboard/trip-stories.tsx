@@ -4,7 +4,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, X, ChevronLeft, ChevronRight, Sparkles,
-  ExternalLink, Play, MapPin, Volume2, VolumeX, Plane,
+  ExternalLink, MapPin, Volume2, VolumeX, Plane,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -164,368 +164,522 @@ function useStoryVideos(destination: string | null) {
 }
 
 /* ════════════════════════════════════════════════════════ */
-/* STORY VIEWER                                            */
+/* STORY VIEWER  — Instagram-grade experience              */
 /* ════════════════════════════════════════════════════════ */
 
-const STORY_DURATION = 12000; // ms per video
-const TICK = 50;
+const STORY_DURATION = 15000; // ms per video segment
 
 interface StoryViewerProps {
   stories: StoryItem[];
   initialIndex: number;
   onClose: () => void;
-  onNavigate?: (id: string) => void;
 }
+
+/* ── Directional slide variants ── */
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? '-30%' : '30%', opacity: 0 }),
+};
 
 function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   const router = useRouter();
+
+  /* ── Indices & direction ── */
   const [storyIdx, setStoryIdx] = useState(initialIndex);
   const [videoIdx, setVideoIdx] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [muted, setMuted] = useState(true);
-  const [showEmbed, setShowEmbed] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const progressRef = useRef(0);
+  const directionRef = useRef(0);          // 1 = forward, -1 = backward
 
+  /* ── RAF progress ── */
+  const [progress, setProgress] = useState(0);
+  const rafRef       = useRef<number | null>(null);
+  const startTsRef   = useRef<number | null>(null);
+  const savedPctRef  = useRef(0);          // progress saved before pause
+
+  /* ── Pause / mute ── */
+  const [isPaused, setIsPaused] = useState(false);
+  const [muted, setMuted]       = useState(true);
+  const isPausedRef = useRef(false);
+
+  /* ── Touch gesture ── */
+  type TouchState = { x: number; y: number; time: number };
+  const touchRef    = useRef<TouchState | null>(null);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didSwipeRef  = useRef(false);
+
+  /* ── Video data ── */
   const currentStory = stories[storyIdx];
-  const coverPhoto = useDestinationPhoto(currentStory.destination, currentStory.coverImage);
+  const coverPhoto   = useDestinationPhoto(currentStory.destination, currentStory.coverImage);
   const { videos, loading } = useStoryVideos(currentStory.destination);
 
   const currentVideo = videos[videoIdx] ?? null;
-  const totalBars = Math.max(videos.length, 1);
+  const totalBars    = Math.max(videos.length, 1);
 
-  /* ── Progress timer ── */
-  const startTimer = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    progressRef.current = 0;
-    setProgress(0);
+  /* ══════════════════ RAF PROGRESS ══════════════════════ */
 
-    intervalRef.current = setInterval(() => {
-      progressRef.current += (TICK / STORY_DURATION) * 100;
-      setProgress(progressRef.current);
-      if (progressRef.current >= 100) advance();
-    }, TICK);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stopRaf = useCallback(() => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+  }, []);
+
+  const startRaf = useCallback(() => {
+    stopRaf();
+    startTsRef.current = null;
+
+    function tick(ts: number) {
+      if (isPausedRef.current) { rafRef.current = requestAnimationFrame(tick); return; }
+      if (!startTsRef.current) startTsRef.current = ts;
+      const elapsed = ts - startTsRef.current;
+      const pct = Math.min(savedPctRef.current + (elapsed / STORY_DURATION) * 100, 100);
+      setProgress(pct);
+      if (pct >= 100) { advanceFn(); return; }
+      rafRef.current = requestAnimationFrame(tick);
+    }
+    rafRef.current = requestAnimationFrame(tick);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storyIdx, videoIdx]);
 
-  const stopTimer = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
+  const pauseRaf = useCallback(() => {
+    isPausedRef.current = true;
+    setIsPaused(true);
+  }, []);
 
-  /* ── Navigation ── */
-  const advance = useCallback(() => {
-    stopTimer();
-    setShowEmbed(false);
-    if (videoIdx < videos.length - 1) {
-      setVideoIdx(v => v + 1);
-    } else if (storyIdx < stories.length - 1) {
-      setStoryIdx(s => s + 1);
+  const resumeRaf = useCallback(() => {
+    isPausedRef.current = false;
+    setIsPaused(false);
+    // Reset start so elapsed time resets (progress saved in savedPctRef)
+    startTsRef.current = null;
+  }, []);
+
+  /* ══════════════════ NAVIGATION ═══════════════════════ */
+
+  // We define a stable ref-based advance so RAF tick can call it without stale closures
+  const storyIdxRef  = useRef(storyIdx);
+  const videoIdxRef  = useRef(videoIdx);
+  const videosRef    = useRef(videos);
+  const storiesRef   = useRef(stories);
+
+  storyIdxRef.current  = storyIdx;
+  videoIdxRef.current  = videoIdx;
+  videosRef.current    = videos;
+  storiesRef.current   = stories;
+
+  const advanceFn = useCallback(() => {
+    stopRaf();
+    savedPctRef.current = 0;
+    const vi = videoIdxRef.current;
+    const si = storyIdxRef.current;
+    const vlen = videosRef.current.length;
+    const slen = storiesRef.current.length;
+
+    directionRef.current = 1;
+    if (vi < vlen - 1) {
+      setVideoIdx(vi + 1);
+    } else if (si < slen - 1) {
+      setStoryIdx(si + 1);
       setVideoIdx(0);
     } else {
       onClose();
     }
-  }, [videoIdx, videos.length, storyIdx, stories.length, onClose]);
+  }, [stopRaf, onClose]);
 
-  const goBack = useCallback(() => {
-    stopTimer();
-    setShowEmbed(false);
-    if (videoIdx > 0) {
-      setVideoIdx(v => v - 1);
-    } else if (storyIdx > 0) {
-      setStoryIdx(s => s - 1);
+  const goBackFn = useCallback(() => {
+    stopRaf();
+    savedPctRef.current = 0;
+    const vi = videoIdxRef.current;
+    const si = storyIdxRef.current;
+
+    directionRef.current = -1;
+    if (vi > 0) {
+      setVideoIdx(vi - 1);
+    } else if (si > 0) {
+      setStoryIdx(si - 1);
       setVideoIdx(0);
     }
-  }, [videoIdx, storyIdx]);
+  }, [stopRaf]);
 
-  const goToStory = (idx: number) => {
-    stopTimer();
-    setShowEmbed(false);
+  const goToStory = useCallback((idx: number) => {
+    stopRaf();
+    savedPctRef.current = 0;
+    directionRef.current = idx > storyIdxRef.current ? 1 : -1;
     setStoryIdx(idx);
     setVideoIdx(0);
-  };
+  }, [stopRaf]);
 
-  /* ── Restart timer on index change ── */
+  /* ── Start/restart progress when indices or loading changes ── */
   useEffect(() => {
-    setShowEmbed(false);
-    if (!loading) startTimer();
-    return stopTimer;
-  }, [storyIdx, videoIdx, loading]);
+    isPausedRef.current = false;
+    setIsPaused(false);
+    savedPctRef.current = 0;
+    setProgress(0);
+    if (!loading) startRaf();
+    return stopRaf;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storyIdx, videoIdx]);
 
   useEffect(() => {
-    if (!loading && videos.length > 0) startTimer();
-    return stopTimer;
+    if (!loading && videos.length > 0) {
+      savedPctRef.current = 0;
+      startRaf();
+    }
+    return stopRaf;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
-  /* ── Keyboard ── */
+  /* ── Keyboard shortcuts ── */
   useEffect(() => {
-    const handle = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') advance();
-      if (e.key === 'ArrowLeft') goBack();
+    const fn = (e: KeyboardEvent) => {
+      if (e.key === 'Escape')      onClose();
+      if (e.key === 'ArrowRight')  advanceFn();
+      if (e.key === 'ArrowLeft')   goBackFn();
+      if (e.key === ' ')           isPausedRef.current ? resumeRaf() : pauseRaf();
     };
-    window.addEventListener('keydown', handle);
-    return () => window.removeEventListener('keydown', handle);
-  }, [advance, goBack, onClose]);
+    window.addEventListener('keydown', fn);
+    return () => window.removeEventListener('keydown', fn);
+  }, [advanceFn, goBackFn, onClose, pauseRaf, resumeRaf]);
+
+  /* ══════════════════ TOUCH / GESTURE ══════════════════ */
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    didSwipeRef.current = false;
+    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
+
+    // Long-press → pause
+    holdTimerRef.current = setTimeout(() => {
+      pauseRaf();
+    }, 150);
+  }, [pauseRaf]);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchRef.current) return;
+    const dx = Math.abs(e.touches[0].clientX - touchRef.current.x);
+    const dy = Math.abs(e.touches[0].clientY - touchRef.current.y);
+
+    // If finger moved, cancel the hold timer
+    if ((dx > 8 || dy > 8) && holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+
+    if (dx > 10 || dy > 10) didSwipeRef.current = true;
+  }, []);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+
+    // Resuming from hold
+    if (isPausedRef.current) {
+      resumeRaf();
+      touchRef.current = null;
+      return;
+    }
+
+    if (!touchRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchRef.current.y;
+    const dt = Date.now() - touchRef.current.time;
+    touchRef.current = null;
+
+    const velocity = Math.abs(dx) / dt; // px/ms
+
+    // Horizontal swipe
+    if (Math.abs(dx) > Math.abs(dy) * 1.2 && (velocity > 0.25 || Math.abs(dx) > 55)) {
+      if (dx < 0) advanceFn(); else goBackFn();
+      return;
+    }
+
+    // Swipe down → close
+    if (dy > 100 && Math.abs(dy) > Math.abs(dx) * 1.5) {
+      onClose();
+      return;
+    }
+
+    // Tap (barely moved)
+    if (!didSwipeRef.current) {
+      const { clientX } = e.changedTouches[0];
+      if (clientX < window.innerWidth * 0.35) goBackFn(); else advanceFn();
+    }
+  }, [advanceFn, goBackFn, onClose, resumeRaf]);
+
+  /* Mouse support for desktop hold-to-pause */
+  const onMouseDown = useCallback(() => {
+    holdTimerRef.current = setTimeout(pauseRaf, 150);
+  }, [pauseRaf]);
+  const onMouseUp = useCallback(() => {
+    if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
+    if (isPausedRef.current) resumeRaf();
+  }, [resumeRaf]);
+
+  /* ══════════════════ RENDER ════════════════════════════ */
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-50 bg-black flex items-center justify-center"
     >
 
-      {/* ── Left story arrow (desktop) ── */}
-      {storyIdx > 0 && (
+      {/* ── Desktop: left/right arrows outside card ── */}
+      <div className="hidden md:flex absolute inset-0 items-center justify-between px-4 z-40 pointer-events-none">
         <button
-          onClick={e => { e.stopPropagation(); goToStory(storyIdx - 1); }}
-          className="absolute left-4 md:left-[calc(50%-240px-60px)] w-10 h-10 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center hover:bg-white/20 transition z-20"
+          onClick={() => goToStory(Math.max(0, storyIdx - 1))}
+          style={{ pointerEvents: storyIdx > 0 ? 'auto' : 'none' }}
+          className={cn(
+            'w-11 h-11 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center hover:bg-white/25 transition',
+            storyIdx === 0 && 'opacity-0'
+          )}
         >
           <ChevronLeft className="w-5 h-5 text-white" />
         </button>
-      )}
-
-      {/* ── Story Card ── */}
-      <motion.div
-        key={storyIdx}
-        initial={{ scale: 0.94, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.94, opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-        className="relative w-full max-w-[360px] h-[calc(100vh-40px)] max-h-[700px] rounded-3xl overflow-hidden shadow-2xl"
-      >
-
-        {/* ── BG: destination photo ── */}
-        <div className="absolute inset-0">
-          <AnimatePresence mode="sync">
-            {coverPhoto ? (
-              <motion.img
-                key={coverPhoto}
-                src={coverPhoto}
-                alt={currentStory.title}
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.6 }}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : (
-              <motion.div
-                key="gradient"
-                className={cn('absolute inset-0 bg-gradient-to-br', currentStory.gradient ?? GRADIENT_FALLBACKS[0])}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              />
-            )}
-          </AnimatePresence>
-          {/* Gradients overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
-        </div>
-
-        {/* ── Progress Bars ── */}
-        <div className="absolute top-3 inset-x-3 flex gap-1 z-30">
-          {Array.from({ length: totalBars }).map((_, i) => (
-            <div key={i} className="flex-1 h-[2.5px] rounded-full bg-white/25 overflow-hidden">
-              <motion.div
-                className="h-full bg-white rounded-full"
-                animate={{
-                  width:
-                    i < videoIdx ? '100%' :
-                    i === videoIdx ? `${progress}%` :
-                    '0%',
-                }}
-                transition={{ duration: 0 }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* ── Header ── */}
-        <div className="absolute top-7 inset-x-4 flex items-center justify-between z-30">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-white/40 shrink-0">
-              {coverPhoto
-                ? <img src={coverPhoto} alt="" className="w-full h-full object-cover" />
-                : <div className={cn('w-full h-full bg-gradient-to-br flex items-center justify-center', currentStory.gradient)}>
-                    <span className="text-sm">{currentStory.emoji}</span>
-                  </div>
-              }
-            </div>
-            <div className="min-w-0">
-              <p className="text-white font-semibold text-sm leading-none">{currentStory.title}</p>
-              {currentStory.subtitle && (
-                <p className="text-white/60 text-[10px] mt-0.5 flex items-center gap-0.5">
-                  <MapPin className="w-2.5 h-2.5" />
-                  {currentStory.subtitle}
-                </p>
-              )}
-            </div>
-            {currentStory.type === 'suggestion' && (
-              <span className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
-                <Sparkles className="w-2.5 h-2.5" />IA
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
-              className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition"
-            >
-              {muted
-                ? <VolumeX className="w-3.5 h-3.5 text-white/80" />
-                : <Volume2 className="w-3.5 h-3.5 text-white" />
-              }
-            </button>
-            <button
-              onClick={e => { e.stopPropagation(); onClose(); }}
-              className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition"
-            >
-              <X className="w-3.5 h-3.5 text-white" />
-            </button>
-          </div>
-        </div>
-
-        {/* ── CENTER: Video area ── */}
-        <div className="absolute inset-0 flex items-center justify-center px-4">
-          {loading ? (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center gap-3"
-            >
-              <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-              <p className="text-white/60 text-xs font-light">Buscando vídeos...</p>
-            </motion.div>
-          ) : currentVideo && !showEmbed ? (
-            /* ── Thumbnail card ── */
-            <motion.div
-              key={currentVideo.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full rounded-2xl overflow-hidden shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="relative aspect-video">
-                <img
-                  src={currentVideo.thumbnail}
-                  alt={currentVideo.title}
-                  className="w-full h-full object-cover"
-                />
-                {/* Play button */}
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={e => {
-                      e.stopPropagation();
-                      stopTimer();
-                      setShowEmbed(true);
-                    }}
-                    className="w-16 h-16 rounded-full bg-white/95 flex items-center justify-center shadow-2xl"
-                  >
-                    <Play className="w-7 h-7 text-zinc-900 ml-1" fill="currentColor" />
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          ) : currentVideo && showEmbed ? (
-            /* ── YouTube embed ── */
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="w-full rounded-2xl overflow-hidden shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="aspect-video relative bg-black">
-                <iframe
-                  key={`${currentVideo.id}-${muted}`}
-                  src={`https://www.youtube-nocookie.com/embed/${currentVideo.id}?autoplay=1&mute=${muted ? 1 : 0}&rel=0&modestbranding=1&playsinline=1&controls=1`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full"
-                />
-              </div>
-            </motion.div>
-          ) : null}
-        </div>
-
-        {/* ── BOTTOM: Video info ── */}
-        {currentVideo && (
-          <motion.div
-            key={currentVideo.id}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="absolute bottom-0 inset-x-0 p-4 z-20"
-          >
-            <div className="bg-black/50 backdrop-blur-xl rounded-2xl p-4 border border-white/10">
-              <p className="text-white font-medium text-sm leading-snug line-clamp-2">{currentVideo.title}</p>
-              <p className="text-white/50 text-[10px] mt-1">{currentVideo.channelTitle}</p>
-              <div className="flex items-center gap-3 mt-3">
-                <a
-                  href={`https://www.youtube.com/watch?v=${currentVideo.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={e => e.stopPropagation()}
-                  className="flex items-center gap-1.5 text-[11px] font-medium text-indigo-300 hover:text-indigo-200 transition"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  Assistir no YouTube
-                </a>
-                {!showEmbed && (
-                  <button
-                    onClick={e => { e.stopPropagation(); stopTimer(); setShowEmbed(true); }}
-                    className="flex items-center gap-1.5 text-[11px] font-medium text-white/60 hover:text-white transition ml-auto"
-                  >
-                    <Play className="w-3 h-3" fill="currentColor" />
-                    Reproduzir aqui
-                  </button>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── TAP ZONES (left = back, right = next) ── */}
-        <div className="absolute inset-0 z-10 flex" style={{ pointerEvents: currentVideo && showEmbed ? 'none' : undefined }}>
-          <div
-            className="w-1/3 h-full"
-            onClick={e => { e.stopPropagation(); goBack(); }}
-          />
-          <div
-            className="w-2/3 h-full"
-            onClick={e => { e.stopPropagation(); advance(); }}
-          />
-        </div>
-
-      </motion.div>
-
-      {/* ── Right story arrow (desktop) ── */}
-      {storyIdx < stories.length - 1 && (
         <button
-          onClick={e => { e.stopPropagation(); goToStory(storyIdx + 1); }}
-          className="absolute right-4 md:right-[calc(50%-240px-60px)] w-10 h-10 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center hover:bg-white/20 transition z-20"
+          onClick={() => goToStory(Math.min(stories.length - 1, storyIdx + 1))}
+          style={{ pointerEvents: storyIdx < stories.length - 1 ? 'auto' : 'none' }}
+          className={cn(
+            'w-11 h-11 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center hover:bg-white/25 transition',
+            storyIdx >= stories.length - 1 && 'opacity-0'
+          )}
         >
           <ChevronRight className="w-5 h-5 text-white" />
         </button>
-      )}
-
-      {/* ── Story strip (bottom previews on desktop) ── */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 z-20">
-        {stories.map((s, i) => (
-          <button
-            key={s.id}
-            onClick={e => { e.stopPropagation(); goToStory(i); }}
-            className={cn(
-              'w-1.5 h-1.5 rounded-full transition-all duration-300',
-              i === storyIdx ? 'bg-white scale-125' : 'bg-white/30 hover:bg-white/60'
-            )}
-          />
-        ))}
       </div>
+
+      {/* ════ STORY CARD — phone-like on desktop, full-screen on mobile ════ */}
+      <div className="relative w-full h-full md:w-[420px] md:h-[calc(100dvh-32px)] md:max-h-[780px] md:rounded-[2rem] overflow-hidden md:shadow-2xl">
+
+        {/* ── Animated story transition ── */}
+        <AnimatePresence custom={directionRef.current} mode="sync">
+          <motion.div
+            key={`${storyIdx}-${videoIdx}`}
+            custom={directionRef.current}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="absolute inset-0"
+          >
+            {/* ─── LAYER 1: Blurred destination photo as BG ─── */}
+            <div className="absolute inset-0 bg-black">
+              {coverPhoto ? (
+                <img
+                  src={coverPhoto}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50 pointer-events-none"
+                  aria-hidden
+                />
+              ) : (
+                <div className={cn('absolute inset-0 bg-gradient-to-br opacity-70', currentStory.gradient ?? GRADIENT_FALLBACKS[0])} />
+              )}
+            </div>
+
+            {/* ─── LAYER 2: YouTube iframe (fills frame, cover crop) ─── */}
+            {currentVideo && (
+              <div className="absolute inset-0 overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.iframe
+                    key={`${currentVideo.id}-${muted ? 'm' : 'u'}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4 }}
+                    src={`https://www.youtube-nocookie.com/embed/${currentVideo.id}?autoplay=1&mute=${muted ? 1 : 0}&controls=0&rel=0&playsinline=1&modestbranding=1&loop=0`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    /* Cover-crop: fill height, overflow width */
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      height: '100%',
+                      aspectRatio: '16/9',
+                      transform: 'translate(-50%, -50%)',
+                      pointerEvents: 'none',  // gesture overlay handles all touches
+                    }}
+                  />
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* Loading state */}
+            {loading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
+                <div className="w-10 h-10 rounded-full border-[3px] border-white/20 border-t-white animate-spin" />
+                <p className="text-white/60 text-xs tracking-wide">Buscando vídeos…</p>
+              </div>
+            )}
+
+            {/* No videos fallback — show cover photo large */}
+            {!loading && !currentVideo && coverPhoto && (
+              <img
+                src={coverPhoto}
+                alt={currentStory.title}
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              />
+            )}
+
+            {/* ─── LAYER 3: Gradient UI overlays ─── */}
+            {/* Top scrim */}
+            <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+            {/* Bottom scrim */}
+            <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+
+            {/* ─── LAYER 4: Progress bars ─── */}
+            <div className="absolute top-4 inset-x-4 flex gap-[3px] z-30 pointer-events-none">
+              {Array.from({ length: totalBars }).map((_, i) => (
+                <div key={i} className="flex-1 h-[2.5px] rounded-full bg-white/25 overflow-hidden">
+                  <div
+                    className="h-full bg-white rounded-full"
+                    style={{
+                      width:
+                        i < videoIdx ? '100%' :
+                        i === videoIdx ? `${progress}%` : '0%',
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* ─── LAYER 5: Header ─── */}
+            <div className="absolute top-10 inset-x-4 flex items-center justify-between z-30 pointer-events-none">
+              {/* Left: avatar + info */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/50 shrink-0">
+                  {coverPhoto
+                    ? <img src={coverPhoto} alt="" className="w-full h-full object-cover" />
+                    : <div className={cn('w-full h-full bg-gradient-to-br flex items-center justify-center text-base', currentStory.gradient)}>
+                        {currentStory.emoji}
+                      </div>
+                  }
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white font-semibold text-[15px] leading-none drop-shadow">{currentStory.title}</p>
+                  {currentStory.subtitle && (
+                    <p className="text-white/70 text-[11px] mt-0.5 flex items-center gap-1">
+                      <MapPin className="w-2.5 h-2.5 shrink-0" />
+                      {currentStory.subtitle}
+                    </p>
+                  )}
+                </div>
+                {currentStory.type === 'suggestion' && (
+                  <span className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/25 text-amber-300 border border-amber-400/30 uppercase tracking-wider backdrop-blur-sm">
+                    <Sparkles className="w-2.5 h-2.5" />IA
+                  </span>
+                )}
+              </div>
+
+              {/* Right: controls */}
+              <div className="flex items-center gap-2 pointer-events-auto">
+                <button
+                  onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
+                  className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 active:scale-90 transition"
+                >
+                  {muted
+                    ? <VolumeX className="w-4 h-4 text-white/80" />
+                    : <Volume2 className="w-4 h-4 text-white" />
+                  }
+                </button>
+                <button
+                  onClick={e => { e.stopPropagation(); onClose(); }}
+                  className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 active:scale-90 transition"
+                >
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* ─── LAYER 6: Bottom overlay ─── */}
+            {currentVideo && (
+              <motion.div
+                key={currentVideo.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="absolute bottom-0 inset-x-0 px-4 pb-8 pt-4 z-30 pointer-events-none"
+              >
+                <p className="text-white font-semibold text-[15px] leading-snug line-clamp-2 drop-shadow">{currentVideo.title}</p>
+                <p className="text-white/60 text-[11px] mt-1">{currentVideo.channelTitle}</p>
+
+                {/* CTA row */}
+                <div className="flex items-center gap-3 mt-4 pointer-events-auto">
+                  <a
+                    href={`https://www.youtube.com/watch?v=${currentVideo.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={e => e.stopPropagation()}
+                    className="flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/20 text-white text-[12px] font-medium px-4 py-2.5 rounded-full hover:bg-white/25 active:scale-95 transition"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Ver no YouTube
+                  </a>
+                  {currentStory.type === 'trip' && (
+                    <button
+                      onClick={e => { e.stopPropagation(); onClose(); router.push(`/dashboard/trips/${currentStory.id}`); }}
+                      className="flex items-center gap-2 bg-indigo-500/80 backdrop-blur-md border border-indigo-400/30 text-white text-[12px] font-medium px-4 py-2.5 rounded-full hover:bg-indigo-500 active:scale-95 transition"
+                    >
+                      <Plane className="w-3.5 h-3.5" />
+                      Ver viagem
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ─── LAYER 7: Gesture capture overlay ─── */}
+            <div
+              className="absolute inset-0 z-20 cursor-pointer"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              onMouseDown={onMouseDown}
+              onMouseUp={onMouseUp}
+              /* Desktop click zones */
+              onClick={e => {
+                const x = e.clientX;
+                const w = (e.currentTarget as HTMLElement).getBoundingClientRect().width;
+                if (x < w * 0.35) goBackFn(); else advanceFn();
+              }}
+            />
+
+          </motion.div>
+        </AnimatePresence>
+
+        {/* ─── Pause indicator (hold to pause) ─── */}
+        <AnimatePresence>
+          {isPaused && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none"
+            >
+              <div className="w-20 h-20 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
+                <div className="flex gap-[5px]">
+                  <div className="w-[5px] h-7 rounded-full bg-white" />
+                  <div className="w-[5px] h-7 rounded-full bg-white" />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ─── Story dots (bottom, desktop) ─── */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-1.5 z-40 pointer-events-none">
+          {stories.map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                'rounded-full transition-all duration-300',
+                i === storyIdx ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/30'
+              )}
+            />
+          ))}
+        </div>
+
+      </div>{/* /card */}
 
     </motion.div>
   );
