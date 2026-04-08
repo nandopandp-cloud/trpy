@@ -446,7 +446,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* ── Card 2: Budget Gauge ── */}
-        <motion.div variants={stagger.item} className="col-span-1 row-span-1">
+        <motion.div variants={stagger.item} className="col-span-1 row-span-1 min-h-[280px]">
           <TiltCard className="h-full p-5 flex flex-col">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -471,7 +471,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* ── Card 3: Total Trips ── */}
-        <motion.div variants={stagger.item} className="col-span-1 row-span-1">
+        <motion.div variants={stagger.item} className="col-span-1 row-span-1 min-h-[280px]">
           <TiltCard className="h-full p-5 flex flex-col">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center">
