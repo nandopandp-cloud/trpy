@@ -491,8 +491,8 @@ export default function DashboardPage() {
           </TiltCard>
         </motion.div>
 
-        {/* ── Card 4: Gastos — span 2 cols on desktop ── */}
-        <motion.div variants={stagger.item} className="col-span-2 row-span-1">
+        {/* ── Card 4: Gastos — span 1 col on mobile, 2 on desktop ── */}
+        <motion.div variants={stagger.item} className="col-span-2 lg:col-span-2 row-span-1">
           <TiltCard className="h-full p-5">
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
@@ -506,8 +506,8 @@ export default function DashboardPage() {
             <div className="flex items-end gap-6">
               {/* Left: spending amount */}
               <div className="shrink-0">
-                <p className="text-3xl font-bold text-foreground leading-none tracking-tight">
-                  <AnimatedNumber value={totalSpent} prefix="R$\u00a0" />
+                <p className="text-3xl font-bold text-foreground leading-none tracking-tight whitespace-nowrap">
+                  R$ <AnimatedNumber value={totalSpent} />
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-1">
                   {totalBudget > 0
@@ -522,7 +522,7 @@ export default function DashboardPage() {
                   {/* Bar */}
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
                     <span>Gasto</span>
-                    <span>R$\u00a0{totalBudget.toLocaleString('pt-BR')}</span>
+                    <span className="whitespace-nowrap">R$ {totalBudget.toLocaleString('pt-BR')}</span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                     <motion.div
@@ -539,12 +539,12 @@ export default function DashboardPage() {
                     </motion.div>
                   </div>
                   {/* Labels */}
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className={cn('font-semibold', totalSpent > totalBudget * 0.9 ? 'text-amber-500' : 'text-indigo-500')}>
-                      R$\u00a0{totalSpent.toLocaleString('pt-BR')} gasto
+                  <div className="flex items-center justify-between text-[10px] gap-2">
+                    <span className={cn('font-semibold whitespace-nowrap', totalSpent > totalBudget * 0.9 ? 'text-amber-500' : 'text-indigo-500')}>
+                      R$ {totalSpent.toLocaleString('pt-BR')} gasto
                     </span>
-                    <span className="text-muted-foreground">
-                      R$\u00a0{Math.max(0, totalBudget - totalSpent).toLocaleString('pt-BR')} restante
+                    <span className="text-muted-foreground whitespace-nowrap">
+                      R$ {Math.max(0, totalBudget - totalSpent).toLocaleString('pt-BR')} restante
                     </span>
                   </div>
                 </div>
