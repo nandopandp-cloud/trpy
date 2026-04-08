@@ -1,13 +1,13 @@
 'use client';
 
-import { useRef, useCallback, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import Link from 'next/link';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Plus, PlaneTakeoff, Wallet, CalendarDays,
-  ArrowRight, Sparkles, ChevronRight, MapPin, Calendar,
+  ArrowRight, ChevronRight, MapPin, Calendar,
   Globe, Compass, Flame, Star, TrendingUp, Target,
   Plane, Mountain, Palmtree, Building2, UtensilsCrossed,
 } from 'lucide-react';
@@ -96,9 +96,6 @@ function CountdownRing({ days, total = 30 }: { days: number; total?: number }) {
 function BudgetGauge({ spent, budget }: { spent: number; budget: number }) {
   const pct = budget > 0 ? Math.min(spent / budget, 1) : 0;
   const isWarning = pct > 0.8;
-  const radius = 50;
-  const halfCircumference = Math.PI * radius;
-  const offset = halfCircumference * (1 - pct);
 
   return (
     <div className="relative w-full max-w-[180px] mx-auto">
@@ -220,6 +217,18 @@ export default function DashboardPage() {
   const totalSpent  = trips.reduce((s, t) => s + Number(t.totalSpent), 0);
   const nextTrip    = trips.find(t => t.status === 'PLANNING' || t.status === 'ONGOING');
   const daysToNext  = nextTrip ? Math.max(0, differenceInDays(new Date(nextTrip.startDate), new Date())) : null;
+
+  // Destination photo for the "Próxima Viagem" card background
+  const [tripPhoto, setTripPhoto] = useState<string | null>(null);
+  useEffect(() => {
+    if (!nextTrip) { setTripPhoto(null); return; }
+    if (nextTrip.coverImage) { setTripPhoto(nextTrip.coverImage); return; }
+    fetch(`/api/destination-photo?q=${encodeURIComponent(nextTrip.destination)}`)
+      .then(r => r.json())
+      .then(d => { if (d.success && d.data?.photoUrl) setTripPhoto(d.data.photoUrl); })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextTrip?.id]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
@@ -352,11 +361,35 @@ export default function DashboardPage() {
         animate="show"
         className="grid grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(160px,auto)]"
       >
-        {/* ── Card 1: Countdown Ring (span 2 on mobile, 2 on desktop) ── */}
+        {/* ── Card 1: Próxima Viagem — span 2×2 ── */}
         <motion.div variants={stagger.item} className="col-span-2 row-span-2">
           <TiltCard className="h-full p-6 flex flex-col justify-between">
-            {/* Aurora bg */}
-            <div className="absolute -top-24 -right-24 w-64 h-64 aurora opacity-20 pointer-events-none" />
+            {/* ── Destination photo as elegant background ── */}
+            {tripPhoto && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1 }}
+                className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none"
+                aria-hidden
+              >
+                <img
+                  src={tripPhoto}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover scale-105"
+                  style={{ opacity: 0.13 }}
+                />
+                {/* Fade: strong on left (text area), transparent on right */}
+                <div className="absolute inset-0 bg-gradient-to-r from-card via-card/70 to-card/10" />
+                {/* Bottom fade */}
+                <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-card/40" />
+              </motion.div>
+            )}
+
+            {/* Aurora blob (only when no photo) */}
+            {!tripPhoto && (
+              <div className="absolute -top-24 -right-24 w-64 h-64 aurora opacity-20 pointer-events-none" />
+            )}
             <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />
 
             <div className="relative z-10">
@@ -458,71 +491,68 @@ export default function DashboardPage() {
           </TiltCard>
         </motion.div>
 
-        {/* ── Card 4: Gastos (spending insight) ── */}
-        <motion.div variants={stagger.item} className="col-span-1 row-span-1">
-          <TiltCard className="h-full p-5 flex flex-col justify-between">
-            <div className="flex items-center gap-2">
+        {/* ── Card 4: Gastos — span 2 cols on desktop ── */}
+        <motion.div variants={stagger.item} className="col-span-2 row-span-1">
+          <TiltCard className="h-full p-5">
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
                 <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
               </div>
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Gastos</span>
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Gastos &amp; Orçamento</span>
             </div>
 
-            <div className="mt-auto">
-              <p className="text-2xl font-bold text-foreground leading-none tracking-tight">
-                <AnimatedNumber value={totalSpent} prefix="R$ " />
-              </p>
+            {/* Two-column layout: big number left, breakdown right */}
+            <div className="flex items-end gap-6">
+              {/* Left: spending amount */}
+              <div className="shrink-0">
+                <p className="text-3xl font-bold text-foreground leading-none tracking-tight">
+                  <AnimatedNumber value={totalSpent} prefix="R$\u00a0" />
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {totalBudget > 0
+                    ? `${Math.round((totalSpent / totalBudget) * 100)}% do orçamento`
+                    : 'total gasto'}
+                </p>
+              </div>
+
+              {/* Right: full progress breakdown */}
               {totalBudget > 0 && (
-                <div className="mt-2">
-                  <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                <div className="flex-1 space-y-1.5">
+                  {/* Bar */}
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                    <span>Gasto</span>
+                    <span>R$\u00a0{totalBudget.toLocaleString('pt-BR')}</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                     <motion.div
                       className={cn(
-                        'h-full rounded-full',
+                        'h-full rounded-full relative overflow-hidden',
                         totalSpent > totalBudget * 0.9 ? 'bg-amber-500' : 'bg-indigo-500'
                       )}
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min((totalSpent / totalBudget) * 100, 100)}%` }}
-                      transition={{ duration: 1, delay: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                    />
+                      transition={{ duration: 1.2, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                    >
+                      {/* Shimmer */}
+                      <span className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]" />
+                    </motion.div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">de R$ {totalBudget.toLocaleString('pt-BR')}</p>
+                  {/* Labels */}
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className={cn('font-semibold', totalSpent > totalBudget * 0.9 ? 'text-amber-500' : 'text-indigo-500')}>
+                      R$\u00a0{totalSpent.toLocaleString('pt-BR')} gasto
+                    </span>
+                    <span className="text-muted-foreground">
+                      R$\u00a0{Math.max(0, totalBudget - totalSpent).toLocaleString('pt-BR')} restante
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
           </TiltCard>
         </motion.div>
 
-        {/* ── Card 5: AI CTA (span 1 col, 1 row) ── */}
-        <motion.div variants={stagger.item} className="col-span-1 row-span-1">
-          <TiltCard className="h-full overflow-hidden group/ai cursor-pointer" onClick={() => router.push('/dashboard/ai')}>
-            {/* BG */}
-            <div className="absolute inset-0 bg-zinc-900 dark:bg-zinc-950" />
-            <div className="absolute inset-0 mesh-gradient-dark opacity-60" />
-            <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-indigo-500/20 blur-2xl animate-breathe" />
-
-            {/* Animated border */}
-            <div className="absolute inset-0 animated-border rounded-3xl" />
-
-            <div className="relative z-10 p-5 flex flex-col h-full justify-between">
-              <div className="flex items-center gap-2">
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  <Sparkles className="w-5 h-5 text-indigo-400" />
-                </motion.div>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 uppercase tracking-wider">IA</span>
-              </div>
-
-              <div className="mt-auto">
-                <p className="text-white font-semibold text-sm leading-tight">Roteiro<br />inteligente</p>
-                <p className="text-zinc-500 text-[10px] mt-1">Descreva e a IA planeja</p>
-              </div>
-
-              <ArrowRight className="w-4 h-4 text-zinc-600 group-hover/ai:text-indigo-400 group-hover/ai:translate-x-1 transition-all mt-3" />
-            </div>
-          </TiltCard>
-        </motion.div>
       </motion.div>
 
       {/* ═══════════════════════════════════════════════════ */}
@@ -546,7 +576,7 @@ export default function DashboardPage() {
 
         <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory">
           {CATEGORIES.map((cat, i) => {
-            const Icon = cat.icon;
+
             return (
               <motion.button
                 key={cat.label}
