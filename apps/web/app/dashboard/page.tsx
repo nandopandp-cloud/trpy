@@ -230,6 +230,21 @@ export default function DashboardPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nextTrip?.id]);
 
+  // Trending destination photos
+  const [trendingPhotos, setTrendingPhotos] = useState<Record<string, string>>({});
+  useEffect(() => {
+    TRENDING.forEach(dest => {
+      fetch(`/api/destination-photo?q=${encodeURIComponent(dest.name)}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success && d.data?.photoUrl) {
+            setTrendingPhotos(prev => ({ ...prev, [dest.name]: d.data.photoUrl }));
+          }
+        })
+        .catch(() => {});
+    });
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
 
@@ -566,7 +581,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* EXPLORE — Categories as Floating Glass Chips       */}
+      {/* EXPLORE — Tactile Category Discovery Cards         */}
       {/* ═══════════════════════════════════════════════════ */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -584,39 +599,59 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory">
-          {CATEGORIES.map((cat, i) => {
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-3 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory">
+          {CATEGORIES.map((cat, i) => (
+            <motion.button
+              key={cat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -8, scale: 1.04 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
+              className="relative shrink-0 snap-start group cursor-pointer"
+            >
+              {/* Glow halo on hover */}
+              <div className={cn(
+                'absolute -inset-1 rounded-3xl opacity-0 group-hover:opacity-60 blur-xl transition-opacity duration-500 bg-gradient-to-br',
+                cat.gradient
+              )} />
 
-            return (
-              <motion.button
-                key={cat.label}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 + i * 0.05 }}
-                whileHover={{ y: -6, scale: 1.03 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
-                className="relative shrink-0 snap-start group"
-              >
-                <div className={cn(
-                  'w-28 h-32 rounded-2xl bg-gradient-to-br flex flex-col items-center justify-center gap-2 shadow-lg',
-                  'transition-all duration-300 group-hover:shadow-xl',
-                  cat.gradient
-                )}>
-                  {/* Glass overlay */}
-                  <div className="absolute inset-0 rounded-2xl bg-white/[0.08]" />
+              <div className={cn(
+                'relative w-[110px] h-[136px] rounded-2xl bg-gradient-to-br flex flex-col overflow-hidden',
+                'shadow-lg group-hover:shadow-2xl transition-shadow duration-300',
+                cat.gradient
+              )}>
+                {/* Animated shimmer layer */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                {/* Moving highlight */}
+                <div className="absolute -inset-full top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent skew-y-12 group-hover:translate-y-full transition-transform duration-700 ease-out" />
 
-                  <span className="text-4xl relative z-10">{cat.emoji}</span>
-                  <span className="text-xs font-semibold text-white relative z-10 tracking-wide">{cat.label}</span>
+                {/* Emoji with micro-animation */}
+                <div className="flex-1 flex items-center justify-center pt-4">
+                  <motion.span
+                    className="text-[2.8rem] drop-shadow-lg select-none"
+                    whileHover={{ rotate: [0, -10, 10, -6, 0], scale: 1.15 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {cat.emoji}
+                  </motion.span>
                 </div>
-              </motion.button>
-            );
-          })}
+
+                {/* Label area */}
+                <div className="px-3 pb-4">
+                  <span className="block text-[11px] font-bold text-white tracking-wide leading-tight">{cat.label}</span>
+                  <span className="block text-[9px] text-white/60 mt-0.5 font-medium uppercase tracking-wider">Explorar →</span>
+                </div>
+              </div>
+            </motion.button>
+          ))}
         </div>
       </motion.section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* TRENDING — Immersive Destination Cards              */}
+      {/* TRENDING — Immersive Destination Cards w/ Photos   */}
       {/* ═══════════════════════════════════════════════════ */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -628,52 +663,87 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2.5">
             <Flame className="w-4 h-4 text-amber-500" />
             <h2 className="text-base font-semibold text-foreground tracking-tight">Em alta</h2>
+            <span className="text-[9px] font-bold text-amber-500/80 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider border border-amber-500/20">
+              Esta semana
+            </span>
           </div>
           <Link href="/dashboard/destinations" className="text-xs text-primary font-medium hover:text-primary/80 transition-colors flex items-center gap-1">
             Ver todos <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory">
-          {TRENDING.map((dest, i) => (
-            <motion.div
-              key={dest.name}
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 + i * 0.06 }}
-              whileHover={{ y: -6 }}
-              onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
-              className="shrink-0 snap-start cursor-pointer group w-48"
-            >
-              <div className="relative h-56 rounded-2xl overflow-hidden">
-                {/* Gradient BG */}
-                <div className={cn('absolute inset-0 bg-gradient-to-br', dest.gradient)} />
+        <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-3 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory">
+          {TRENDING.map((dest, i) => {
+            const photo = trendingPhotos[dest.name];
 
-                {/* Emoji */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-6xl opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-500">{dest.emoji}</span>
+            return (
+              <motion.div
+                key={dest.name}
+                initial={{ opacity: 0, x: 28 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
+                className="shrink-0 snap-start cursor-pointer group"
+                style={{ width: 200 }}
+              >
+                <div className="relative h-[272px] rounded-2xl overflow-hidden shadow-lg group-hover:shadow-2xl transition-shadow duration-500">
+
+                  {/* Photo layer — fills card with zoom on hover */}
+                  {photo ? (
+                    <img
+                      src={photo}
+                      alt={dest.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    /* Gradient fallback while photo loads */
+                    <div className={cn('absolute inset-0 bg-gradient-to-br', dest.gradient)}>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-7xl opacity-25 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500 select-none">
+                          {dest.emoji}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cinematic dark overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  {/* Subtle vignette */}
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.3)_100%)]" />
+
+                  {/* Featured badge on first card */}
+                  {i === 0 && (
+                    <div className="absolute top-3 left-3 flex items-center gap-1 bg-amber-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                      <Flame className="w-3 h-3 text-white" />
+                      <span className="text-[10px] font-bold text-white uppercase tracking-wide">Em alta</span>
+                    </div>
+                  )}
+
+                  {/* Rating badge */}
+                  <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/15">
+                    <Star className="w-3 h-3 text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.7)]" />
+                    <span className="text-[11px] font-bold text-white">{dest.rating}</span>
+                  </div>
+
+                  {/* Bottom info */}
+                  <div className="absolute bottom-0 inset-x-0 p-4">
+                    <p className="text-lg font-bold text-white leading-tight tracking-tight">{dest.name}</p>
+                    <p className="text-xs text-white/65 flex items-center gap-1 mt-1">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      {dest.country}
+                    </p>
+                    {/* CTA hint */}
+                    <div className="mt-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                      <span className="text-[10px] font-semibold text-white/80 uppercase tracking-widest">Explorar destino</span>
+                      <ArrowRight className="w-3 h-3 text-white/80" />
+                    </div>
+                  </div>
                 </div>
-
-                {/* Glass overlay on hover */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
-
-                {/* Rating */}
-                <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full border border-white/10">
-                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                  <span className="text-[11px] font-medium text-white">{dest.rating}</span>
-                </div>
-
-                {/* Bottom info */}
-                <div className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-                  <p className="text-base font-semibold text-white">{dest.name}</p>
-                  <p className="text-xs text-white/70 flex items-center gap-1 mt-0.5">
-                    <MapPin className="w-3 h-3" />
-                    {dest.country}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       </motion.section>
 
