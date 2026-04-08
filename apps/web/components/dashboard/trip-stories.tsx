@@ -43,11 +43,71 @@ interface TripStoriesProps {
 
 /* ── Constants ────────────────────────────────────────── */
 
-const AI_SUGGESTIONS: StoryItem[] = [
-  { id: 'ai-1', type: 'suggestion', title: 'Kyoto', destination: 'Kyoto Japão', subtitle: 'Japão', emoji: '⛩️', gradient: 'from-rose-600 to-pink-700' },
-  { id: 'ai-2', type: 'suggestion', title: 'Maldivas', destination: 'Maldivas', subtitle: 'Ilhas Maldivas', emoji: '🏝️', gradient: 'from-cyan-500 to-blue-600' },
-  { id: 'ai-3', type: 'suggestion', title: 'Marrocos', destination: 'Marrocos', subtitle: 'Marrocos', emoji: '🕌', gradient: 'from-amber-600 to-orange-700' },
+type SuggestionSeed = Omit<StoryItem, 'id'>;
+
+const DESTINATION_POOL: SuggestionSeed[] = [
+  { type: 'suggestion', title: 'Kyoto',       destination: 'Kyoto Japão',        subtitle: 'Japão',         emoji: '⛩️',  gradient: 'from-rose-600 to-pink-700' },
+  { type: 'suggestion', title: 'Maldivas',    destination: 'Maldivas',            subtitle: 'Maldivas',      emoji: '🏝️',  gradient: 'from-cyan-500 to-blue-600' },
+  { type: 'suggestion', title: 'Marrocos',    destination: 'Marrocos',            subtitle: 'Marrocos',      emoji: '🕌',  gradient: 'from-amber-600 to-orange-700' },
+  { type: 'suggestion', title: 'Santorini',   destination: 'Santorini Grécia',    subtitle: 'Grécia',        emoji: '🏛️',  gradient: 'from-blue-500 to-cyan-600' },
+  { type: 'suggestion', title: 'Bali',        destination: 'Bali Indonésia',      subtitle: 'Indonésia',     emoji: '🌺',  gradient: 'from-emerald-500 to-teal-600' },
+  { type: 'suggestion', title: 'Patagônia',   destination: 'Patagônia Argentina', subtitle: 'Argentina',     emoji: '🏔️',  gradient: 'from-slate-500 to-slate-700' },
+  { type: 'suggestion', title: 'Lisboa',      destination: 'Lisboa Portugal',     subtitle: 'Portugal',      emoji: '🏡',  gradient: 'from-yellow-500 to-orange-600' },
+  { type: 'suggestion', title: 'Nova York',   destination: 'Nova York EUA',       subtitle: 'EUA',           emoji: '🗽',  gradient: 'from-sky-600 to-blue-700' },
+  { type: 'suggestion', title: 'Tóquio',      destination: 'Tóquio Japão',        subtitle: 'Japão',         emoji: '🎌',  gradient: 'from-red-500 to-rose-700' },
+  { type: 'suggestion', title: 'Islândia',    destination: 'Islândia',            subtitle: 'Islândia',      emoji: '🌋',  gradient: 'from-indigo-600 to-violet-700' },
+  { type: 'suggestion', title: 'Dubai',       destination: 'Dubai Emirados',      subtitle: 'Emirados',      emoji: '🏙️',  gradient: 'from-amber-400 to-yellow-600' },
+  { type: 'suggestion', title: 'Tailândia',   destination: 'Bangkok Tailândia',   subtitle: 'Tailândia',     emoji: '🛕',  gradient: 'from-orange-500 to-red-600' },
+  { type: 'suggestion', title: 'Costa Rica',  destination: 'Costa Rica',          subtitle: 'Costa Rica',    emoji: '🦜',  gradient: 'from-green-500 to-emerald-700' },
+  { type: 'suggestion', title: 'Paris',       destination: 'Paris França',        subtitle: 'França',        emoji: '🗼',  gradient: 'from-pink-500 to-rose-600' },
+  { type: 'suggestion', title: 'Machu Picchu',destination: 'Machu Picchu Peru',   subtitle: 'Peru',          emoji: '🏯',  gradient: 'from-lime-600 to-green-700' },
+  { type: 'suggestion', title: 'Safari Kenya',destination: 'Safári Quênia',       subtitle: 'Quênia',        emoji: '🦁',  gradient: 'from-yellow-600 to-amber-700' },
+  { type: 'suggestion', title: 'Barcelona',   destination: 'Barcelona Espanha',   subtitle: 'Espanha',       emoji: '🎨',  gradient: 'from-red-500 to-yellow-500' },
+  { type: 'suggestion', title: 'Amsterdã',    destination: 'Amsterdã Holanda',    subtitle: 'Holanda',       emoji: '🌷',  gradient: 'from-violet-500 to-purple-700' },
+  { type: 'suggestion', title: 'Vancouver',   destination: 'Vancouver Canadá',    subtitle: 'Canadá',        emoji: '🍁',  gradient: 'from-red-600 to-rose-700' },
+  { type: 'suggestion', title: 'Amalfi',      destination: 'Costa Amalfi Itália', subtitle: 'Itália',        emoji: '🍋',  gradient: 'from-yellow-400 to-orange-500' },
+  { type: 'suggestion', title: 'Phuket',      destination: 'Phuket Tailândia',    subtitle: 'Tailândia',     emoji: '⛵',  gradient: 'from-teal-500 to-cyan-600' },
+  { type: 'suggestion', title: 'Nepal',       destination: 'Katmandu Nepal',      subtitle: 'Nepal',         emoji: '🏔️',  gradient: 'from-orange-600 to-red-700' },
+  { type: 'suggestion', title: 'Nova Zelândia',destination: 'Nova Zelândia',      subtitle: 'Nova Zelândia', emoji: '🐑',  gradient: 'from-green-600 to-teal-700' },
+  { type: 'suggestion', title: 'Egipto',      destination: 'Cairo Egito',         subtitle: 'Egito',         emoji: '🐪',  gradient: 'from-amber-500 to-yellow-600' },
+  { type: 'suggestion', title: 'Meksiko',     destination: 'Cidade do México',    subtitle: 'México',        emoji: '🌮',  gradient: 'from-green-500 to-red-600' },
+  { type: 'suggestion', title: 'Seul',        destination: 'Seul Coreia do Sul',  subtitle: 'Coreia do Sul', emoji: '🌸',  gradient: 'from-pink-500 to-fuchsia-600' },
+  { type: 'suggestion', title: 'Rio de Janeiro', destination: 'Rio de Janeiro Brasil', subtitle: 'Brasil',   emoji: '🎭',  gradient: 'from-green-500 to-yellow-500' },
+  { type: 'suggestion', title: 'Singapura',   destination: 'Singapura',           subtitle: 'Singapura',     emoji: '🌃',  gradient: 'from-purple-600 to-blue-700' },
 ];
+
+const SUGGESTIONS_CACHE_KEY = 'trpy_story_suggestions_v1';
+const SUGGESTIONS_TTL = 12 * 60 * 60 * 1000; // 12 horas
+
+function pickRandomDestinations(count: number): StoryItem[] {
+  const shuffled = [...DESTINATION_POOL].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count).map((s, i) => ({ ...s, id: `ai-${i}` }));
+}
+
+function useSuggestions(count = 8): StoryItem[] {
+  const [suggestions, setSuggestions] = useState<StoryItem[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SUGGESTIONS_CACHE_KEY);
+      if (raw) {
+        const { items, ts } = JSON.parse(raw) as { items: StoryItem[]; ts: number };
+        if (Date.now() - ts < SUGGESTIONS_TTL) {
+          setSuggestions(items);
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+
+    const fresh = pickRandomDestinations(count);
+    setSuggestions(fresh);
+    try {
+      localStorage.setItem(SUGGESTIONS_CACHE_KEY, JSON.stringify({ items: fresh, ts: Date.now() }));
+    } catch { /* ignore */ }
+  }, [count]);
+
+  return suggestions;
+}
 
 const GRADIENT_FALLBACKS = [
   'from-indigo-600 via-violet-600 to-purple-700',
@@ -583,6 +643,9 @@ export function TripStories({ trips = [] }: TripStoriesProps) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
 
+  // 8 destinos aleatórios renovados a cada 12h
+  const suggestions = useSuggestions(8);
+
   // Build story items (excluding "create" from viewer)
   const userStories: StoryItem[] = trips.map((trip, i) => ({
     id: trip.id,
@@ -595,7 +658,7 @@ export function TripStories({ trips = [] }: TripStoriesProps) {
     status: trip.status as StoryItem['status'],
   }));
 
-  const aiStories = trips.length < 4 ? AI_SUGGESTIONS : [];
+  const aiStories = suggestions;
   const viewableStories = [...userStories, ...aiStories];
 
   // All bubbles (create + stories)
