@@ -472,7 +472,7 @@ export default function DashboardPage() {
 
         {/* ── Card 3: Total Trips ── */}
         <motion.div variants={stagger.item} className="col-span-1 row-span-1">
-          <TiltCard className="h-full p-5 flex flex-col justify-between">
+          <TiltCard className="h-full p-5 flex flex-col">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center">
                 <PlaneTakeoff className="w-3.5 h-3.5 text-indigo-500" />
@@ -480,13 +480,23 @@ export default function DashboardPage() {
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Viagens</span>
             </div>
 
-            <div className="mt-auto">
-              <p className="text-4xl font-bold text-foreground leading-none tracking-tight">
+            {/* Center number with flex-1 to fill space */}
+            <div className="flex-1 flex flex-col items-center justify-center py-6">
+              <p className="text-5xl font-bold text-foreground leading-none tracking-tight">
                 <AnimatedNumber value={data?.total ?? 0} />
               </p>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-[11px] text-muted-foreground mt-2">
                 {(data?.total ?? 0) === 1 ? 'viagem planejada' : 'viagens planejadas'}
               </p>
+            </div>
+
+            {/* Bottom accent bar */}
+            <div className="mt-auto pt-4 border-t border-border/40">
+              <div className="flex items-center justify-center gap-2">
+                <div className="h-1 w-12 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-500/40" />
+                <span className="text-[10px] text-muted-foreground font-medium">Planejadas</span>
+                <div className="h-1 w-12 rounded-full bg-gradient-to-l from-indigo-500 to-indigo-500/40" />
+              </div>
             </div>
           </TiltCard>
         </motion.div>
