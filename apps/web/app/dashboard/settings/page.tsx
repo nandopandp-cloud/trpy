@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { User, Bell, Palette, Globe, ShieldCheck, LogOut } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { UserAvatar } from '@/components/user/user-avatar';
 import { cn } from '@/lib/utils';
 
 const stagger = {
@@ -31,7 +32,6 @@ const SECTIONS = [
 export default function SettingsPage() {
   const { data: session } = useSession();
   const user = session?.user;
-  const initials = user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() ?? '?';
 
   return (
     <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
@@ -48,13 +48,7 @@ export default function SettingsPage() {
         className="rounded-3xl border border-border bg-card p-5 shadow-card"
       >
         <div className="flex items-center gap-4">
-          {user?.image ? (
-            <img src={user.image} alt="" className="w-14 h-14 rounded-2xl object-cover shrink-0" />
-          ) : (
-            <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white text-xl font-black shrink-0">
-              {initials}
-            </div>
-          )}
+          <UserAvatar name={user?.name} email={user?.email} image={user?.image} size="xl" className="rounded-2xl ring-primary/20" />
           <div>
             <p className="font-bold text-foreground">{user?.name ?? 'Usuário'}</p>
             <p className="text-sm text-muted-foreground">{user?.email ?? ''}</p>
@@ -79,10 +73,10 @@ export default function SettingsPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">Tema</p>
-              <p className="text-xs text-muted-foreground">Claro, escuro ou sistema</p>
+              <p className="text-xs text-muted-foreground">Clique para alternar</p>
             </div>
           </div>
-          <ThemeToggle />
+          <ThemeToggle showLabel />
         </div>
       </motion.div>
 

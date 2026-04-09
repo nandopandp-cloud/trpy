@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" suppressHydrationWarning className="scroll-smooth">
       <body className={`${inter.variable} ${spaceGrotesk.variable} ${spaceMono.variable} ${playfair.variable} ${inter.className}`}>
         <SessionProvider>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <QueryProvider>
               {children}
               <Toaster />
