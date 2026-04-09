@@ -46,7 +46,7 @@ function PlaceCard({
 }) {
   const photo = place.photos?.[0];
   const photoUrl = photo
-    ? `/api/place-photo?ref=${photo.photo_reference}&maxwidth=400`
+    ? `/api/place-photo?ref=${photo.photo_reference}&maxwidth=600`
     : null;
 
   const mapsUrl = `https://www.google.com/maps/place/?q=place_id:${place.place_id}`;
@@ -128,6 +128,35 @@ function PlaceCard({
         </a>
       </div>
     </motion.div>
+  );
+}
+
+function EmptyState({ tab, destination }: { tab: typeof TABS[number]; destination: string }) {
+  const mapsQuery = encodeURIComponent(
+    `${tab.label} em ${destination}`
+  );
+  const mapsUrl = `https://www.google.com/maps/search/${mapsQuery}`;
+  const Icon = tab.icon;
+  return (
+    <div className="rounded-2xl border border-dashed border-border p-8 text-center space-y-3">
+      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto">
+        <Icon className="w-5 h-5 text-muted-foreground" />
+      </div>
+      <div>
+        <p className="text-sm font-medium text-foreground">Nenhum resultado encontrado</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Não encontramos {tab.label.toLowerCase()} para este destino via API.
+        </p>
+      </div>
+      <a
+        href={mapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+      >
+        Buscar no Google Maps <ExternalLink className="w-3 h-3" />
+      </a>
+    </div>
   );
 }
 
@@ -217,9 +246,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
             className="space-y-3"
           >
             {places.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border p-8 text-center">
-                <p className="text-sm text-muted-foreground">Nenhum resultado encontrado.</p>
-              </div>
+              <EmptyState tab={tab} destination={destination} />
             ) : (
               places.map((place) => (
                 <PlaceCard

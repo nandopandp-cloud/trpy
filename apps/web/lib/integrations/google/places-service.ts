@@ -106,17 +106,30 @@ export async function searchPlaces(
   return (data.results as PlaceSearchResult[]).slice(0, 10);
 }
 
+const TYPE_QUERY: Record<string, string> = {
+  restaurant:        'melhores restaurantes',
+  lodging:           'melhores hotéis',
+  tourist_attraction:'principais atrações turísticas',
+  museum:            'museus',
+};
+
 export async function searchPlacesByType(
   location: string,
   type: 'restaurant' | 'lodging' | 'tourist_attraction' | 'museum',
 ): Promise<PlaceSearchResult[]> {
   const key = getApiKey();
+  // Use explicit query with location for better international results
+  const queryTerm = TYPE_QUERY[type] ?? type;
   const params = new URLSearchParams({
-    query: location,
-    type,
+    query: `${queryTerm} em ${location}`,
     language: 'pt-BR',
     key,
   });
+  // Only add type filter for restaurant and lodging — tourist_attraction type
+  // is too restrictive and can cause 0 results for international destinations
+  if (type === 'restaurant' || type === 'lodging') {
+    params.set('type', type);
+  }
 
   const url = `${BASE_URL}/place/textsearch/json?${params}`;
   const res = await fetch(url, { next: { revalidate: 1800 } });
