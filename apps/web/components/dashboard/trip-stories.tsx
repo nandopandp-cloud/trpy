@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Plus, X, ChevronLeft, ChevronRight, Sparkles,
+  Plus, X, ChevronLeft, ChevronRight,
   ExternalLink, MapPin, Volume2, VolumeX, Plane,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -167,7 +167,7 @@ function useStoryVideos(destination: string | null) {
 /* STORY VIEWER  — Instagram-grade experience              */
 /* ════════════════════════════════════════════════════════ */
 
-const STORY_DURATION = 15000; // ms per video segment
+const STORY_DURATION = 50000; // ms per video segment
 
 interface StoryViewerProps {
   stories: StoryItem[];
@@ -564,11 +564,6 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
                     </p>
                   )}
                 </div>
-                {currentStory.type === 'suggestion' && (
-                  <span className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/25 text-amber-300 border border-amber-400/30 uppercase tracking-wider backdrop-blur-sm">
-                    <Sparkles className="w-2.5 h-2.5" />IA
-                  </span>
-                )}
               </div>
 
               {/* Right: controls */}
@@ -743,11 +738,6 @@ function StoryBubble({ story, viewed }: { story: StoryItem; viewed: boolean }) {
             )}
 
             {/* AI badge */}
-            {story.type === 'suggestion' && (
-              <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                <Sparkles className="w-2.5 h-2.5 text-amber-300" />
-              </div>
-            )}
           </div>
         </div>
       </div>
