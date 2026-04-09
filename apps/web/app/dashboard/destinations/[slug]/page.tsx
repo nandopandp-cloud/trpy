@@ -340,6 +340,10 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
           )}
         </motion.div>
 
+        {/* Bottom gradient — legibility only, not covering the full photo */}
+        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none" />
+        {/* Top vignette — subtle, for top bar buttons */}
+        <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
 
         {/* Top bar */}
         <motion.div
@@ -387,12 +391,12 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
             </span>
 
             {/* Title */}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight capitalize tracking-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight capitalize tracking-tight drop-shadow-lg">
               {destination}
             </h1>
 
             {/* Subtitle */}
-            <p className="text-sm md:text-base text-muted-foreground mt-1 max-w-lg line-clamp-2">
+            <p className="text-sm md:text-base text-white/80 mt-1 max-w-lg line-clamp-2 drop-shadow">
               {meta.desc}
             </p>
 
