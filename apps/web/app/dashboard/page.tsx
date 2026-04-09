@@ -377,11 +377,11 @@ export default function DashboardPage() {
         variants={stagger.container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(160px,auto)]"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:auto-rows-[minmax(160px,auto)]"
       >
-        {/* ── Card 1: Próxima Viagem — span 2×2 ── */}
-        <motion.div variants={stagger.item} className="col-span-2 row-span-2">
-          <TiltCard className="h-full p-6 flex flex-col justify-between">
+        {/* ── Card 1: Próxima Viagem — full-width mobile, 2×2 desktop ── */}
+        <motion.div variants={stagger.item} className="col-span-2 lg:row-span-2">
+          <TiltCard className="h-full p-5 flex flex-col justify-between">
             {/* ── Destination photo as elegant background ── */}
             {tripPhoto && (
               <motion.div
@@ -410,31 +410,53 @@ export default function DashboardPage() {
             )}
             <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />
 
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                  <CalendarDays className="w-4 h-4 text-indigo-500" />
-                </div>
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Próxima viagem</span>
+            {/* Header */}
+            <div className="relative z-10 flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                <CalendarDays className="w-3.5 h-3.5 text-indigo-500" />
               </div>
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Próxima viagem</span>
             </div>
 
-            <div className="relative z-10 flex-1 flex flex-col items-center justify-center py-4">
+            {/* Body — horizontal on mobile, vertical on desktop */}
+            <div className="relative z-10 flex-1 flex flex-row lg:flex-col items-center gap-4 lg:gap-0 lg:justify-center">
               {daysToNext !== null ? (
                 <>
-                  <CountdownRing days={daysToNext} total={Math.max(daysToNext + 10, 30)} />
-                  <p className="text-base font-semibold text-foreground mt-3">{nextTrip?.destination}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{nextTrip?.title}</p>
+                  {/* Ring — smaller on mobile */}
+                  <div className="shrink-0 scale-75 lg:scale-100 origin-center -my-4 lg:my-0">
+                    <CountdownRing days={daysToNext} total={Math.max(daysToNext + 10, 30)} />
+                  </div>
+                  {/* Text — beside ring on mobile */}
+                  <div className="lg:text-center lg:mt-3">
+                    <p className="text-sm font-bold text-foreground leading-tight">{nextTrip?.destination}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{nextTrip?.title}</p>
+                    {/* Stats inline on mobile */}
+                    <div className="flex items-center gap-3 mt-3 lg:hidden">
+                      <div>
+                        <p className="text-base font-bold text-foreground leading-none">
+                          <AnimatedNumber value={data?.total ?? 0} />
+                        </p>
+                        <p className="text-[9px] text-muted-foreground mt-0.5">viagens</p>
+                      </div>
+                      <div className="w-px h-6 bg-border/40" />
+                      <div>
+                        <p className="text-base font-bold text-foreground leading-none">
+                          {nextTrip && format(new Date(nextTrip.startDate), "d MMM", { locale: ptBR })}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground mt-0.5">partida</p>
+                      </div>
+                    </div>
+                  </div>
                 </>
               ) : (
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
-                    <Globe className="w-8 h-8 text-muted-foreground/40" />
+                <div className="text-center w-full">
+                  <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-2">
+                    <Globe className="w-6 h-6 text-muted-foreground/40" />
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground">Nenhuma viagem planejada</p>
+                  <p className="text-xs font-medium text-muted-foreground">Nenhuma viagem planejada</p>
                   <button
                     onClick={() => router.push('/dashboard/trips/new')}
-                    className="mt-3 text-xs font-medium text-indigo-500 hover:text-indigo-400 transition-colors"
+                    className="mt-2 text-xs font-medium text-indigo-500 hover:text-indigo-400 transition-colors"
                   >
                     Criar primeira viagem →
                   </button>
@@ -442,9 +464,9 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Quick stats row */}
+            {/* Stats row — desktop only */}
             {nextTrip && (
-              <div className="relative z-10 flex items-center gap-3 pt-3 border-t border-border/40">
+              <div className="relative z-10 hidden lg:flex items-center gap-3 pt-3 border-t border-border/40">
                 <div className="flex-1 text-center">
                   <p className="text-lg font-bold text-foreground leading-none">
                     <AnimatedNumber value={data?.total ?? 0} />
@@ -464,16 +486,16 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* ── Card 2: Budget Gauge ── */}
-        <motion.div variants={stagger.item} className="col-span-1 row-span-1 min-h-[280px]">
-          <TiltCard className="h-full p-5 flex flex-col">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <Wallet className="w-3.5 h-3.5 text-emerald-500" />
+        <motion.div variants={stagger.item} className="col-span-1 row-span-1">
+          <TiltCard className="h-full p-4 flex flex-col">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <Wallet className="w-3 h-3 text-emerald-500" />
               </div>
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Orçamento</span>
             </div>
 
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center py-1">
               {totalBudget > 0 ? (
                 <BudgetGauge spent={totalSpent} budget={totalBudget} />
               ) : (
@@ -481,7 +503,7 @@ export default function DashboardPage() {
               )}
             </div>
 
-            <div className="mt-auto pt-2 flex justify-between text-[10px] text-muted-foreground">
+            <div className="pt-1 flex justify-between text-[9px] text-muted-foreground">
               <span>R$ {totalSpent.toLocaleString('pt-BR')}</span>
               <span>R$ {totalBudget.toLocaleString('pt-BR')}</span>
             </div>
@@ -489,31 +511,29 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* ── Card 3: Total Trips ── */}
-        <motion.div variants={stagger.item} className="col-span-1 row-span-1 min-h-[280px]">
-          <TiltCard className="h-full p-5 flex flex-col">
+        <motion.div variants={stagger.item} className="col-span-1 row-span-1">
+          <TiltCard className="h-full p-4 flex flex-col">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                <PlaneTakeoff className="w-3.5 h-3.5 text-indigo-500" />
+              <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                <PlaneTakeoff className="w-3 h-3 text-indigo-500" />
               </div>
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Viagens</span>
             </div>
 
-            {/* Center number with flex-1 to fill space */}
-            <div className="flex-1 flex flex-col items-center justify-center py-6">
-              <p className="text-5xl font-bold text-foreground leading-none tracking-tight">
+            <div className="flex-1 flex flex-col items-center justify-center py-2">
+              <p className="text-4xl font-bold text-foreground leading-none tracking-tight">
                 <AnimatedNumber value={data?.total ?? 0} />
               </p>
-              <p className="text-[11px] text-muted-foreground mt-2">
-                {(data?.total ?? 0) === 1 ? 'viagem planejada' : 'viagens planejadas'}
+              <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
+                {(data?.total ?? 0) === 1 ? 'viagem' : 'viagens'}<br />planejadas
               </p>
             </div>
 
-            {/* Bottom accent bar */}
-            <div className="mt-auto pt-4 border-t border-border/40">
-              <div className="flex items-center justify-center gap-2">
-                <div className="h-1 w-12 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-500/40" />
-                <span className="text-[10px] text-muted-foreground font-medium">Planejadas</span>
-                <div className="h-1 w-12 rounded-full bg-gradient-to-l from-indigo-500 to-indigo-500/40" />
+            <div className="pt-2 border-t border-border/40">
+              <div className="flex items-center justify-center gap-1.5">
+                <div className="h-0.5 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-500/40" />
+                <span className="text-[9px] text-muted-foreground font-medium">Planejadas</span>
+                <div className="h-0.5 w-8 rounded-full bg-gradient-to-l from-indigo-500 to-indigo-500/40" />
               </div>
             </div>
           </TiltCard>
