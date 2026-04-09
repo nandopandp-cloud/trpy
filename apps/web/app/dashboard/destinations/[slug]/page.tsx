@@ -39,6 +39,13 @@ const DEST_META: Record<string, { desc: string; highlights: string[]; bestTime: 
   kyoto:      { desc: 'Antiga capital imperial do Japão, com milhares de templos, jardins zen e gueixas preservando tradições centenárias.', highlights: ['Templos', 'Jardins', 'Gueixas', 'Cerimônia do chá', 'Bambu'], bestTime: 'Mar–Mai', currency: 'JPY (Iene)', language: 'Japonês' },
   maldivas:   { desc: 'Paraíso tropical com águas turquesas, resorts sobre palafitas e recifes de coral que tiram o fôlego.', highlights: ['Snorkeling', 'Resorts', 'Praias', 'Mergulho', 'Romance'], bestTime: 'Nov–Abr', currency: 'MVR (Rufiyaa)', language: 'Divehi' },
   lisboa:     { desc: 'Capital portuguesa charmosa com ruas de paralelepípedo, pastéis de nata, fado e mirantes deslumbrantes.', highlights: ['Fado', 'Gastronomia', 'Mirantes', 'Pastéis', 'Alfama'], bestTime: 'Mar–Out', currency: 'EUR (Euro)', language: 'Português' },
+  'rio de janeiro': { desc: 'Cidade maravilhosa com montanhas selvagens, praias icônicas e uma energia contagiante o ano todo.', highlights: ['Praia', 'Montanhas', 'Carnaval', 'Pão de Açúcar', 'Samba'], bestTime: 'Dez–Mar', currency: 'BRL (Real)', language: 'Português' },
+  'nova york': { desc: 'A metrópole que nunca dorme, com edifícios imponentes, museus e uma cena gastronômica de classe mundial.', highlights: ['Arranha-céus', 'Museus', 'Broadway', 'Central Park', 'Gastronomia'], bestTime: 'Abr–Jun', currency: 'USD (Dólar)', language: 'Inglês' },
+  'barcelona': { desc: 'Cidade catalã vibrante com arquitetura única, praias mediterrâneas e uma culinária que conquista paladares.', highlights: ['Arquitetura', 'Praias', 'Gastronomia', 'Arte', 'Cultura'], bestTime: 'Abr–Jun', currency: 'EUR (Euro)', language: 'Catalão/Espanhol' },
+  'amsterdã': { desc: 'Capital dos Países Baixos com canais pitorescos, museus famosos e uma atmosfera cosmopolita e descontraída.', highlights: ['Canais', 'Museus', 'Bicicletas', 'Tulipas', 'Arquitetura'], bestTime: 'Abr–Set', currency: 'EUR (Euro)', language: 'Holandês' },
+  'bangkok': { desc: 'Metrópole tailandesa fervilhante com templos dourados, mercados flutuantes e gastronomia picante e saborosa.', highlights: ['Templos', 'Mercados', 'Gastronomia', 'Compras', 'Vida noturna'], bestTime: 'Nov–Fev', currency: 'THB (Bath)', language: 'Tailandês' },
+  'marrocos': { desc: 'País mágico com desertos fascinantes, medinas coloridas e uma cultura rica em tradições milenares.', highlights: ['Deserto', 'Medinas', 'Montanhas', 'Marroquinaria', 'Gastronomia'], bestTime: 'Set–Abr', currency: 'MAD (Dirã)', language: 'Árabe/Francês' },
+  'vancouver': { desc: 'Cidade canadense aninhada entre montanhas e oceano, com natureza selvagem e uma cena urbana sofisticada.', highlights: ['Natureza', 'Montanhas', 'Praias', 'Parques', 'Gastronomia'], bestTime: 'Jun–Set', currency: 'CAD (Dólar Canadense)', language: 'Inglês' },
 };
 
 const DEFAULT_META = { desc: 'Descubra o melhor que este destino tem a oferecer — restaurantes, hotéis, atrações e experiências imperdíveis.', highlights: ['Cultura', 'Gastronomia', 'Natureza', 'Aventura'], bestTime: 'Consulte', currency: 'Consulte', language: 'Consulte' };
@@ -256,10 +263,22 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
 
   /* Cover image */
   useEffect(() => {
-    fetch(`/api/destination-photo?q=${encodeURIComponent(destination)}`)
+    if (!destination) return;
+    setCoverImage(null); // Reset on destination change
+    const controller = new AbortController();
+
+    fetch(`/api/destination-photo?q=${encodeURIComponent(destination)}`, { signal: controller.signal })
       .then(r => r.json())
-      .then(d => { if (d.success && d.data.photoUrl) setCoverImage(d.data.photoUrl); })
-      .catch(() => {});
+      .then(d => {
+        if (d.success && d.data?.photoUrl) {
+          setCoverImage(d.data.photoUrl);
+        }
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') console.error('Photo fetch failed:', err);
+      });
+
+    return () => controller.abort();
   }, [destination]);
 
   /* Places data */
@@ -321,10 +340,6 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
           )}
         </motion.div>
 
-        {/* Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/60 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,transparent_40%,rgba(0,0,0,0.3)_100%)]" />
 
         {/* Top bar */}
         <motion.div
