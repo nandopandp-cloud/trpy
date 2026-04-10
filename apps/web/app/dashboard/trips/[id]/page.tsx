@@ -604,16 +604,6 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
           </motion.div>
         </div>
 
-        {/* Edit cover hint — subtle overlay on hover */}
-        <button
-          onClick={() => setShowCoverPicker(true)}
-          className="absolute inset-0 w-full h-full opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center bg-black/20 group"
-          aria-label="Editar capa"
-        >
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-            <Camera className="w-4 h-4" /> Editar capa
-          </div>
-        </button>
       </div>
 
       {/* ── STICKY TABS ───────────────────────────────────────────────────── */}
