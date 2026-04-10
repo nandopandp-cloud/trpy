@@ -393,10 +393,10 @@ export default function DashboardPage() {
 
             {/* Header */}
             <div className="relative z-10 flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                <CalendarDays className="w-3.5 h-3.5 text-indigo-500" />
+              <div className="w-7 h-7 rounded-xl bg-white/10 flex items-center justify-center">
+                <CalendarDays className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Próxima viagem</span>
+              <span className="text-[10px] font-semibold text-white/60 uppercase tracking-wider">Próxima viagem</span>
             </div>
 
             {/* Body — horizontal on mobile, vertical on desktop */}
@@ -409,22 +409,22 @@ export default function DashboardPage() {
                   </div>
                   {/* Text — beside ring on mobile */}
                   <div className="lg:text-center lg:mt-3">
-                    <p className="text-sm font-bold text-foreground leading-tight">{nextTrip?.destination}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{nextTrip?.title}</p>
+                    <p className="text-sm font-bold text-white leading-tight">{nextTrip?.destination}</p>
+                    <p className="text-xs text-white/70 mt-0.5 line-clamp-1">{nextTrip?.title}</p>
                     {/* Stats inline on mobile */}
                     <div className="flex items-center gap-3 mt-3 lg:hidden">
                       <div>
-                        <p className="text-base font-bold text-foreground leading-none">
+                        <p className="text-base font-bold text-white leading-none">
                           <AnimatedNumber value={data?.total ?? 0} />
                         </p>
-                        <p className="text-[9px] text-muted-foreground mt-0.5">viagens</p>
+                        <p className="text-[9px] text-white/60 mt-0.5">viagens</p>
                       </div>
-                      <div className="w-px h-6 bg-border/40" />
+                      <div className="w-px h-6 bg-white/20" />
                       <div>
-                        <p className="text-base font-bold text-foreground leading-none">
+                        <p className="text-base font-bold text-white leading-none">
                           {nextTrip && format(new Date(nextTrip.startDate), "d MMM", { locale: ptBR })}
                         </p>
-                        <p className="text-[9px] text-muted-foreground mt-0.5">partida</p>
+                        <p className="text-[9px] text-white/60 mt-0.5">partida</p>
                       </div>
                     </div>
                   </div>
@@ -447,19 +447,19 @@ export default function DashboardPage() {
 
             {/* Stats row — desktop only */}
             {nextTrip && (
-              <div className="relative z-10 hidden lg:flex items-center gap-3 pt-3 border-t border-border/40">
+              <div className="relative z-10 hidden lg:flex items-center gap-3 pt-3 border-t border-white/20">
                 <div className="flex-1 text-center">
-                  <p className="text-lg font-bold text-foreground leading-none">
+                  <p className="text-lg font-bold text-white leading-none">
                     <AnimatedNumber value={data?.total ?? 0} />
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">viagens</p>
+                  <p className="text-[10px] text-white/60 mt-0.5">viagens</p>
                 </div>
-                <div className="w-px h-8 bg-border/40" />
+                <div className="w-px h-8 bg-white/20" />
                 <div className="flex-1 text-center">
-                  <p className="text-lg font-bold text-foreground leading-none">
+                  <p className="text-lg font-bold text-white leading-none">
                     {format(new Date(nextTrip.startDate), "d MMM", { locale: ptBR })}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">partida</p>
+                  <p className="text-[10px] text-white/60 mt-0.5">partida</p>
                 </div>
               </div>
             )}
