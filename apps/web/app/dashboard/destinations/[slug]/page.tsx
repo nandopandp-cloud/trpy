@@ -13,6 +13,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
+import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
 import { GoogleMapView } from '@/components/integrations/google/google-map-view';
 import { YouTubeVideoPlayer } from '@/components/integrations/youtube/youtube-video-player';
 import { PlaceDetailModal } from '@/components/integrations/google/place-detail-modal';
@@ -29,6 +30,26 @@ const GRADIENTS = [
   'from-amber-700 via-orange-600 to-red-700',
   'from-blue-700 via-indigo-700 to-violet-800',
 ];
+
+/* Category-to-photo-query mapping — same as dashboard */
+const CATEGORY_QUERIES: Record<string, string> = {
+  praias: 'tropical beach ocean waves',
+  montanhas: 'mountain peaks landscape snow',
+  cidades: 'city architecture skyline urban',
+  aventura: 'extreme adventure sports nature',
+  gastronomia: 'gourmet food cuisine restaurant',
+  cultura: 'historical temple ruins architecture',
+  relax: 'spa pool resort infinity wellness',
+  família: 'family vacation kids park fun',
+  natureza: 'rainforest wildlife nature jungle',
+  inverno: 'snow winter ski mountain landscape',
+  cruzeiros: 'cruise ship ocean sea travel',
+  safari: 'safari africa wildlife savanna lion',
+  festas: 'festival carnival celebration fireworks',
+  compras: 'shopping mall market street fashion',
+  esportes: 'surf diving underwater ocean sport',
+  'lua de mel': 'romantic sunset couple beach travel',
+};
 
 /* Destination metadata — enriches the overview section */
 const DEST_META: Record<string, { desc: string; highlights: string[]; bestTime: string; currency: string; language: string }> = {
@@ -270,25 +291,13 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
     return () => obs.disconnect();
   }, []);
 
-  /* Cover image */
+  /* Cover image — synced from hook to local state for animation compatibility */
+  const categoryQuery = CATEGORY_QUERIES[destination?.toLowerCase() || ''];
+  const photoFromHook = useDestinationPhoto(categoryQuery || destination);
+
   useEffect(() => {
-    if (!destination) return;
-    setCoverImage(null); // Reset on destination change
-    const controller = new AbortController();
-
-    fetch(`/api/destination-photo?q=${encodeURIComponent(destination)}`, { signal: controller.signal })
-      .then(r => r.json())
-      .then(d => {
-        if (d.success && d.data?.photoUrl) {
-          setCoverImage(d.data.photoUrl);
-        }
-      })
-      .catch(err => {
-        if (err.name !== 'AbortError') console.error('Photo fetch failed:', err);
-      });
-
-    return () => controller.abort();
-  }, [destination]);
+    setCoverImage(photoFromHook);
+  }, [photoFromHook]);
 
   /* Places data */
   const { data: placesData, isLoading: placesLoading, isError: placesError } = useQuery<{
