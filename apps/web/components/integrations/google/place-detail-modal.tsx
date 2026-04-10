@@ -672,8 +672,12 @@ export function PlaceDetailModal({
   fallbackName,
   onClose,
 }: PlaceDetailModalProps) {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id ?? null;
+
   const [showAddToTrip, setShowAddToTrip] = useState(false);
   const [showAllHours, setShowAllHours] = useState(false);
+  const [writeReview, setWriteReview] = useState<{ open: boolean; existing?: TrpyReview }>({ open: false });
 
   const { data: place, isLoading, isError } = useQuery<PlaceDetails>({
     queryKey: ['place-details', placeId],
@@ -684,6 +688,17 @@ export function PlaceDetailModal({
       return json.data;
     },
     staleTime: 60 * 60 * 1000, // 1h
+  });
+
+  const { data: trpyReviews = [] } = useQuery<TrpyReview[]>({
+    queryKey: ['place-reviews', placeId],
+    queryFn: async () => {
+      const res = await fetch(`/api/place-reviews?placeId=${placeId}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      return json.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5min
   });
 
   // Lock scroll
@@ -735,6 +750,7 @@ export function PlaceDetailModal({
   }
 
   return (
+    <>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -961,20 +977,27 @@ export function PlaceDetailModal({
             )}
 
             {/* Reviews */}
-            {place && (
+            {(place || trpyReviews.length > 0) && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Avaliações
                   </h3>
-                  {place.rating != null && (
+                  {place?.rating != null && (
                     <div className="flex items-center gap-1.5">
                       <StarRow value={place.rating} size="md" />
                       <span className="text-sm font-bold text-foreground">{place.rating.toFixed(1)}</span>
+                      <span className="text-xs text-muted-foreground">Google</span>
                     </div>
                   )}
                 </div>
-                <ReviewsList reviews={place.reviews ?? []} />
+                <ReviewsList
+                  googleReviews={place?.reviews ?? []}
+                  trpyReviews={trpyReviews}
+                  currentUserId={currentUserId}
+                  onWriteReview={() => setWriteReview({ open: true })}
+                  onEditReview={(r) => setWriteReview({ open: true, existing: r })}
+                />
               </div>
             )}
 
@@ -1038,5 +1061,18 @@ export function PlaceDetailModal({
         )}
       </motion.div>
     </motion.div>
+
+    {/* Write/Edit review modal — rendered outside the main modal stack */}
+    <AnimatePresence>
+      {writeReview.open && place && (
+        <WriteReviewModal
+          googlePlaceId={place.place_id}
+          placeName={place.name}
+          existing={writeReview.existing}
+          onClose={() => setWriteReview({ open: false })}
+        />
+      )}
+    </AnimatePresence>
+    </>
   );
 }

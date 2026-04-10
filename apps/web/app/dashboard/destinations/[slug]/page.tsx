@@ -7,7 +7,7 @@ import {
   ArrowLeft, MapPin, Plus, Heart, Share2, Star,
   Globe, Calendar, Coins, Languages, Compass,
   Utensils, Hotel, Landmark, Youtube, Map,
-  ChevronRight, Clock, ExternalLink, Building2,
+  ChevronRight, Clock, Building2,
   ImageIcon,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { GoogleMapView } from '@/components/integrations/google/google-map-view';
 import { YouTubeVideoPlayer } from '@/components/integrations/youtube/youtube-video-player';
+import { PlaceDetailModal } from '@/components/integrations/google/place-detail-modal';
 import type { YouTubeVideo } from '@/lib/integrations/youtube/youtube-service';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
 import { cn } from '@/lib/utils';
@@ -128,24 +129,28 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
-/* ── Place Card (Improved) ───────────────────────────── */
+/* ── Place Card (Native Modal) ───────────────────────── */
 
-function PlaceCard({ place, favoriteType }: { place: PlaceSearchResult; favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' }) {
+function PlaceCard({ place, favoriteType, onOpen }: {
+  place: PlaceSearchResult;
+  favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
+  onOpen: () => void;
+}) {
   const photo = place.photos?.[0];
   const photoUrl = photo ? `/api/place-photo?ref=${photo.photo_reference}&maxwidth=400` : null;
-  const mapsUrl = `https://www.google.com/maps/place/?q=place_id:${place.place_id}`;
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group flex gap-3 p-3 rounded-2xl bg-card border border-border hover:border-foreground/10 hover:shadow-md transition-all duration-300"
+      onClick={onOpen}
+      className="group flex gap-3 p-3 rounded-2xl bg-card border border-border hover:border-primary/40 hover:bg-muted/40 transition-all duration-200 cursor-pointer"
     >
       {/* Thumbnail */}
       <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden shrink-0 bg-muted relative">
         {photoUrl ? (
-          <img src={photoUrl} alt={place.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={photoUrl} alt={place.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Building2 className="w-6 h-6 text-muted-foreground/40" />
@@ -156,17 +161,19 @@ function PlaceCard({ place, favoriteType }: { place: PlaceSearchResult; favorite
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-semibold text-foreground leading-tight line-clamp-1">{place.name}</p>
-          <FavoriteButton
-            type={favoriteType}
-            externalId={place.place_id}
-            name={place.name}
-            image={photoUrl ?? undefined}
-            rating={place.rating}
-            metadata={{ googlePlaceId: place.place_id, address: place.formatted_address }}
-            size="sm"
-            className="shrink-0 -mt-0.5"
-          />
+          <p className="text-sm font-semibold text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">{place.name}</p>
+          <div onClick={(e) => e.stopPropagation()}>
+            <FavoriteButton
+              type={favoriteType}
+              externalId={place.place_id}
+              name={place.name}
+              image={photoUrl ?? undefined}
+              rating={place.rating}
+              metadata={{ googlePlaceId: place.place_id, address: place.formatted_address }}
+              size="sm"
+              className="shrink-0 -mt-0.5"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -197,12 +204,9 @@ function PlaceCard({ place, favoriteType }: { place: PlaceSearchResult; favorite
           </p>
         )}
 
-        <a
-          href={mapsUrl} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline mt-2 group/link"
-        >
-          Ver no Maps <ExternalLink className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
-        </a>
+        <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-primary mt-2 group-hover:gap-1.5 transition-all">
+          Ver detalhes <ChevronRight className="w-3 h-3" />
+        </span>
       </div>
     </motion.div>
   );
@@ -243,6 +247,11 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
   const [placeTab, setPlaceTab] = useState<PlaceTab>('restaurants');
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<{
+    placeId: string;
+    name: string;
+    favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
+  } | null>(null);
 
   /* Hero parallax */
   const heroRef = useRef<HTMLDivElement>(null);
@@ -316,6 +325,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
   const currentPlaceTabMeta = PLACE_TABS.find(t => t.key === placeTab)!;
 
   return (
+    <>
     <div className="min-h-screen bg-background pb-28 md:pb-0">
 
       {/* ═══════════════════════════════════════════════ */}
@@ -540,7 +550,12 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                 ) : (
                   <div className="space-y-2">
                     {(placesData?.attractions ?? []).slice(0, 3).map(place => (
-                      <PlaceCard key={place.place_id} place={place} favoriteType="ACTIVITY" />
+                      <PlaceCard
+                        key={place.place_id}
+                        place={place}
+                        favoriteType="ACTIVITY"
+                        onOpen={() => setSelectedPlace({ placeId: place.place_id, name: place.name, favoriteType: 'ACTIVITY' })}
+                      />
                     ))}
                     {(placesData?.attractions ?? []).length === 0 && (
                       <EmptyState icon={Landmark} title="Nenhuma atração encontrada" subtitle="Explore outras categorias na aba Lugares." />
@@ -653,7 +668,16 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                       />
                     ) : (
                       currentPlaces.map(place => (
-                        <PlaceCard key={place.place_id} place={place} favoriteType={currentPlaceTabMeta.favoriteType} />
+                        <PlaceCard
+                          key={place.place_id}
+                          place={place}
+                          favoriteType={currentPlaceTabMeta.favoriteType}
+                          onOpen={() => setSelectedPlace({
+                            placeId: place.place_id,
+                            name: place.name,
+                            favoriteType: currentPlaceTabMeta.favoriteType,
+                          })}
+                        />
                       ))
                     )}
                   </motion.div>
@@ -739,5 +763,19 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
         </motion.div>
       </div>
     </div>
+
+    {/* Native place detail modal */}
+    <AnimatePresence>
+      {selectedPlace && (
+        <PlaceDetailModal
+          key={selectedPlace.placeId}
+          placeId={selectedPlace.placeId}
+          favoriteType={selectedPlace.favoriteType}
+          fallbackName={selectedPlace.name}
+          onClose={() => setSelectedPlace(null)}
+        />
+      )}
+    </AnimatePresence>
+    </>
   );
 }
