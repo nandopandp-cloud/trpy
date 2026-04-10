@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ArrowRight, Loader2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Loader2, Mail, Lock, User, Eye, EyeOff, ChevronDown } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
 
+  const [emailExpanded, setEmailExpanded] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -78,20 +79,12 @@ export default function SignupPage() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.6, duration: 0.6 }}
-      className="space-y-5"
-    >
-      {/* Heading */}
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold text-white tracking-tight">
-          Comece sua jornada
-        </h2>
-        <p className="text-[13px] text-white/60">
-          Crie sua conta grátis em segundos.
-        </p>
+    <div className="space-y-3">
+
+      {/* Heading — desktop only */}
+      <div className="hidden md:block space-y-1 mb-5">
+        <h2 className="text-xl font-semibold text-white tracking-tight">Comece sua jornada</h2>
+        <p className="text-[13px] text-white/60">Crie sua conta grátis em segundos.</p>
       </div>
 
       {error && (
@@ -105,92 +98,166 @@ export default function SignupPage() {
       )}
 
       {/* OAuth */}
-      <div className="space-y-2.5">
-        <OAuthButton
-          provider="google"
-          label="Cadastrar com Google"
-          onClick={() => handleOAuthLogin('google')}
-          loading={loadingProvider === 'google'}
+      <OAuthButton
+        provider="google"
+        label="Cadastrar com Google"
+        onClick={() => handleOAuthLogin('google')}
+        loading={loadingProvider === 'google'}
+        disabled={isLoading}
+      />
+      <OAuthButton
+        provider="apple"
+        label="Cadastrar com Apple"
+        onClick={() => handleOAuthLogin('apple')}
+        loading={loadingProvider === 'apple'}
+        disabled={isLoading}
+      />
+
+      {/* Mobile: collapsed email form */}
+      <div className="md:hidden">
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => setEmailExpanded((v) => !v)}
           disabled={isLoading}
-        />
-        <OAuthButton
-          provider="apple"
-          label="Cadastrar com Apple"
-          onClick={() => handleOAuthLogin('apple')}
-          loading={loadingProvider === 'apple'}
-          disabled={isLoading}
-        />
+          className="w-full flex items-center justify-between h-12 px-4 rounded-2xl bg-white/[0.06] border border-white/12 text-[13px] text-white/65 hover:bg-white/[0.1] hover:text-white/80 transition-all"
+        >
+          <span>Cadastrar com email e senha</span>
+          <motion.span
+            animate={{ rotate: emailExpanded ? 180 : 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <ChevronDown className="w-4 h-4" />
+          </motion.span>
+        </motion.button>
+
+        <AnimatePresence initial={false}>
+          {emailExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
+            >
+              <form onSubmit={handleSignup} className="pt-2 space-y-2.5">
+                <GlassInput
+                  icon={User}
+                  type="text"
+                  value={name}
+                  onChange={setName}
+                  placeholder="Seu nome (opcional)"
+                  autoComplete="name"
+                />
+                <GlassInput
+                  icon={Mail}
+                  type="email"
+                  value={email}
+                  onChange={setEmail}
+                  placeholder="seu@email.com"
+                  autoComplete="email"
+                  required
+                />
+                <GlassInput
+                  icon={Lock}
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="Crie uma senha (mín. 8 chars)"
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
+                  rightSlot={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-white/50 hover:text-white/90 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  }
+                />
+                <motion.button
+                  type="submit"
+                  whileTap={{ scale: 0.98 }}
+                  disabled={isLoading || !email.trim() || !password.trim() || password.length < 8}
+                  className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30"
+                >
+                  {loadingProvider === 'email'
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <><span>Criar conta</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
+                  }
+                </motion.button>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <div className="relative flex items-center gap-3 py-1">
-        <div className="flex-1 h-px bg-white/15" />
-        <span className="text-[11px] font-medium tracking-wider uppercase text-white/50">
-          ou com email
-        </span>
-        <div className="flex-1 h-px bg-white/15" />
-      </div>
-
-      {/* Form */}
-      <form onSubmit={handleSignup} className="space-y-3">
-        <GlassInput
-          icon={User}
-          type="text"
-          value={name}
-          onChange={setName}
-          placeholder="Seu nome (opcional)"
-          autoComplete="name"
-        />
-        <GlassInput
-          icon={Mail}
-          type="email"
-          value={email}
-          onChange={setEmail}
-          placeholder="seu@email.com"
-          autoComplete="email"
-          required
-        />
-        <div className="space-y-1.5">
-          <GlassInput
-            icon={Lock}
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={setPassword}
-            placeholder="Crie uma senha"
-            autoComplete="new-password"
-            required
-            minLength={8}
-            rightSlot={
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-white/50 hover:text-white/90 transition-colors"
-                tabIndex={-1}
-                aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            }
-          />
-          <p className="text-[11px] text-white/40 pl-2">Mínimo de 8 caracteres</p>
+      {/* Desktop: email form always visible */}
+      <div className="hidden md:block">
+        <div className="relative flex items-center gap-3 py-2">
+          <div className="flex-1 h-px bg-white/15" />
+          <span className="text-[11px] font-medium tracking-wider uppercase text-white/50">ou com email</span>
+          <div className="flex-1 h-px bg-white/15" />
         </div>
 
-        <motion.button
-          type="submit"
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          disabled={isLoading || !email.trim() || !password.trim() || password.length < 8}
-          className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold hover:bg-white/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30"
-        >
-          {loadingProvider === 'email' ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <span>Criar conta</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </>
-          )}
-        </motion.button>
-      </form>
+        <form onSubmit={handleSignup} className="space-y-3">
+          <GlassInput
+            icon={User}
+            type="text"
+            value={name}
+            onChange={setName}
+            placeholder="Seu nome (opcional)"
+            autoComplete="name"
+          />
+          <GlassInput
+            icon={Mail}
+            type="email"
+            value={email}
+            onChange={setEmail}
+            placeholder="seu@email.com"
+            autoComplete="email"
+            required
+          />
+          <div className="space-y-1.5">
+            <GlassInput
+              icon={Lock}
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={setPassword}
+              placeholder="Crie uma senha"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              rightSlot={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-white/50 hover:text-white/90 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              }
+            />
+            <p className="text-[11px] text-white/40 pl-2">Mínimo de 8 caracteres</p>
+          </div>
+
+          <motion.button
+            type="submit"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            disabled={isLoading || !email.trim() || !password.trim() || password.length < 8}
+            className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold hover:bg-white/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30"
+          >
+            {loadingProvider === 'email'
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <><span>Criar conta</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
+            }
+          </motion.button>
+        </form>
+      </div>
 
       <p className="text-center text-[13px] text-white/60 pt-1">
         Já tem uma conta?{' '}
@@ -198,11 +265,11 @@ export default function SignupPage() {
           Entrar
         </Link>
       </p>
-    </motion.div>
+    </div>
   );
 }
 
-// ─── Shared glass primitives (duplicated to keep each page self-contained) ──
+// ─── Primitives ──────────────────────────────────────────────────────────────
 
 function GlassInput({
   icon: Icon,
@@ -239,9 +306,7 @@ function GlassInput({
         className="w-full h-12 pl-11 pr-11 rounded-2xl bg-white/[0.08] border border-white/15 text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:bg-white/[0.12] focus:border-white/30 transition-all backdrop-blur-sm"
       />
       {rightSlot && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2">
-          {rightSlot}
-        </div>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2">{rightSlot}</div>
       )}
     </div>
   );
@@ -272,7 +337,7 @@ function OAuthButton({
         <Loader2 className="w-4 h-4 animate-spin" />
       ) : provider === 'google' ? (
         <>
-          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+          <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0" fill="none">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -282,7 +347,7 @@ function OAuthButton({
         </>
       ) : (
         <>
-          <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white">
+          <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 fill-white">
             <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
           </svg>
           {label ?? 'Continuar com Apple'}

@@ -6,55 +6,46 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaImages } from '@/components/integrations/media';
 import { cn } from '@/lib/utils';
 
-// ─── Curated destinations — each one evokes a different travel fantasy ───────
-// We rotate through these to give the user a glimpse of possibilities.
 const DESTINATIONS = [
-  { query: 'santorini greece sunset aerial', label: 'Santorini', country: 'Grécia' },
-  { query: 'kyoto japan cherry blossom temple', label: 'Kyoto', country: 'Japão' },
-  { query: 'machu picchu peru mountains', label: 'Machu Picchu', country: 'Peru' },
-  { query: 'bali indonesia rice terraces', label: 'Ubud', country: 'Indonésia' },
-  { query: 'iceland northern lights aurora', label: 'Reykjavík', country: 'Islândia' },
-  { query: 'maldives overwater bungalow ocean', label: 'Maldivas', country: 'Oceano Índico' },
+  { query: 'santorini greece sunset aerial travel', label: 'Santorini', country: 'Grécia' },
+  { query: 'kyoto japan cherry blossom temple travel', label: 'Kyoto', country: 'Japão' },
+  { query: 'machu picchu peru mountains mist', label: 'Machu Picchu', country: 'Peru' },
+  { query: 'bali indonesia temple rice fields', label: 'Ubud', country: 'Indonésia' },
+  { query: 'iceland waterfall northern lights', label: 'Islândia', country: 'Europa' },
+  { query: 'maldives turquoise ocean bungalow', label: 'Maldivas', country: 'Oceano Índico' },
 ] as const;
-
-// ─── Cinematic Shell ─────────────────────────────────────────────────────────
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   const [index, setIndex] = useState(0);
-
-  // We fetch a small pool per destination and pick the first landscape image
-  // that loaded successfully. React Query will cache these across mounts.
   const current = DESTINATIONS[index];
+
   const { data } = useMediaImages({
     query: current.query,
     perPage: 4,
     orientation: 'landscape',
   });
 
-  // Preload next destination's image to avoid flicker on transition
+  // Preload next destination
   const next = DESTINATIONS[(index + 1) % DESTINATIONS.length];
   useMediaImages({ query: next.query, perPage: 4, orientation: 'landscape' });
 
   const imageUrl = data?.items?.[0]?.url ?? null;
 
-  // Rotate destinations every ~8s for a slow, cinematic feel
   useEffect(() => {
-    const id = setInterval(() => {
-      setIndex((i) => (i + 1) % DESTINATIONS.length);
-    }, 8000);
+    const id = setInterval(() => setIndex((i) => (i + 1) % DESTINATIONS.length), 8000);
     return () => clearInterval(id);
   }, []);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
 
-      {/* ── BACKGROUND LAYER — rotating cinematic imagery ─────────────────── */}
+      {/* ── BACKGROUND ────────────────────────────────────────────────────── */}
       <div className="absolute inset-0 z-0">
         <AnimatePresence mode="sync">
           {imageUrl && (
             <motion.div
               key={current.query}
-              initial={{ opacity: 0, scale: 1.08 }}
+              initial={{ opacity: 0, scale: 1.07 }}
               animate={{
                 opacity: 1,
                 scale: 1,
@@ -63,7 +54,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
                   scale: { duration: 9, ease: 'linear' },
                 },
               }}
-              exit={{ opacity: 0, transition: { duration: 1.6, ease: 'easeInOut' } }}
+              exit={{ opacity: 0, transition: { duration: 1.4, ease: 'easeInOut' } }}
               className="absolute inset-0"
             >
               <img
@@ -76,27 +67,28 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           )}
         </AnimatePresence>
 
-        {/* Fallback gradient while the first image loads */}
         {!imageUrl && (
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-zinc-900" />
         )}
 
-        {/* ── Cinematic overlays ─────────────────────────────────────────── */}
-        {/* Base darkening */}
-        <div className="absolute inset-0 bg-black/45" />
-        {/* Vignette — edges darker than center */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.7)_100%)]" />
-        {/* Bottom fade — ensures content readability */}
-        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black via-black/70 to-transparent" />
-        {/* Top fade — keeps header visible */}
-        <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black/60 to-transparent" />
+        {/* ── Mobile overlays: minimal top, heavy bottom so photo dominates ─ */}
+        <div className="absolute inset-0 md:hidden bg-black/25" />
+        {/* Very strong bottom-up fade — headline and buttons sit here */}
+        <div className="absolute inset-x-0 bottom-0 h-[65%] md:hidden bg-gradient-to-t from-black via-black/90 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-36 md:hidden bg-gradient-to-b from-black/55 to-transparent" />
+
+        {/* ── Desktop overlays ─────────────────────────────────────────────── */}
+        <div className="absolute inset-0 hidden md:block bg-black/40" />
+        <div className="absolute inset-0 hidden md:block bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.65)_100%)]" />
+        <div className="absolute bottom-0 left-0 right-0 h-2/3 hidden md:block bg-gradient-to-t from-black via-black/65 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-48 hidden md:block bg-gradient-to-b from-black/55 to-transparent" />
       </div>
 
-      {/* ── FOREGROUND — layout ────────────────────────────────────────────── */}
+      {/* ── FOREGROUND ────────────────────────────────────────────────────── */}
       <div className="relative z-10 flex min-h-screen flex-col">
 
-        {/* Brand header */}
-        <header className="w-full px-6 md:px-10 pt-6 md:pt-8 flex items-center justify-between">
+        {/* Header */}
+        <header className="w-full px-5 md:px-10 pt-6 md:pt-8 flex items-center justify-between">
           <Link href="/" className="inline-flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center transition-all group-hover:bg-white/15 group-hover:scale-105">
               <svg viewBox="0 0 24 24" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none">
@@ -108,32 +100,31 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
                 <circle cx="12" cy="12" r="1.5" fill="white" />
               </svg>
             </div>
-            <span className="text-lg font-bold tracking-tight text-white drop-shadow-sm">TRPY</span>
+            <span className="text-base font-bold tracking-tight text-white drop-shadow-sm">TRPY</span>
           </Link>
 
-          {/* Destination chip — subtle location label */}
           <AnimatePresence mode="wait">
             <motion.div
               key={current.query}
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.6 }}
-              className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15"
+              transition={{ duration: 0.5 }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[11px] font-medium tracking-wider uppercase text-white/80">
-                {current.label}, {current.country}
+                {current.label}
               </span>
             </motion.div>
           </AnimatePresence>
         </header>
 
-        {/* Main content — hero text + auth card */}
-        <main className="flex-1 flex flex-col justify-end md:justify-center px-5 md:px-10 pt-10 pb-8 md:py-12">
-          <div className="max-w-6xl w-full mx-auto grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+        {/* ── UNIFIED LAYOUT: mobile headline (shown only on mobile) + shared content ── */}
+        <main className="flex-1 flex flex-col justify-end md:justify-center px-5 md:px-10 pb-8 md:py-12">
+          <div className="w-full md:max-w-6xl md:mx-auto md:grid md:grid-cols-2 md:gap-16 md:items-center">
 
-            {/* ── LEFT — emotional headline (desktop only) ─────────────── */}
+            {/* LEFT col — desktop headline (hidden on mobile) */}
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -166,51 +157,59 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
               </p>
             </motion.div>
 
-            {/* ── RIGHT — glass auth card ────────────────────────────── */}
+            {/* RIGHT col — form area (full-width on mobile) */}
             <motion.div
-              initial={{ opacity: 0, y: 32 }}
+              initial={{ opacity: 0, y: 28 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ delay: 0.35, duration: 0.95, ease: [0.22, 1, 0.36, 1] }}
               className="w-full md:max-w-md md:ml-auto"
             >
-              {/* Mobile headline — shows above card on small screens */}
-              <div className="md:hidden text-center mb-7">
-                <motion.h1
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.8 }}
-                  className="text-4xl font-medium text-white tracking-tight leading-[0.95] mb-3"
-                >
+              {/* Mobile: cinematic headline above form (no card) */}
+              <div className="md:hidden mb-7">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={current.label}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.4 }}
+                    className="text-[10px] font-semibold tracking-[0.22em] uppercase text-white/55 mb-3"
+                  >
+                    {current.label} · {current.country}
+                  </motion.p>
+                </AnimatePresence>
+                <h1 className="text-[2.6rem] font-bold text-white tracking-tight leading-[1.04] mb-3">
                   Sua próxima<br />
-                  jornada{' '}
-                  <span className="italic font-light bg-gradient-to-r from-indigo-200 to-amber-200 bg-clip-text text-transparent">
-                    começa aqui.
-                  </span>
-                </motion.h1>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.8 }}
-                  className="text-sm text-white/70 font-light max-w-xs mx-auto"
-                >
+                  <span className="italic font-light bg-gradient-to-r from-indigo-200 via-white/90 to-amber-200 bg-clip-text text-transparent">
+                    jornada
+                  </span>{' '}
+                  começa<br />aqui.
+                </h1>
+                <p className="text-[13px] text-white/60 font-light">
                   Planeje, descubra e viva experiências inesquecíveis.
-                </motion.p>
+                </p>
               </div>
 
-              {/* Glass card */}
-              <div className="relative rounded-[28px] bg-white/[0.07] backdrop-blur-2xl border border-white/15 shadow-2xl overflow-hidden">
-                {/* Subtle inner glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] via-transparent to-transparent pointer-events-none" />
-                <div className="relative p-6 sm:p-8">
-                  {children}
+              {/* Mobile: no card — content floats directly over image */}
+              <div className="md:hidden">
+                {children}
+              </div>
+
+              {/* Desktop: glassmorphism card */}
+              <div className="hidden md:block">
+                <div className="relative rounded-[28px] bg-white/[0.07] backdrop-blur-2xl border border-white/15 shadow-2xl overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] via-transparent to-transparent pointer-events-none" />
+                  <div className="relative p-7 lg:p-8">
+                    {children}
+                  </div>
                 </div>
               </div>
 
-              {/* Footer — legal + indicators */}
-              <div className="flex items-center justify-between mt-5 px-2">
-                <p className="text-[11px] text-white/45 leading-snug max-w-[220px]">
-                  Ao continuar você concorda com nossos{' '}
-                  <Link href="#" className="text-white/70 hover:text-white underline underline-offset-2">Termos</Link>.
+              {/* Footer: terms + dots */}
+              <div className="flex items-center justify-between mt-4 md:mt-5 px-1">
+                <p className="text-[10px] md:text-[11px] text-white/35 md:text-white/40 leading-snug max-w-[200px]">
+                  Ao continuar, aceita os{' '}
+                  <Link href="#" className="text-white/55 md:text-white/60 hover:text-white underline underline-offset-2">Termos</Link>.
                 </p>
                 <DestinationDots current={index} total={DESTINATIONS.length} onSelect={setIndex} />
               </div>
@@ -221,8 +220,6 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-// ─── Destination progress dots ───────────────────────────────────────────────
 
 function DestinationDots({
   current,
