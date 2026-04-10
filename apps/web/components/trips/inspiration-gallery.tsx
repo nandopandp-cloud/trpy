@@ -231,19 +231,8 @@ function Lightbox({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="max-w-5xl mx-auto flex items-end justify-between gap-4">
-          {/* Info */}
-          <div className="min-w-0">
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-white/50 mb-1">
-              {item.source}
-            </p>
-            <p className="text-base font-semibold text-white">{item.author.name}</p>
-            {item.location && (
-              <p className="text-xs text-white/60 mt-1">{item.location}</p>
-            )}
-          </div>
-
           {/* Actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}

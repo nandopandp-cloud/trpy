@@ -73,7 +73,7 @@ const config: Config = {
         'accent-gradient': 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #f59e0b 100%)',
         'dark-surface': 'linear-gradient(135deg, #18181b 0%, #27272a 50%, #18181b 100%)',
         'warm-gradient': 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-        'hero-overlay': 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 65%, rgba(0,0,0,0.85) 100%)',
+        'hero-overlay': 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 65%, rgba(0,0,0,0.92) 100%)',
       },
       borderRadius: {
         lg: 'var(--radius)',
