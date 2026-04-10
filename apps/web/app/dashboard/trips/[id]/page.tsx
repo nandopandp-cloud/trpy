@@ -281,12 +281,12 @@ function StickyTabs({
   active,
   onChange,
   counts,
-  availableTabs = TABS,
+  availableTabs,
 }: {
   active: TabId;
   onChange: (tab: TabId) => void;
   counts: Partial<Record<TabId, number>>;
-  availableTabs?: typeof TABS;
+  availableTabs: Array<{ id: TabId; label: string }>;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -630,7 +630,9 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
         const hasCoordinates = trip.itineraryDays.some((d: any) =>
           d.items.some((item: any) => item.latitude != null && item.longitude != null)
         );
-        const visibleTabs: typeof TABS = hasCoordinates ? TABS : TABS.filter((t) => t.id !== 'map') as typeof TABS;
+        const visibleTabs: Array<{ id: TabId; label: string }> = hasCoordinates
+          ? Array.from(TABS)
+          : Array.from(TABS).filter((t) => t.id !== 'map');
 
         // If "Mapa" is hidden and user is on it, switch to itinerary
         if (!hasCoordinates && activeTab === 'map') {
