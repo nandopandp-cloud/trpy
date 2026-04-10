@@ -374,12 +374,14 @@ export default function DashboardPage() {
                   src={tripPhoto}
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover scale-105"
-                  style={{ opacity: 0.13 }}
+                  style={{ opacity: 0.08 }}
                 />
-                {/* Fade: strong on left (text area), transparent on right */}
-                <div className="absolute inset-0 bg-gradient-to-r from-card via-card/70 to-card/10" />
-                {/* Bottom fade */}
-                <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-card/40" />
+                {/* Strong dark overlay for text readability */}
+                <div className="absolute inset-0 bg-black/50" />
+                {/* Gradient overlay — stronger on left (text area) */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/40 to-black/20" />
+                {/* Bottom fade — ensures bottom area is darkest */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
               </motion.div>
             )}
 
@@ -387,7 +389,7 @@ export default function DashboardPage() {
             {!tripPhoto && (
               <div className="absolute -top-24 -right-24 w-64 h-64 aurora opacity-20 pointer-events-none" />
             )}
-            <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
 
             {/* Header */}
             <div className="relative z-10 flex items-center gap-2 mb-3">
