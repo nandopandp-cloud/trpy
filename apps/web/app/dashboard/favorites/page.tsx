@@ -19,7 +19,10 @@ interface Favorite {
   name: string;
   image?: string;
   rating?: number;
-  metadata?: Record<string, unknown>;
+  googlePlaceId?: string | null;
+  youtubeVideoId?: string | null;
+  pinterestPinId?: string | null;
+  metadata?: Record<string, unknown> | null;
   createdAt: string;
 }
 
@@ -111,8 +114,11 @@ function FavoriteCard({ favorite, onRemove, onClick }: { favorite: Favorite; onR
         <motion.button
           initial={{ opacity: 0 }}
           whileHover={{ scale: 1.1 }}
-          onClick={onRemove}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </motion.button>
