@@ -22,10 +22,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts  Account[]
-  sessions  Session[]
-  trips     Trip[]
-  favorites Favorite[]
+  accounts      Account[]
+  sessions      Session[]
+  trips         Trip[]
+  favorites     Favorite[]
+  placeReviews  PlaceReview[]
 
   @@map("users")
 }
@@ -188,6 +189,28 @@ model Favorite {
   @@index([userId])
   @@index([type])
   @@map("favorites")
+}
+
+// ─── Place Reviews ───────────────────────────────────────────────────────────
+
+model PlaceReview {
+  id           String   @id @default(cuid())
+  userId       String
+  googlePlaceId String
+  placeName    String
+  rating       Int      // 1-5
+  title        String?
+  body         String?
+  visitedOn    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, googlePlaceId])
+  @@index([googlePlaceId])
+  @@index([userId])
+  @@map("place_reviews")
 }
 
 // ─── Expenses ────────────────────────────────────────────────────────────────

@@ -2,16 +2,30 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Star, MapPin, Clock, Phone, Globe, ChevronLeft, ChevronRight,
   ExternalLink, Navigation, Share2, Building2, Loader2, DollarSign,
-  ChevronDown, SlidersHorizontal, Check,
+  ChevronDown, SlidersHorizontal, Check, Pencil, Plus,
 } from 'lucide-react';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { GoogleMapView } from './google-map-view';
+import { WriteReviewModal } from './write-review-modal';
 import { cn } from '@/lib/utils';
 import type { PlaceDetails, PlaceReview } from '@/lib/integrations/google/places-service';
+
+// ─── Trpy review shape (from our DB) ─────────────────────────────────────────
+
+interface TrpyReview {
+  id: string;
+  rating: number;
+  title: string | null;
+  body: string | null;
+  visitedOn: string | null;
+  createdAt: string;
+  user: { id: string; name: string | null; image: string | null };
+}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -235,100 +249,278 @@ function ReviewCard({ review, index }: { review: PlaceReview; index: number }) {
   );
 }
 
-type SortMode = 'relevant' | 'recent';
+// ─── Trpy Review Card ─────────────────────────────────────────────────────────
 
-function ReviewsList({ reviews }: { reviews: PlaceReview[] }) {
-  const [filter, setFilter] = useState<number | null>(null);
-  const [sort, setSort] = useState<SortMode>('relevant');
-
-  const filtered = useMemo(() => {
-    let list = [...reviews];
-    if (filter != null) list = list.filter((r) => Math.round(r.rating) === filter);
-    if (sort === 'recent') list.sort((a, b) => b.time - a.time);
-    return list;
-  }, [reviews, filter, sort]);
-
-  // Count per rating for filter chips
-  const counts = useMemo(() => {
-    const c: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    reviews.forEach((r) => {
-      const rounded = Math.round(r.rating);
-      if (c[rounded] != null) c[rounded]++;
-    });
-    return c;
-  }, [reviews]);
-
-  if (reviews.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border p-8 text-center">
-        <p className="text-sm text-muted-foreground">Nenhuma avaliação disponível.</p>
-      </div>
-    );
-  }
+function TrpyReviewCard({
+  review,
+  index,
+  onEdit,
+  isOwn,
+}: {
+  review: TrpyReview;
+  index: number;
+  onEdit?: () => void;
+  isOwn: boolean;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = review.body && review.body.length > 240;
+  const initials = review.user.name?.[0]?.toUpperCase() ?? '?';
+  const date = new Date(review.createdAt).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
 
   return (
-    <div className="space-y-3">
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => setFilter(null)}
-          className={cn(
-            'px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
-            filter == null
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted text-muted-foreground hover:text-foreground',
-          )}
-        >
-          Todas ({reviews.length})
-        </button>
-        {[5, 4, 3, 2, 1].map((r) => {
-          const count = counts[r];
-          if (count === 0) return null;
-          return (
-            <button
-              key={r}
-              onClick={() => setFilter(filter === r ? null : r)}
-              className={cn(
-                'flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
-                filter === r
-                  ? 'bg-amber-400 text-zinc-900'
-                  : 'bg-muted text-muted-foreground hover:text-foreground',
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.04, 0.3) }}
+      className={cn(
+        'rounded-2xl border p-4 space-y-2.5',
+        isOwn ? 'border-primary/30 bg-primary/5' : 'border-border bg-card',
+      )}
+    >
+      {/* Source badge */}
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+          <Star className="w-2.5 h-2.5 fill-current" /> Trpy
+        </span>
+        {isOwn && (
+          <span className="text-[10px] text-muted-foreground font-medium">Sua avaliação</span>
+        )}
+      </div>
+
+      <div className="flex items-start gap-3">
+        {review.user.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={review.user.image}
+            alt={review.user.name ?? 'Usuário'}
+            referrerPolicy="no-referrer"
+            className="w-9 h-9 rounded-full object-cover shrink-0 ring-1 ring-border"
+          />
+        ) : (
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            {initials}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {review.user.name ?? 'Viajante Trpy'}
+            </p>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[11px] text-muted-foreground">{date}</span>
+              {isOwn && onEdit && (
+                <button
+                  onClick={onEdit}
+                  className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
               )}
-            >
-              {r} <Star className="w-3 h-3 fill-current" />
-              <span className="opacity-70">({count})</span>
-            </button>
-          );
-        })}
-
-        <div className="flex-1" />
-
-        {/* Sort */}
-        <div className="relative">
-          <button
-            onClick={() => setSort(sort === 'relevant' ? 'recent' : 'relevant')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-muted text-foreground hover:bg-muted/80 transition-colors"
-          >
-            <SlidersHorizontal className="w-3 h-3" />
-            {sort === 'relevant' ? 'Relevantes' : 'Recentes'}
-          </button>
+            </div>
+          </div>
+          <StarRow value={review.rating} />
+          {review.title && (
+            <p className="text-xs font-semibold text-foreground mt-1">{review.title}</p>
+          )}
         </div>
       </div>
 
-      {/* List */}
-      <AnimatePresence mode="popLayout">
-        {filtered.length === 0 ? (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-xs text-muted-foreground text-center py-6"
-          >
-            Nenhuma avaliação nessa faixa.
-          </motion.p>
-        ) : (
-          filtered.map((r, i) => <ReviewCard key={`${r.author_name}-${r.time}`} review={r} index={i} />)
-        )}
-      </AnimatePresence>
+      {review.body && (
+        <div className="space-y-1">
+          <p className={cn(
+            'text-sm text-foreground/80 leading-relaxed',
+            !expanded && isLong && 'line-clamp-4',
+          )}>
+            {review.body}
+          </p>
+          {isLong && (
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              {expanded ? 'Ler menos' : 'Ler mais'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {review.visitedOn && (
+        <p className="text-[11px] text-muted-foreground">
+          Visitado em {new Date(review.visitedOn).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Combined Reviews Section ─────────────────────────────────────────────────
+
+type SortMode = 'relevant' | 'recent';
+type ReviewSource = 'all' | 'trpy' | 'google';
+
+function ReviewsList({
+  googleReviews,
+  trpyReviews,
+  currentUserId,
+  onWriteReview,
+  onEditReview,
+}: {
+  googleReviews: PlaceReview[];
+  trpyReviews: TrpyReview[];
+  currentUserId: string | null;
+  onWriteReview: () => void;
+  onEditReview: (r: TrpyReview) => void;
+}) {
+  const [filter, setFilter] = useState<number | null>(null);
+  const [sort, setSort] = useState<SortMode>('recent');
+  const [source, setSource] = useState<ReviewSource>('all');
+
+  const myTrpyReview = trpyReviews.find((r) => r.user.id === currentUserId);
+  const totalCount = googleReviews.length + trpyReviews.length;
+
+  // Unified list entries
+  const unified = useMemo(() => {
+    const list: Array<{ type: 'google'; data: PlaceReview } | { type: 'trpy'; data: TrpyReview }> = [];
+    if (source !== 'trpy') googleReviews.forEach((r) => list.push({ type: 'google', data: r }));
+    if (source !== 'google') trpyReviews.forEach((r) => list.push({ type: 'trpy', data: r }));
+    return list;
+  }, [googleReviews, trpyReviews, source]);
+
+  const filtered = useMemo(() => {
+    let list = [...unified];
+    if (filter != null) {
+      list = list.filter((item) =>
+        item.type === 'google'
+          ? Math.round(item.data.rating) === filter
+          : (item.data as TrpyReview).rating === filter,
+      );
+    }
+    if (sort === 'recent') {
+      list.sort((a, b) => {
+        const ta = a.type === 'google' ? (a.data as PlaceReview).time : new Date((a.data as TrpyReview).createdAt).getTime() / 1000;
+        const tb = b.type === 'google' ? (b.data as PlaceReview).time : new Date((b.data as TrpyReview).createdAt).getTime() / 1000;
+        return tb - ta;
+      });
+    }
+    return list;
+  }, [unified, filter, sort]);
+
+  const counts = useMemo(() => {
+    const c: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    unified.forEach((item) => {
+      const r = item.type === 'google' ? Math.round((item.data as PlaceReview).rating) : (item.data as TrpyReview).rating;
+      if (c[r] != null) c[r]++;
+    });
+    return c;
+  }, [unified]);
+
+  return (
+    <div className="space-y-3">
+      {/* Write review CTA */}
+      <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            {myTrpyReview ? 'Você já avaliou este lugar' : 'Compartilhe sua experiência'}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {myTrpyReview ? 'Toque para editar ou atualizar sua avaliação.' : 'Ajude outros viajantes com sua opinião no Trpy.'}
+          </p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={myTrpyReview ? () => onEditReview(myTrpyReview) : onWriteReview}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold shrink-0 hover:bg-primary/90 transition-colors"
+        >
+          {myTrpyReview ? (
+            <><Pencil className="w-3.5 h-3.5" /> Editar</>
+          ) : (
+            <><Plus className="w-3.5 h-3.5" /> Avaliar</>
+          )}
+        </motion.button>
+      </div>
+
+      {totalCount > 0 && (
+        <>
+          {/* Source filter tabs */}
+          <div className="flex gap-2">
+            {(['all', 'trpy', 'google'] as ReviewSource[]).map((s) => (
+              <button
+                key={s}
+                onClick={() => setSource(s)}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
+                  source === s ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {s === 'all' ? `Todas (${totalCount})` : s === 'trpy' ? `Trpy (${trpyReviews.length})` : `Google (${googleReviews.length})`}
+              </button>
+            ))}
+          </div>
+
+          {/* Rating filter + sort */}
+          <div className="flex flex-wrap items-center gap-2">
+            {[5, 4, 3, 2, 1].map((r) => {
+              const count = counts[r];
+              if (count === 0) return null;
+              return (
+                <button
+                  key={r}
+                  onClick={() => setFilter(filter === r ? null : r)}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
+                    filter === r ? 'bg-amber-400 text-zinc-900' : 'bg-muted text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {r} <Star className="w-3 h-3 fill-current" />
+                  <span className="opacity-70">({count})</span>
+                </button>
+              );
+            })}
+            <div className="flex-1" />
+            <button
+              onClick={() => setSort(sort === 'relevant' ? 'recent' : 'relevant')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-muted text-foreground hover:bg-muted/80 transition-colors"
+            >
+              <SlidersHorizontal className="w-3 h-3" />
+              {sort === 'relevant' ? 'Relevantes' : 'Recentes'}
+            </button>
+          </div>
+
+          {/* List */}
+          <AnimatePresence mode="popLayout">
+            {filtered.length === 0 ? (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-muted-foreground text-center py-6">
+                Nenhuma avaliação nessa faixa.
+              </motion.p>
+            ) : (
+              filtered.map((item, i) =>
+                item.type === 'trpy' ? (
+                  <TrpyReviewCard
+                    key={(item.data as TrpyReview).id}
+                    review={item.data as TrpyReview}
+                    index={i}
+                    isOwn={(item.data as TrpyReview).user.id === currentUserId}
+                    onEdit={() => onEditReview(item.data as TrpyReview)}
+                  />
+                ) : (
+                  <ReviewCard
+                    key={`${(item.data as PlaceReview).author_name}-${(item.data as PlaceReview).time}`}
+                    review={item.data as PlaceReview}
+                    index={i}
+                  />
+                ),
+              )
+            )}
+          </AnimatePresence>
+        </>
+      )}
+
+      {totalCount === 0 && (
+        <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+          <p className="text-sm text-muted-foreground">Nenhuma avaliação ainda. Seja o primeiro!</p>
+        </div>
+      )}
     </div>
   );
 }
