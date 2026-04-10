@@ -4,31 +4,82 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search } from 'lucide-react';
+import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
 import { cn } from '@/lib/utils';
 
 const ALL_CATEGORIES = [
-  { label: 'Praias', emoji: '🏖️', gradient: 'from-sky-400 to-cyan-500', desc: 'Mar, sol e areia branca' },
-  { label: 'Montanhas', emoji: '⛰️', gradient: 'from-emerald-500 to-green-700', desc: 'Trilhas e altitudes' },
-  { label: 'Cidades', emoji: '🏙️', gradient: 'from-violet-500 to-indigo-700', desc: 'Arte e arquitetura urbana' },
-  { label: 'Aventura', emoji: '🪂', gradient: 'from-amber-400 to-orange-600', desc: 'Adrenalina pura' },
-  { label: 'Gastronomia', emoji: '🍣', gradient: 'from-rose-500 to-red-600', desc: 'Culinária do mundo' },
-  { label: 'Cultura', emoji: '🏛️', gradient: 'from-purple-500 to-violet-700', desc: 'História e tradição' },
-  { label: 'Relax', emoji: '🧖', gradient: 'from-teal-400 to-cyan-600', desc: 'Spa e bem-estar' },
-  { label: 'Família', emoji: '👨‍👩‍👧', gradient: 'from-pink-400 to-fuchsia-600', desc: 'Para toda a família' },
-  { label: 'Natureza', emoji: '🌿', gradient: 'from-green-500 to-emerald-700', desc: 'Ecoturismo e fauna' },
-  { label: 'Inverno', emoji: '❄️', gradient: 'from-blue-400 to-sky-600', desc: 'Neve e esqui' },
-  { label: 'Cruzeiros', emoji: '🛳️', gradient: 'from-blue-600 to-indigo-700', desc: 'Viagens de navio' },
-  { label: 'Safari', emoji: '🦁', gradient: 'from-yellow-500 to-amber-700', desc: 'África e vida selvagem' },
-  { label: 'Festas', emoji: '🎉', gradient: 'from-fuchsia-500 to-pink-600', desc: 'Carnaval e festivais' },
-  { label: 'Compras', emoji: '🛍️', gradient: 'from-orange-400 to-red-500', desc: 'Centros comerciais' },
-  { label: 'Esportes', emoji: '🤿', gradient: 'from-cyan-500 to-blue-600', desc: 'Mergulho e surf' },
-  { label: 'Lua de mel', emoji: '💑', gradient: 'from-rose-400 to-pink-600', desc: 'Destinos românticos' },
+  { label: 'Praias', emoji: '🏖️', gradient: 'from-sky-400 to-cyan-500', desc: 'Mar, sol e areia branca', query: 'tropical beach ocean waves' },
+  { label: 'Montanhas', emoji: '⛰️', gradient: 'from-emerald-500 to-green-700', desc: 'Trilhas e altitudes', query: 'mountain peaks landscape snow' },
+  { label: 'Cidades', emoji: '🏙️', gradient: 'from-violet-500 to-indigo-700', desc: 'Arte e arquitetura urbana', query: 'city architecture skyline urban' },
+  { label: 'Aventura', emoji: '🪂', gradient: 'from-amber-400 to-orange-600', desc: 'Adrenalina pura', query: 'extreme adventure sports nature' },
+  { label: 'Gastronomia', emoji: '🍣', gradient: 'from-rose-500 to-red-600', desc: 'Culinária do mundo', query: 'gourmet food cuisine restaurant' },
+  { label: 'Cultura', emoji: '🏛️', gradient: 'from-purple-500 to-violet-700', desc: 'História e tradição', query: 'historical temple ruins architecture' },
+  { label: 'Relax', emoji: '🧖', gradient: 'from-teal-400 to-cyan-600', desc: 'Spa e bem-estar', query: 'spa pool resort infinity wellness' },
+  { label: 'Família', emoji: '👨‍👩‍👧', gradient: 'from-pink-400 to-fuchsia-600', desc: 'Para toda a família', query: 'family vacation kids park fun' },
+  { label: 'Natureza', emoji: '🌿', gradient: 'from-green-500 to-emerald-700', desc: 'Ecoturismo e fauna', query: 'rainforest wildlife nature jungle' },
+  { label: 'Inverno', emoji: '❄️', gradient: 'from-blue-400 to-sky-600', desc: 'Neve e esqui', query: 'snow winter ski mountain landscape' },
+  { label: 'Cruzeiros', emoji: '🛳️', gradient: 'from-blue-600 to-indigo-700', desc: 'Viagens de navio', query: 'cruise ship ocean sea travel' },
+  { label: 'Safari', emoji: '🦁', gradient: 'from-yellow-500 to-amber-700', desc: 'África e vida selvagem', query: 'safari africa wildlife savanna lion' },
+  { label: 'Festas', emoji: '🎉', gradient: 'from-fuchsia-500 to-pink-600', desc: 'Carnaval e festivais', query: 'festival carnival celebration fireworks' },
+  { label: 'Compras', emoji: '🛍️', gradient: 'from-orange-400 to-red-500', desc: 'Centros comerciais', query: 'shopping mall market street fashion' },
+  { label: 'Esportes', emoji: '🤿', gradient: 'from-cyan-500 to-blue-600', desc: 'Mergulho e surf', query: 'surf diving underwater ocean sport' },
+  { label: 'Lua de mel', emoji: '💑', gradient: 'from-rose-400 to-pink-600', desc: 'Destinos românticos', query: 'romantic sunset couple beach travel' },
 ];
 
 const stagger = {
   container: { hidden: {}, show: { transition: { staggerChildren: 0.04 } } },
   item: { hidden: { opacity: 0, scale: 0.88 }, show: { opacity: 1, scale: 1, transition: { ease: [0.16, 1, 0.3, 1], duration: 0.4 } } },
 };
+
+// ─── Each card manages its own photo hook ────────────────────────────────────
+
+interface CatItem {
+  label: string;
+  emoji: string;
+  gradient: string;
+  desc: string;
+  query: string;
+}
+
+function CategoryCard({ cat }: { cat: CatItem }) {
+  const router = useRouter();
+  const photo = useDestinationPhoto(cat.query);
+
+  return (
+    <motion.button
+      variants={stagger.item}
+      whileHover={{ scale: 1.03, y: -4 }}
+      whileTap={{ scale: 0.96 }}
+      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
+      className="group relative overflow-hidden rounded-2xl text-left cursor-pointer"
+    >
+      <div className={cn('h-[120px] relative overflow-hidden', !photo && `bg-gradient-to-br ${cat.gradient}`)}>
+        {/* Real photo */}
+        {photo && (
+          <img
+            src={photo}
+            alt={cat.label}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        )}
+        {/* Overlays */}
+        <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-black/20 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/65 to-transparent" />
+        {/* Emoji */}
+        <span className="absolute right-3 top-3 text-3xl opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-300 select-none drop-shadow">
+          {cat.emoji}
+        </span>
+        {/* Text */}
+        <div className="absolute bottom-0 left-0 right-0 p-3">
+          <p className="text-sm font-bold text-white leading-tight">{cat.label}</p>
+          <p className="text-[10px] text-white/65 mt-0.5 leading-tight">{cat.desc}</p>
+        </div>
+      </div>
+    </motion.button>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DestinationsPage() {
   const router = useRouter();
@@ -83,31 +134,7 @@ export default function DestinationsPage() {
         className="grid grid-cols-2 sm:grid-cols-3 gap-3"
       >
         {filtered.map(cat => (
-          <motion.button
-            key={cat.label}
-            variants={stagger.item}
-            whileHover={{ scale: 1.03, y: -4 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
-            className="group relative overflow-hidden rounded-2xl text-left cursor-pointer"
-          >
-            {/* Gradient bg */}
-            <div className={cn('h-[120px] bg-gradient-to-br relative', cat.gradient)}>
-              {/* Gloss */}
-              <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/20 to-transparent" />
-              {/* Dark fade bottom */}
-              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/50 to-transparent" />
-              {/* Large emoji bg */}
-              <span className="absolute right-3 top-3 text-4xl opacity-30 group-hover:opacity-50 group-hover:scale-110 transition-all duration-300 select-none">
-                {cat.emoji}
-              </span>
-              {/* Text */}
-              <div className="absolute bottom-0 left-0 right-0 p-3">
-                <p className="text-sm font-bold text-white leading-tight">{cat.label}</p>
-                <p className="text-[10px] text-white/65 mt-0.5 leading-tight">{cat.desc}</p>
-              </div>
-            </div>
-          </motion.button>
+          <CategoryCard key={cat.label} cat={cat} />
         ))}
       </motion.div>
 

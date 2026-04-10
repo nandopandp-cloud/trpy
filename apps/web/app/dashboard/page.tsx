@@ -12,6 +12,7 @@ import {
   Plane,
 } from 'lucide-react';
 import { useTrips } from '@/hooks/useTrips';
+import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
 import { TripStories } from '@/components/dashboard/trip-stories';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -166,22 +167,22 @@ function TiltCard({ children, className, onClick }: { children: React.ReactNode;
 /* ── Data ─────────────────────────────────────────────── */
 
 const TRENDING = [
-  { name: 'Bali', country: 'Indonésia', emoji: '🌊', gradient: 'from-emerald-500 to-teal-600', tag: 'Natureza', rating: 4.9 },
-  { name: 'Paris', country: 'França', emoji: '🗼', gradient: 'from-sky-500 to-indigo-600', tag: 'Cultura', rating: 4.8 },
-  { name: 'Patagônia', country: 'Argentina', emoji: '🏔️', gradient: 'from-slate-500 to-slate-700', tag: 'Aventura', rating: 4.9 },
-  { name: 'Tóquio', country: 'Japão', emoji: '🎌', gradient: 'from-rose-500 to-pink-600', tag: 'Urbano', rating: 4.8 },
-  { name: 'Santorini', country: 'Grécia', emoji: '🏝️', gradient: 'from-blue-500 to-cyan-600', tag: 'Romance', rating: 4.7 },
+  { name: 'Bali', country: 'Indonésia', emoji: '🌊', gradient: 'from-emerald-500 to-teal-600', tag: 'Natureza', rating: 4.9, query: 'Bali travel landscape' },
+  { name: 'Paris', country: 'França', emoji: '🗼', gradient: 'from-sky-500 to-indigo-600', tag: 'Cultura', rating: 4.8, query: 'Paris city skyline' },
+  { name: 'Patagônia', country: 'Argentina', emoji: '🏔️', gradient: 'from-slate-500 to-slate-700', tag: 'Aventura', rating: 4.9, query: 'Patagonia mountains landscape' },
+  { name: 'Tóquio', country: 'Japão', emoji: '🎌', gradient: 'from-rose-500 to-pink-600', tag: 'Urbano', rating: 4.8, query: 'Tokyo city night' },
+  { name: 'Santorini', country: 'Grécia', emoji: '🏝️', gradient: 'from-blue-500 to-cyan-600', tag: 'Romance', rating: 4.7, query: 'Santorini Greece blue domes' },
 ];
 
 const CATEGORIES = [
-  { label: 'Praias', emoji: '🏖️', gradient: 'from-sky-400 to-cyan-500', desc: 'Mar, sol e areia' },
-  { label: 'Montanhas', emoji: '⛰️', gradient: 'from-emerald-500 to-green-700', desc: 'Trilhas e altitudes' },
-  { label: 'Cidades', emoji: '🏙️', gradient: 'from-violet-500 to-indigo-700', desc: 'Arte e arquitetura' },
-  { label: 'Aventura', emoji: '🪂', gradient: 'from-amber-400 to-orange-600', desc: 'Adrenalina pura' },
-  { label: 'Gastronomia', emoji: '🍣', gradient: 'from-rose-500 to-red-600', desc: 'Culinária do mundo' },
-  { label: 'Cultura', emoji: '🏛️', gradient: 'from-purple-500 to-violet-700', desc: 'História e tradição' },
-  { label: 'Relax', emoji: '🧖', gradient: 'from-teal-400 to-cyan-600', desc: 'Spa e descanso' },
-  { label: 'Família', emoji: '👨‍👩‍👧', gradient: 'from-pink-400 to-fuchsia-600', desc: 'Para toda família' },
+  { label: 'Praias', emoji: '🏖️', gradient: 'from-sky-400 to-cyan-500', desc: 'Mar, sol e areia', query: 'tropical beach ocean' },
+  { label: 'Montanhas', emoji: '⛰️', gradient: 'from-emerald-500 to-green-700', desc: 'Trilhas e altitudes', query: 'mountain landscape trail' },
+  { label: 'Cidades', emoji: '🏙️', gradient: 'from-violet-500 to-indigo-700', desc: 'Arte e arquitetura', query: 'city architecture skyline' },
+  { label: 'Aventura', emoji: '🪂', gradient: 'from-amber-400 to-orange-600', desc: 'Adrenalina pura', query: 'adventure extreme sports' },
+  { label: 'Gastronomia', emoji: '🍣', gradient: 'from-rose-500 to-red-600', desc: 'Culinária do mundo', query: 'gourmet food travel' },
+  { label: 'Cultura', emoji: '🏛️', gradient: 'from-purple-500 to-violet-700', desc: 'História e tradição', query: 'historical architecture temple' },
+  { label: 'Relax', emoji: '🧖', gradient: 'from-teal-400 to-cyan-600', desc: 'Spa e descanso', query: 'spa wellness resort' },
+  { label: 'Família', emoji: '👨‍👩‍👧', gradient: 'from-pink-400 to-fuchsia-600', desc: 'Para toda família', query: 'family vacation fun travel' },
 ];
 
 const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string }> = {
@@ -221,32 +222,11 @@ export default function DashboardPage() {
   const nextTrip    = trips.find(t => t.status === 'PLANNING' || t.status === 'ONGOING');
   const daysToNext  = nextTrip ? Math.max(0, differenceInDays(new Date(nextTrip.startDate), new Date())) : null;
 
-  // Destination photo for the "Próxima Viagem" card background
-  const [tripPhoto, setTripPhoto] = useState<string | null>(null);
-  useEffect(() => {
-    if (!nextTrip) { setTripPhoto(null); return; }
-    if (nextTrip.coverImage) { setTripPhoto(nextTrip.coverImage); return; }
-    fetch(`/api/destination-photo?q=${encodeURIComponent(nextTrip.destination)}`)
-      .then(r => r.json())
-      .then(d => { if (d.success && d.data?.photoUrl) setTripPhoto(d.data.photoUrl); })
-      .catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nextTrip?.id]);
-
-  // Trending destination photos
-  const [trendingPhotos, setTrendingPhotos] = useState<Record<string, string>>({});
-  useEffect(() => {
-    TRENDING.forEach(dest => {
-      fetch(`/api/destination-photo?q=${encodeURIComponent(dest.name)}`)
-        .then(r => r.json())
-        .then(d => {
-          if (d.success && d.data?.photoUrl) {
-            setTrendingPhotos(prev => ({ ...prev, [dest.name]: d.data.photoUrl }));
-          }
-        })
-        .catch(() => {});
-    });
-  }, []);
+  // Photo for "Próxima Viagem" card — use saved coverImage or fetch from media engine
+  const tripPhotoFromEngine = useDestinationPhoto(
+    nextTrip && !nextTrip.coverImage ? nextTrip.destination : null,
+  );
+  const tripPhoto = nextTrip?.coverImage ?? tripPhotoFromEngine;
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
@@ -619,38 +599,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-4 gap-2.5 md:grid-cols-8">
           {CATEGORIES.map((cat, i) => (
-            <motion.button
-              key={cat.label}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.35 + i * 0.04, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ scale: 1.06, y: -3 }}
-              whileTap={{ scale: 0.93 }}
-              onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
-              className="group flex flex-col items-center gap-2 cursor-pointer"
-            >
-              {/* Icon bubble */}
-              <div className={cn(
-                'relative w-full aspect-square rounded-2xl bg-gradient-to-br overflow-hidden',
-                'shadow-md group-hover:shadow-lg transition-all duration-300',
-                cat.gradient
-              )}>
-                {/* Gloss top */}
-                <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/25 to-transparent rounded-t-2xl" />
-                {/* Bottom shade */}
-                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent" />
-                {/* Emoji */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl md:text-3xl select-none drop-shadow transition-transform duration-300 group-hover:scale-125">
-                    {cat.emoji}
-                  </span>
-                </div>
-              </div>
-              {/* Label */}
-              <span className="text-[10px] md:text-[11px] font-semibold text-foreground/80 group-hover:text-foreground transition-colors leading-tight text-center">
-                {cat.label}
-              </span>
-            </motion.button>
+            <CategoryBubble key={cat.label} cat={cat} delay={0.35 + i * 0.04} />
           ))}
         </div>
       </motion.section>
@@ -674,99 +623,13 @@ export default function DashboardPage() {
 
         {/* First card prominent, rest in scrollable row */}
         <div className="space-y-3">
-          {/* Hero card — first trending dest */}
-          {(() => {
-            const dest = TRENDING[0];
-            const photo = trendingPhotos[dest.name];
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
-                className="relative h-[200px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg hover:shadow-2xl transition-shadow duration-500"
-              >
-                {photo ? (
-                  <img src={photo} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                ) : (
-                  <div className={cn('absolute inset-0 bg-gradient-to-br', dest.gradient)} />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-
-                {/* Content positioned left */}
-                <div className="absolute inset-0 flex flex-col justify-between p-5">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1.5 bg-amber-500 px-2.5 py-1 rounded-full">
-                      <Flame className="w-3 h-3 text-white" />
-                      <span className="text-[10px] font-bold text-white uppercase tracking-wide">Destaque</span>
-                    </div>
-                    <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/15">
-                      <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                      <span className="text-[11px] font-bold text-white">{dest.rating}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-semibold text-white/60 uppercase tracking-widest">{dest.tag}</span>
-                    <h3 className="text-2xl font-black text-white leading-tight tracking-tight mt-0.5">{dest.name}</h3>
-                    <p className="text-sm text-white/70 flex items-center gap-1 mt-1">
-                      <MapPin className="w-3.5 h-3.5 shrink-0" />
-                      {dest.country}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Arrow */}
-                <div className="absolute right-5 bottom-5 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-                  <ArrowRight className="w-4 h-4 text-white" />
-                </div>
-              </motion.div>
-            );
-          })()}
+          <TrendingHeroCard dest={TRENDING[0]} delay={0.4} />
 
           {/* Remaining 4 — horizontal scroll */}
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 -mx-4 px-4 md:mx-0 md:px-0">
-            {TRENDING.slice(1).map((dest, i) => {
-              const photo = trendingPhotos[dest.name];
-              return (
-                <motion.div
-                  key={dest.name}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.45 + i * 0.07 }}
-                  whileHover={{ y: -6, scale: 1.03 }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
-                  className="shrink-0 cursor-pointer group"
-                  style={{ width: 148 }}
-                >
-                  <div className="relative h-[188px] rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-shadow duration-400">
-                    {photo ? (
-                      <img src={photo} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-600 group-hover:scale-110" />
-                    ) : (
-                      <div className={cn('absolute inset-0 bg-gradient-to-br', dest.gradient)}>
-                        <span className="absolute inset-0 flex items-center justify-center text-5xl opacity-20 select-none">{dest.emoji}</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-
-                    {/* Rating */}
-                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded-full border border-white/10">
-                      <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                      <span className="text-[10px] font-bold text-white">{dest.rating}</span>
-                    </div>
-
-                    {/* Info */}
-                    <div className="absolute bottom-0 inset-x-0 p-3">
-                      <p className="text-sm font-bold text-white leading-tight">{dest.name}</p>
-                      <p className="text-[10px] text-white/60 mt-0.5">{dest.country}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {TRENDING.slice(1).map((dest, i) => (
+              <TrendingSmallCard key={dest.name} dest={dest} delay={0.45 + i * 0.07} />
+            ))}
           </div>
         </div>
       </motion.section>
@@ -876,6 +739,173 @@ export default function DashboardPage() {
       </motion.section>
 
     </div>
+  );
+}
+
+// ─── Trending card sub-components ────────────────────────────────────────────
+// Each card calls its own useDestinationPhoto hook so React's rules-of-hooks
+// are respected (no hook calls inside .map()).
+
+interface TrendingDest {
+  name: string;
+  country: string;
+  emoji: string;
+  gradient: string;
+  tag: string;
+  rating: number;
+  query: string;
+}
+
+function TrendingHeroCard({ dest, delay }: { dest: TrendingDest; delay: number }) {
+  const router = useRouter();
+  const photo = useDestinationPhoto(dest.query);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
+      className="relative h-[200px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg hover:shadow-2xl transition-shadow duration-500"
+    >
+      {/* Background: photo or gradient fallback */}
+      {photo ? (
+        <img
+          src={photo}
+          alt={dest.name}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+      ) : (
+        <div className={cn('absolute inset-0 bg-gradient-to-br', dest.gradient)} />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+
+      {/* Content */}
+      <div className="absolute inset-0 flex flex-col justify-between p-5">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-amber-500 px-2.5 py-1 rounded-full">
+            <Flame className="w-3 h-3 text-white" />
+            <span className="text-[10px] font-bold text-white uppercase tracking-wide">Destaque</span>
+          </div>
+          <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/15">
+            <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+            <span className="text-[11px] font-bold text-white">{dest.rating}</span>
+          </div>
+        </div>
+        <div>
+          <span className="text-[10px] font-semibold text-white/60 uppercase tracking-widest">{dest.tag}</span>
+          <h3 className="text-2xl font-black text-white leading-tight tracking-tight mt-0.5">{dest.name}</h3>
+          <p className="text-sm text-white/70 flex items-center gap-1 mt-1">
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            {dest.country}
+          </p>
+        </div>
+      </div>
+
+      {/* Arrow */}
+      <div className="absolute right-5 bottom-5 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+        <ArrowRight className="w-4 h-4 text-white" />
+      </div>
+    </motion.div>
+  );
+}
+
+function TrendingSmallCard({ dest, delay }: { dest: TrendingDest; delay: number }) {
+  const router = useRouter();
+  const photo = useDestinationPhoto(dest.query);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay }}
+      whileHover={{ y: -6, scale: 1.03 }}
+      whileTap={{ scale: 0.96 }}
+      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
+      className="shrink-0 cursor-pointer group"
+      style={{ width: 148 }}
+    >
+      <div className="relative h-[188px] rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-shadow">
+        {photo ? (
+          <img src={photo} alt={dest.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+        ) : (
+          <div className={cn('absolute inset-0 bg-gradient-to-br', dest.gradient)}>
+            <span className="absolute inset-0 flex items-center justify-center text-5xl opacity-20 select-none">{dest.emoji}</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+
+        {/* Rating */}
+        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded-full border border-white/10">
+          <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+          <span className="text-[10px] font-bold text-white">{dest.rating}</span>
+        </div>
+
+        {/* Info */}
+        <div className="absolute bottom-0 inset-x-0 p-3">
+          <p className="text-sm font-bold text-white leading-tight">{dest.name}</p>
+          <p className="text-[10px] text-white/60 mt-0.5">{dest.country}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Category bubble with real photo background ───────────────────────────────
+
+interface CategoryItem {
+  label: string;
+  emoji: string;
+  gradient: string;
+  desc: string;
+  query: string;
+}
+
+function CategoryBubble({ cat, delay }: { cat: CategoryItem; delay: number }) {
+  const router = useRouter();
+  const photo = useDestinationPhoto(cat.query);
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ scale: 1.06, y: -3 }}
+      whileTap={{ scale: 0.93 }}
+      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
+      className="group flex flex-col items-center gap-2 cursor-pointer"
+    >
+      {/* Photo or gradient bubble */}
+      <div className={cn(
+        'relative w-full aspect-square rounded-2xl overflow-hidden',
+        'shadow-md group-hover:shadow-lg transition-all duration-300',
+        !photo && `bg-gradient-to-br ${cat.gradient}`,
+      )}>
+        {photo && (
+          <img
+            src={photo}
+            alt={cat.label}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        )}
+        {/* Gloss */}
+        <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl" />
+        {/* Bottom shade + emoji */}
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-2xl md:text-3xl select-none drop-shadow transition-transform duration-300 group-hover:scale-125 relative z-10">
+            {cat.emoji}
+          </span>
+        </div>
+      </div>
+      {/* Label */}
+      <span className="text-[10px] md:text-[11px] font-semibold text-foreground/80 group-hover:text-foreground transition-colors leading-tight text-center">
+        {cat.label}
+      </span>
+    </motion.button>
   );
 }
 
