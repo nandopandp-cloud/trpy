@@ -8,6 +8,7 @@ import {
   Youtube, Image as ImageIcon, Star, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FavoriteDetailModal } from '@/components/favorites/favorite-detail-modal';
 
 type FavoriteType = 'PLACE' | 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' | 'VIDEO' | 'PIN';
 
@@ -76,7 +77,7 @@ async function removeFavoriteApi(externalId: string, type: FavoriteType) {
   if (!res.ok) throw new Error('Erro ao remover favorito');
 }
 
-function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: () => void }) {
+function FavoriteCard({ favorite, onRemove, onClick }: { favorite: Favorite; onRemove: () => void; onClick: () => void }) {
   const Icon = TYPE_ICON[favorite.type];
   const gradient = TYPE_GRADIENT[favorite.type];
   const colors = TYPE_COLOR[favorite.type];
@@ -87,7 +88,8 @@ function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: ()
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all duration-300"
+      onClick={onClick}
+      className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
     >
       {/* Image or gradient */}
       <div className="relative h-36 overflow-hidden">
@@ -141,6 +143,8 @@ function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: ()
 
 export default function FavoritesPage() {
   const [activeTab, setActiveTab] = useState<FavoriteType | 'ALL'>('ALL');
+  const [selectedFavorite, setSelectedFavorite] = useState<Favorite | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: favorites = [], isLoading } = useQuery({
@@ -169,7 +173,8 @@ export default function FavoritesPage() {
   const total = Object.values(stats as Record<string, number>).reduce((s, v) => s + v, 0);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+    <>
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
       {/* Header */}
       <div className="space-y-1">
         <h1 className="text-2xl font-medium text-foreground tracking-tight">Favoritos</h1>
@@ -269,6 +274,10 @@ export default function FavoritesPage() {
               <FavoriteCard
                 key={fav.id}
                 favorite={fav}
+                onClick={() => {
+                  setSelectedFavorite(fav);
+                  setIsModalOpen(true);
+                }}
                 onRemove={() =>
                   removeMutation.mutate({ externalId: fav.externalId, type: fav.type })
                 }
@@ -277,6 +286,16 @@ export default function FavoritesPage() {
           </AnimatePresence>
         </motion.div>
       )}
-    </div>
+      </div>
+
+      <FavoriteDetailModal
+        favorite={selectedFavorite}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedFavorite(null);
+        }}
+      />
+    </>
   );
 }
