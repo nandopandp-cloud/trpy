@@ -241,9 +241,9 @@ export default function DashboardPage() {
         className="relative overflow-hidden rounded-[2rem] min-h-[220px]"
       >
         {/* BG layers */}
-        <div className="absolute inset-0 bg-zinc-900 dark:bg-zinc-950" />
-        <div className="absolute inset-0 mesh-gradient-dark opacity-80" />
-        <div className="absolute inset-0 bg-dot-grid-dark opacity-[0.07]" />
+        <div className="absolute inset-0 bg-muted/40 dark:bg-zinc-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-muted to-primary/5 dark:from-indigo-950/30 dark:via-zinc-900 dark:to-indigo-950/20" />
+        <div className="absolute inset-0 bg-dot-grid opacity-[0.03] dark:opacity-[0.07]" />
 
         {/* Aurora blob */}
         <div className="absolute -top-20 -right-20 w-80 h-80 aurora opacity-40" />
@@ -263,7 +263,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-zinc-500 text-[10px] font-mono mb-2 tracking-[0.2em] uppercase"
+              className="text-muted-foreground text-[10px] font-mono mb-2 tracking-[0.2em] uppercase"
             >
               {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
             </motion.p>
@@ -272,7 +272,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.5 }}
-              className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white leading-[1.1] tracking-tight"
+              className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-[1.1] tracking-tight"
             >
               Olá, viajante<span className="text-gradient-accent">.</span>
             </motion.h1>
@@ -281,10 +281,10 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
-              className="text-zinc-400 text-sm md:text-base font-light max-w-md mt-2"
+              className="text-muted-foreground text-sm md:text-base font-light max-w-md mt-2"
             >
               {nextTrip
-                ? <>Faltam <strong className="text-white font-medium">{daysToNext} dias</strong> para <strong className="text-white font-medium">{nextTrip.destination}</strong></>
+                ? <>Faltam <strong className="text-foreground font-medium">{daysToNext} dias</strong> para <strong className="text-foreground font-medium">{nextTrip.destination}</strong></>
                 : 'Pronto para planejar sua próxima aventura?'}
             </motion.p>
 
@@ -295,19 +295,19 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
                 onClick={() => router.push(`/dashboard/trips/${nextTrip.id}`)}
-                className="mt-5 inline-flex items-center gap-3 bg-white/[0.06] backdrop-blur-md border border-white/[0.08] rounded-2xl px-4 py-3 cursor-pointer hover:bg-white/[0.1] hover:border-white/[0.15] transition-all group/pill"
+                className="mt-5 inline-flex items-center gap-3 bg-muted/40 backdrop-blur-sm border border-border rounded-2xl px-4 py-3 cursor-pointer hover:bg-muted/60 transition-all group/pill"
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/30 to-purple-500/20 flex items-center justify-center shrink-0 ring-1 ring-white/10">
-                  <Plane className="w-4 h-4 text-indigo-300" />
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
+                  <Plane className="w-4 h-4 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-white font-medium text-xs truncate">{nextTrip.title}</p>
-                  <p className="text-zinc-500 text-[10px] truncate flex items-center gap-1">
+                  <p className="text-foreground font-medium text-xs truncate">{nextTrip.title}</p>
+                  <p className="text-muted-foreground text-[10px] truncate flex items-center gap-1">
                     <MapPin className="w-2.5 h-2.5" />
                     {nextTrip.destination}
                   </p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-zinc-600 group-hover/pill:text-zinc-400 group-hover/pill:translate-x-0.5 transition-all" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover/pill:text-foreground group-hover/pill:translate-x-0.5 transition-all" />
               </motion.div>
             )}
           </div>
@@ -320,18 +320,17 @@ export default function DashboardPage() {
             className="shrink-0"
           >
             <div className="group relative">
-              <div className="absolute -inset-2 rounded-full bg-indigo-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
+              <div className="absolute -inset-2 rounded-full bg-primary/15 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
               <button
                 onClick={() => router.push('/dashboard/trips/new')}
-                className="group relative z-10 flex items-center overflow-hidden rounded-full p-[1.5px]"
+                className="group relative z-10 flex items-center overflow-hidden rounded-full p-[1.5px] bg-gradient-to-r from-primary/60 to-primary/40"
               >
-                <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0_340deg,#6366f1_360deg)]" />
-                <span className="relative flex items-center rounded-full bg-zinc-900 px-7 py-3.5 ring-1 ring-white/10">
+                <span className="relative flex items-center rounded-full bg-card px-7 py-3.5 ring-1 ring-border">
                   <span className="absolute inset-0 overflow-hidden rounded-full">
-                    <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+                    <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-primary/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                   </span>
-                  <Plus className="w-4 h-4 mr-2 text-indigo-300 relative z-10" />
-                  <span className="relative z-10 text-sm font-medium tracking-wide text-white">Nova viagem</span>
+                  <Plus className="w-4 h-4 mr-2 text-primary relative z-10" />
+                  <span className="relative z-10 text-sm font-medium tracking-wide text-foreground">Nova viagem</span>
                 </span>
               </button>
             </div>
