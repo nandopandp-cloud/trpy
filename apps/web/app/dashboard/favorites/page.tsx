@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -18,6 +19,9 @@ interface Favorite {
   name: string;
   image?: string;
   rating?: number;
+  googlePlaceId?: string;
+  youtubeVideoId?: string;
+  pinterestPinId?: string;
   metadata?: Record<string, unknown>;
   createdAt: string;
 }
@@ -76,10 +80,46 @@ async function removeFavoriteApi(externalId: string, type: FavoriteType) {
   if (!res.ok) throw new Error('Erro ao remover favorito');
 }
 
+// Helper function to get navigation URL for a favorite
+function getFavoriteUrl(favorite: Favorite): string | null {
+  switch (favorite.type) {
+    case 'PLACE':
+      // Places are typically accessed through a destination page or place detail
+      return favorite.googlePlaceId ? `/dashboard/places/${favorite.googlePlaceId}` : null;
+    case 'RESTAURANT':
+    case 'HOTEL':
+    case 'ACTIVITY':
+      // These are Google Places that can be opened in a detail modal or page
+      return favorite.googlePlaceId ? `/dashboard/places/${favorite.googlePlaceId}?type=${favorite.type}` : null;
+    case 'VIDEO':
+      // Videos can be opened with the YouTube video ID
+      return favorite.youtubeVideoId ? `/dashboard/videos/${favorite.youtubeVideoId}` : null;
+    case 'PIN':
+      // Pinterest pins can be linked to Pinterest
+      return favorite.pinterestPinId ? `https://pinterest.com/pin/${favorite.pinterestPinId}/` : null;
+    default:
+      return null;
+  }
+}
+
 function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: () => void }) {
+  const router = useRouter();
   const Icon = TYPE_ICON[favorite.type];
   const gradient = TYPE_GRADIENT[favorite.type];
   const colors = TYPE_COLOR[favorite.type];
+  const navigationUrl = getFavoriteUrl(favorite);
+  const isExternal = favorite.type === 'PIN';
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (!navigationUrl) return;
+    e.preventDefault();
+
+    if (isExternal) {
+      window.open(navigationUrl, '_blank');
+    } else {
+      router.push(navigationUrl);
+    }
+  };
 
   return (
     <motion.div
@@ -87,7 +127,11 @@ function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: ()
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all duration-300"
+      onClick={navigationUrl ? handleCardClick : undefined}
+      className={cn(
+        'group relative bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300',
+        navigationUrl ? 'cursor-pointer hover:shadow-xl hover:border-primary/20 hover:-translate-y-1' : ''
+      )}
     >
       {/* Image or gradient */}
       <div className="relative h-36 overflow-hidden">
@@ -95,7 +139,18 @@ function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: ()
           <img
             src={favorite.image}
             alt={favorite.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover transition-transform duration-500"
+            style={{ transform: navigationUrl ? 'scale(1)' : 'scale(1)' }}
+            onMouseEnter={(e) => {
+              if (navigationUrl) {
+                (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.05)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (navigationUrl) {
+                (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)';
+              }
+            }}
           />
         ) : (
           <div className={cn('w-full h-full bg-gradient-to-br flex items-center justify-center relative', gradient)}>
@@ -109,8 +164,11 @@ function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: ()
         <motion.button
           initial={{ opacity: 0 }}
           whileHover={{ scale: 1.1 }}
-          onClick={onRemove}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </motion.button>
@@ -120,6 +178,15 @@ function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: ()
           <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
             <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
             <span className="text-xs text-white font-medium">{favorite.rating}</span>
+          </div>
+        )}
+
+        {/* Navigation indicator */}
+        {navigationUrl && (
+          <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         )}
       </div>
@@ -133,7 +200,12 @@ function FavoriteCard({ favorite, onRemove }: { favorite: Favorite; onRemove: ()
             {favorite.type.toLowerCase()}
           </span>
         </div>
-        <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">{favorite.name}</p>
+        <p className={cn(
+          'text-sm font-medium line-clamp-2 leading-snug',
+          navigationUrl ? 'text-foreground group-hover:text-primary transition-colors' : 'text-foreground'
+        )}>
+          {favorite.name}
+        </p>
       </div>
     </motion.div>
   );
