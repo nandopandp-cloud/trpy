@@ -51,7 +51,7 @@ const PRESET_GRADIENTS = [
   { id: 'slate',    class: 'from-slate-600 via-slate-700 to-zinc-800',       label: 'Urbano' },
 ];
 
-const TABS = [
+const TABS_BASE = [
   { id: 'itinerary', label: 'Itinerário' },
   { id: 'budget',    label: 'Despesas' },
   { id: 'map',       label: 'Mapa' },
@@ -59,6 +59,8 @@ const TABS = [
   { id: 'videos',    label: 'Vídeos' },
   { id: 'inspo',     label: 'Inspiração' },
 ] as const;
+
+const TABS = TABS_BASE;
 
 type TabId = typeof TABS[number]['id'];
 
@@ -275,21 +277,27 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
 
 // ─── Sticky tab bar ───────────────────────────────────────────────────────────
 
-function StickyTabs({ active, onChange, counts }: {
+function StickyTabs({
+  active,
+  onChange,
+  counts,
+  availableTabs = TABS,
+}: {
   active: TabId;
   onChange: (tab: TabId) => void;
   counts: Partial<Record<TabId, number>>;
+  availableTabs?: typeof TABS;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
   return (
     <div
       ref={ref}
-      className="sticky top-16 z-20 bg-background/90 backdrop-blur-xl border-b border-border"
+      className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border"
     >
       <div className="max-w-2xl mx-auto px-0">
         <div className="flex overflow-x-auto scrollbar-hide">
-          {TABS.map((tab) => {
+          {availableTabs.map((tab) => {
             const isActive = active === tab.id;
             const count = counts[tab.id];
             return (
@@ -617,14 +625,30 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
       </div>
 
       {/* ── STICKY TABS ───────────────────────────────────────────────────── */}
-      <StickyTabs
-        active={activeTab}
-        onChange={setActiveTab}
-        counts={{
-          itinerary: trip.itineraryDays.length,
-          budget: trip.expenses.length,
-        }}
-      />
+      {(() => {
+        // Filter out "Mapa" tab if no coordinates exist in itinerary
+        const hasCoordinates = trip.itineraryDays.some((d: any) =>
+          d.items.some((item: any) => item.latitude != null && item.longitude != null)
+        );
+        const visibleTabs: typeof TABS = hasCoordinates ? TABS : TABS.filter((t) => t.id !== 'map') as typeof TABS;
+
+        // If "Mapa" is hidden and user is on it, switch to itinerary
+        if (!hasCoordinates && activeTab === 'map') {
+          setActiveTab('itinerary');
+        }
+
+        return (
+          <StickyTabs
+            active={activeTab}
+            onChange={setActiveTab}
+            counts={{
+              itinerary: trip.itineraryDays.length,
+              budget: trip.expenses.length,
+            }}
+            availableTabs={visibleTabs}
+          />
+        );
+      })()}
 
       {/* ── BODY ──────────────────────────────────────────────────────────── */}
       <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-6">
@@ -730,11 +754,15 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
                       {markers.length === 0 && (
                         <div className="rounded-2xl bg-muted/50 border border-border px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
                           <Map className="w-4 h-4 shrink-0 text-primary" />
-                          Atividades com coordenadas aparecem aqui como marcadores.
+                          Mapa do destino: {trip.destination}
                         </div>
                       )}
                       <div className="rounded-3xl overflow-hidden border border-border shadow-card">
-                        <GoogleMapView markers={markers} height="420px" />
+                        <GoogleMapView
+                          markers={markers}
+                          height="420px"
+                          defaultCenter={markers.length === 0 ? trip.destination : undefined}
+                        />
                       </div>
                     </>
                   );
