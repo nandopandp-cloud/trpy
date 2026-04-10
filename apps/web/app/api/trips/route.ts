@@ -4,6 +4,7 @@ import { TripStatus } from '@trpy/database';
 import { prisma } from '@/lib/prisma';
 import { ok, err, handleError } from '@/lib/api';
 import { getCurrentUserId } from '@/lib/auth-utils';
+import { getBestCoverImage } from '@/lib/integrations/media';
 
 const createTripSchema = z.object({
   title: z.string().min(1).max(100),
@@ -65,6 +66,17 @@ export async function POST(req: NextRequest) {
       return err('A data de fim deve ser após a data de início');
     }
 
+    // Auto-enrich: if no cover was explicitly provided, try to fetch one from
+    // the media engine. Never blocks trip creation on provider failures.
+    let coverImage = data.coverImage;
+    if (!coverImage) {
+      try {
+        coverImage = (await getBestCoverImage(data.destination)) ?? undefined;
+      } catch (e) {
+        console.error('[trips.POST] auto-enrich cover failed', e);
+      }
+    }
+
     const trip = await prisma.trip.create({
       data: {
         userId,
@@ -74,7 +86,7 @@ export async function POST(req: NextRequest) {
         endDate: end,
         budget: data.budget,
         description: data.description,
-        coverImage: data.coverImage,
+        coverImage,
         currency: data.currency,
       },
     });
