@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { YouTubeGallery } from '@/components/integrations/youtube/youtube-gallery';
-import { PinterestGallery } from '@/components/integrations/pinterest/pinterest-gallery';
+import { InspirationGallery } from '@/components/trips/inspiration-gallery';
 import { GoogleMapView, type MapMarker } from '@/components/integrations/google/google-map-view';
 import { PlacesRecommendations } from '@/components/integrations/google/places-recommendations';
 import { cn } from '@/lib/utils';
@@ -807,7 +807,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
                     Inspirações para <span className="text-primary">{trip.destination}</span>
                   </p>
                 </div>
-                <PinterestGallery destination={trip.destination} theme="travel" />
+                <InspirationGallery destination={trip.destination} />
               </div>
             )}
 
