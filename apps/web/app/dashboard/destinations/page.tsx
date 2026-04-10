@@ -62,18 +62,34 @@ function CategoryCard({ cat }: { cat: CatItem }) {
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         )}
-        {/* Overlays */}
-        <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-black/20 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/65 to-transparent" />
-        {/* Emoji */}
-        <span className="absolute right-3 top-3 text-3xl opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-300 select-none drop-shadow">
-          {cat.emoji}
-        </span>
-        {/* Text */}
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <p className="text-sm font-bold text-white leading-tight">{cat.label}</p>
-          <p className="text-[10px] text-white/65 mt-0.5 leading-tight">{cat.desc}</p>
-        </div>
+        {/* Overlays — only when there's a photo */}
+        {photo && (
+          <>
+            <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-black/20 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/65 to-transparent" />
+          </>
+        )}
+        {/* Text — only when there's a photo (no emoji, cleaner look) */}
+        {photo && (
+          <div className="absolute bottom-0 left-0 right-0 p-3">
+            <p className="text-sm font-bold text-white leading-tight">{cat.label}</p>
+            <p className="text-[10px] text-white/65 mt-0.5 leading-tight">{cat.desc}</p>
+          </div>
+        )}
+        {/* Fallback when no photo: emoji + text */}
+        {!photo && (
+          <>
+            <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/25 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/50 to-transparent" />
+            <span className="absolute right-3 top-3 text-3xl opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-300 select-none drop-shadow">
+              {cat.emoji}
+            </span>
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <p className="text-sm font-bold text-white leading-tight">{cat.label}</p>
+              <p className="text-[10px] text-white/65 mt-0.5 leading-tight">{cat.desc}</p>
+            </div>
+          </>
+        )}
       </div>
     </motion.button>
   );

@@ -891,15 +891,6 @@ function CategoryBubble({ cat, delay }: { cat: CategoryItem; delay: number }) {
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         )}
-        {/* Gloss */}
-        <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl" />
-        {/* Bottom shade + emoji */}
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl md:text-3xl select-none drop-shadow transition-transform duration-300 group-hover:scale-125 relative z-10">
-            {cat.emoji}
-          </span>
-        </div>
       </div>
       {/* Label */}
       <span className="text-[10px] md:text-[11px] font-semibold text-foreground/80 group-hover:text-foreground transition-colors leading-tight text-center">
