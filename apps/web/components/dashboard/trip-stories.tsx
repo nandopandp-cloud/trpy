@@ -1,13 +1,27 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate as animateMotion } from 'framer-motion';
 import {
   Plus, X, ChevronLeft, ChevronRight,
   ExternalLink, MapPin, Volume2, VolumeX, Plane,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+
+/* ── Mobile detection hook ─────────────────────────────── */
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return isMobile;
+}
 
 /* ── Types ────────────────────────────────────────────── */
 
@@ -164,6 +178,64 @@ function useStoryVideos(destination: string | null) {
 }
 
 /* ════════════════════════════════════════════════════════ */
+/* NEIGHBOR SLIDE — static cover used during mobile cube    */
+/* ════════════════════════════════════════════════════════ */
+
+function NeighborSlide({ story }: { story: StoryItem }) {
+  const photo = useDestinationPhoto(story.destination, story.coverImage);
+  return (
+    <div className="absolute inset-0 bg-black overflow-hidden">
+      {photo ? (
+        <>
+          <img
+            src={photo}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40 pointer-events-none"
+            aria-hidden
+          />
+          <img
+            src={photo}
+            alt={story.title}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          />
+        </>
+      ) : (
+        <div
+          className={cn(
+            'absolute inset-0 bg-gradient-to-br',
+            story.gradient ?? GRADIENT_FALLBACKS[0],
+          )}
+        />
+      )}
+      {/* Scrims to match the active story look */}
+      <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+      {/* Minimal header — mirrors active slide */}
+      <div className="absolute top-10 inset-x-4 flex items-center gap-2.5 z-10 pointer-events-none">
+        <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/50 shrink-0">
+          {photo ? (
+            <img src={photo} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className={cn('w-full h-full bg-gradient-to-br flex items-center justify-center text-base', story.gradient)}>
+              {story.emoji}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0">
+          <p className="text-white font-semibold text-[15px] leading-none drop-shadow">{story.title}</p>
+          {story.subtitle && (
+            <p className="text-white/70 text-[11px] mt-0.5 flex items-center gap-1">
+              <MapPin className="w-2.5 h-2.5 shrink-0" />
+              {story.subtitle}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════ */
 /* STORY VIEWER  — Instagram-grade experience              */
 /* ════════════════════════════════════════════════════════ */
 
@@ -184,6 +256,7 @@ const slideVariants = {
 
 function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   /* ── Indices & direction ── */
   const [storyIdx, setStoryIdx] = useState(initialIndex);
@@ -201,11 +274,19 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   const [muted, setMuted]       = useState(true);
   const isPausedRef = useRef(false);
 
+  /* ── Mobile cube-swipe drag state ── */
+  const dragX = useMotionValue(0);              // live x offset during drag
+  const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
+  const frameWidthRef = useRef(0);               // card width (set on touchstart)
+  const frameRef = useRef<HTMLDivElement>(null);
+
   /* ── Touch gesture ── */
   type TouchState = { x: number; y: number; time: number };
   const touchRef    = useRef<TouchState | null>(null);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didSwipeRef  = useRef(false);
+  const gestureModeRef = useRef<'idle' | 'hold' | 'hdrag' | 'vdrag'>('idle');
 
   /* ── Video data ── */
   const currentStory = stories[storyIdx];
@@ -340,29 +421,121 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
 
   /* ══════════════════ TOUCH / GESTURE ══════════════════ */
 
+  /* Commit a cube-swipe: animate dragX to its end position, then swap storyIdx */
+  const commitCubeSwipe = useCallback((direction: 1 | -1) => {
+    const width = frameWidthRef.current || window.innerWidth;
+    const target = direction === 1 ? -width : width;
+    animateMotion(dragX, target, {
+      type: 'spring',
+      stiffness: 320,
+      damping: 36,
+      mass: 0.9,
+      onComplete: () => {
+        // Swap story, reset drag invisibly
+        directionRef.current = direction;
+        savedPctRef.current = 0;
+        if (direction === 1) {
+          setStoryIdx((i) => Math.min(storiesRef.current.length - 1, i + 1));
+        } else {
+          setStoryIdx((i) => Math.max(0, i - 1));
+        }
+        setVideoIdx(0);
+        dragX.set(0);
+        setIsDragging(false);
+        isDraggingRef.current = false;
+        gestureModeRef.current = 'idle';
+      },
+    });
+  }, [dragX]);
+
+  /* Rubber-band back to current story */
+  const cancelCubeSwipe = useCallback(() => {
+    animateMotion(dragX, 0, {
+      type: 'spring',
+      stiffness: 420,
+      damping: 42,
+      mass: 0.7,
+      onComplete: () => {
+        setIsDragging(false);
+        isDraggingRef.current = false;
+        gestureModeRef.current = 'idle';
+        // Resume progress since we paused on drag start
+        if (isPausedRef.current) resumeRaf();
+      },
+    });
+  }, [dragX, resumeRaf]);
+
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     didSwipeRef.current = false;
+    gestureModeRef.current = 'idle';
     touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
 
-    // Long-press → pause
+    // Cache frame width for drag math
+    if (frameRef.current) {
+      frameWidthRef.current = frameRef.current.getBoundingClientRect().width;
+    }
+
+    // Long-press → pause (Instagram-style hold to inspect)
     holdTimerRef.current = setTimeout(() => {
-      pauseRaf();
-    }, 150);
+      if (gestureModeRef.current === 'idle') {
+        gestureModeRef.current = 'hold';
+        pauseRaf();
+      }
+    }, 180);
   }, [pauseRaf]);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (!touchRef.current) return;
-    const dx = Math.abs(e.touches[0].clientX - touchRef.current.x);
-    const dy = Math.abs(e.touches[0].clientY - touchRef.current.y);
+    const cx = e.touches[0].clientX;
+    const cy = e.touches[0].clientY;
+    const dx = cx - touchRef.current.x;
+    const dy = cy - touchRef.current.y;
+    const adx = Math.abs(dx);
+    const ady = Math.abs(dy);
 
-    // If finger moved, cancel the hold timer
-    if ((dx > 8 || dy > 8) && holdTimerRef.current) {
+    // Cancel hold-to-pause if finger moves
+    if ((adx > 6 || ady > 6) && holdTimerRef.current) {
       clearTimeout(holdTimerRef.current);
       holdTimerRef.current = null;
     }
 
-    if (dx > 10 || dy > 10) didSwipeRef.current = true;
-  }, []);
+    if (adx > 8 || ady > 8) didSwipeRef.current = true;
+
+    // Once we're in hdrag mode, keep tracking even if movement gets vertical
+    if (gestureModeRef.current === 'hdrag') {
+      let next = dx;
+      // Rubber-band at edges
+      const atStart = storyIdxRef.current === 0;
+      const atEnd = storyIdxRef.current === storiesRef.current.length - 1;
+      if ((atStart && dx > 0) || (atEnd && dx < 0)) {
+        next = dx * 0.3;
+      }
+      dragX.set(next);
+      e.stopPropagation();
+      return;
+    }
+
+    // On mobile, decide gesture mode early once movement is significant
+    if (isMobile && gestureModeRef.current === 'idle' && (adx > 10 || ady > 10)) {
+      if (adx > ady * 1.1) {
+        // Horizontal swipe begins — enter cube drag mode
+        gestureModeRef.current = 'hdrag';
+        isDraggingRef.current = true;
+        setIsDragging(true);
+        pauseRaf();
+        let next = dx;
+        const atStart = storyIdxRef.current === 0;
+        const atEnd = storyIdxRef.current === storiesRef.current.length - 1;
+        if ((atStart && dx > 0) || (atEnd && dx < 0)) {
+          next = dx * 0.3;
+        }
+        dragX.set(next);
+      } else {
+        // Vertical — let default flow handle swipe-down-to-close
+        gestureModeRef.current = 'vdrag';
+      }
+    }
+  }, [dragX, isMobile, pauseRaf]);
 
   const onTouchEnd = useCallback((e: React.TouchEvent) => {
     if (holdTimerRef.current) {
@@ -370,8 +543,32 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
       holdTimerRef.current = null;
     }
 
-    // Resuming from hold
-    if (isPausedRef.current) {
+    // Resolve cube swipe
+    if (gestureModeRef.current === 'hdrag' && touchRef.current) {
+      const dx = e.changedTouches[0].clientX - touchRef.current.x;
+      const dt = Date.now() - touchRef.current.time;
+      const velocity = Math.abs(dx) / Math.max(dt, 1); // px/ms
+      const width = frameWidthRef.current || window.innerWidth;
+      const threshold = width * 0.22;
+      const fast = velocity > 0.45;
+      const atStart = storyIdxRef.current === 0;
+      const atEnd = storyIdxRef.current === storiesRef.current.length - 1;
+
+      touchRef.current = null;
+
+      if (dx < 0 && (Math.abs(dx) > threshold || fast) && !atEnd) {
+        commitCubeSwipe(1);
+      } else if (dx > 0 && (Math.abs(dx) > threshold || fast) && !atStart) {
+        commitCubeSwipe(-1);
+      } else {
+        cancelCubeSwipe();
+      }
+      return;
+    }
+
+    // Resuming from hold-to-pause
+    if (gestureModeRef.current === 'hold') {
+      gestureModeRef.current = 'idle';
       resumeRaf();
       touchRef.current = null;
       return;
@@ -383,26 +580,34 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     const dt = Date.now() - touchRef.current.time;
     touchRef.current = null;
 
-    const velocity = Math.abs(dx) / dt; // px/ms
-
-    // Horizontal swipe
-    if (Math.abs(dx) > Math.abs(dy) * 1.2 && (velocity > 0.25 || Math.abs(dx) > 55)) {
-      if (dx < 0) advanceFn(); else goBackFn();
-      return;
-    }
-
-    // Swipe down → close
+    // Swipe down → close (vdrag mode)
     if (dy > 100 && Math.abs(dy) > Math.abs(dx) * 1.5) {
       onClose();
       return;
     }
 
-    // Tap (barely moved)
+    // Desktop-only horizontal fallback swipe (mobile uses cube drag above)
+    if (!isMobile) {
+      const velocity = Math.abs(dx) / Math.max(dt, 1);
+      if (Math.abs(dx) > Math.abs(dy) * 1.2 && (velocity > 0.25 || Math.abs(dx) > 55)) {
+        if (dx < 0) advanceFn(); else goBackFn();
+        return;
+      }
+    }
+
+    // Tap (barely moved) → sub-story navigation
     if (!didSwipeRef.current) {
       const { clientX } = e.changedTouches[0];
-      if (clientX < window.innerWidth * 0.35) goBackFn(); else advanceFn();
+      const rect = frameRef.current?.getBoundingClientRect();
+      const leftEdge = rect?.left ?? 0;
+      const width = rect?.width ?? window.innerWidth;
+      const relative = clientX - leftEdge;
+      // Instagram-style: 1/3 left = back, 2/3 right = forward
+      if (relative < width * 0.33) goBackFn(); else advanceFn();
     }
-  }, [advanceFn, goBackFn, onClose, resumeRaf]);
+
+    gestureModeRef.current = 'idle';
+  }, [advanceFn, cancelCubeSwipe, commitCubeSwipe, goBackFn, isMobile, onClose, resumeRaf]);
 
   /* Mouse support for desktop hold-to-pause */
   const onMouseDown = useCallback(() => {
@@ -412,6 +617,55 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
     if (isPausedRef.current) resumeRaf();
   }, [resumeRaf]);
+
+  /* ══════════════════ CUBE TRANSFORMS (mobile) ═════════ */
+
+  // dragX goes from -width (swiped left, advance) to +width (swiped right, back)
+  // For current slide: rotate around the edge that stays (right edge when swiping left, left edge when swiping right)
+  // For neighbor slide: rotate in from the opposite edge
+  const MAX_ANGLE = 80;
+
+  const currentRotateY = useTransform(dragX, (x) => {
+    const width = frameWidthRef.current || 1;
+    const pct = Math.max(-1, Math.min(1, x / width));
+    return -pct * MAX_ANGLE;
+  });
+
+  const currentOpacity = useTransform(dragX, (x) => {
+    const width = frameWidthRef.current || 1;
+    const pct = Math.abs(x) / width;
+    return 1 - pct * 0.35;
+  });
+
+  const nextRotateY = useTransform(dragX, (x) => {
+    const width = frameWidthRef.current || 1;
+    const pct = Math.max(-1, Math.min(0, x / width)); // only when dragging left (x negative)
+    return MAX_ANGLE + pct * MAX_ANGLE; // 80 → 0
+  });
+
+  const nextTranslateX = useTransform(dragX, (x) => {
+    const width = frameWidthRef.current || 1;
+    // sits one width to the right, follows drag
+    return width + x;
+  });
+
+  const prevRotateY = useTransform(dragX, (x) => {
+    const width = frameWidthRef.current || 1;
+    const pct = Math.max(0, Math.min(1, x / width));
+    return -MAX_ANGLE + pct * MAX_ANGLE; // -80 → 0
+  });
+
+  const prevTranslateX = useTransform(dragX, (x) => {
+    const width = frameWidthRef.current || 1;
+    return -width + x;
+  });
+
+  const currentTransformOrigin = useTransform(dragX, (x) =>
+    x < 0 ? 'left center' : 'right center'
+  );
+
+  const prevStory = storyIdx > 0 ? stories[storyIdx - 1] : null;
+  const nextStory = storyIdx < stories.length - 1 ? stories[storyIdx + 1] : null;
 
   /* ══════════════════ RENDER ════════════════════════════ */
 
@@ -449,19 +703,66 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
       </div>
 
       {/* ════ STORY CARD — phone-like on desktop, full-screen on mobile ════ */}
-      <div className="relative w-full h-full md:w-[420px] md:h-[calc(100dvh-32px)] md:max-h-[780px] md:rounded-[2rem] overflow-hidden md:shadow-2xl">
+      <div
+        ref={frameRef}
+        className="relative w-full h-full md:w-[420px] md:h-[calc(100dvh-32px)] md:max-h-[780px] md:rounded-[2rem] overflow-hidden md:shadow-2xl"
+        style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}
+      >
+
+        {/* ── Cube neighbor slides (mobile drag only) ── */}
+        {isMobile && isDragging && prevStory && (
+          <motion.div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              x: prevTranslateX,
+              rotateY: prevRotateY,
+              transformOrigin: 'right center',
+              backfaceVisibility: 'hidden',
+              zIndex: 5,
+            }}
+          >
+            <NeighborSlide story={prevStory} />
+          </motion.div>
+        )}
+        {isMobile && isDragging && nextStory && (
+          <motion.div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              x: nextTranslateX,
+              rotateY: nextRotateY,
+              transformOrigin: 'left center',
+              backfaceVisibility: 'hidden',
+              zIndex: 5,
+            }}
+          >
+            <NeighborSlide story={nextStory} />
+          </motion.div>
+        )}
 
         {/* ── Animated story transition ── */}
         <AnimatePresence custom={directionRef.current} mode="sync">
           <motion.div
             key={`${storyIdx}-${videoIdx}`}
             custom={directionRef.current}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
+            variants={isMobile && isDragging ? undefined : slideVariants}
+            initial={isMobile && isDragging ? false : 'enter'}
+            animate={isMobile && isDragging ? undefined : 'center'}
+            exit={isMobile && isDragging ? undefined : 'exit'}
             transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0"
+            style={
+              isMobile && isDragging
+                ? {
+                    x: dragX,
+                    rotateY: currentRotateY,
+                    opacity: currentOpacity,
+                    transformOrigin: currentTransformOrigin,
+                    backfaceVisibility: 'hidden',
+                  }
+                : undefined
+            }
           >
             {/* ─── LAYER 1: Blurred destination photo as BG ─── */}
             <div className="absolute inset-0 bg-black">
