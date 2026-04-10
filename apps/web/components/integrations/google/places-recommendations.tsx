@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, MapPin, Clock, ExternalLink, Utensils, Hotel, Landmark, Building2 } from 'lucide-react';
+import { Star, MapPin, Clock, ExternalLink, Utensils, Hotel, Landmark, Building2, ChevronRight } from 'lucide-react';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
+import { PlaceDetailModal } from './place-detail-modal';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
 
 interface RecommendationsData {
@@ -40,29 +41,35 @@ function StarRating({ value }: { value: number }) {
 function PlaceCard({
   place,
   favoriteType,
+  onOpen,
 }: {
   place: PlaceSearchResult;
   favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
+  onOpen: () => void;
 }) {
   const photo = place.photos?.[0];
   const photoUrl = photo
     ? `/api/place-photo?ref=${photo.photo_reference}&maxwidth=600`
     : null;
 
-  const mapsUrl = `https://www.google.com/maps/place/?q=place_id:${place.place_id}`;
-
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex gap-3 p-3 rounded-2xl bg-muted/50 border border-border hover:border-primary/30 transition-colors group"
+      onClick={onOpen}
+      className="flex gap-3 p-3 rounded-2xl bg-muted/50 border border-border hover:border-primary/40 hover:bg-muted/70 transition-all cursor-pointer group"
     >
       {/* Thumbnail */}
       <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-muted">
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoUrl} alt={place.name} className="w-full h-full object-cover" />
+          <img
+            src={photoUrl}
+            alt={place.name}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <Building2 className="w-6 h-6 opacity-40" />
@@ -73,19 +80,21 @@ function PlaceCard({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-semibold text-foreground leading-tight line-clamp-1">
+          <p className="text-sm font-semibold text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
             {place.name}
           </p>
-          <FavoriteButton
-            type={favoriteType}
-            externalId={place.place_id}
-            name={place.name}
-            image={photoUrl ?? undefined}
-            rating={place.rating}
-            metadata={{ googlePlaceId: place.place_id, address: place.formatted_address }}
-            size="sm"
-            className="shrink-0 -mt-0.5"
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <FavoriteButton
+              type={favoriteType}
+              externalId={place.place_id}
+              name={place.name}
+              image={photoUrl ?? undefined}
+              rating={place.rating}
+              metadata={{ googlePlaceId: place.place_id, address: place.formatted_address }}
+              size="sm"
+              className="shrink-0 -mt-0.5"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 mt-1">
@@ -104,7 +113,7 @@ function PlaceCard({
             <span className="text-xs text-muted-foreground">{PRICE[place.price_level]}</span>
           )}
           {place.opening_hours?.open_now != null && (
-            <span className={`text-xs font-medium flex items-center gap-1 ${place.opening_hours.open_now ? 'text-emerald-400' : 'text-red-400'}`}>
+            <span className={`text-xs font-medium flex items-center gap-1 ${place.opening_hours.open_now ? 'text-emerald-500' : 'text-red-500'}`}>
               <Clock className="w-3 h-3" />
               {place.opening_hours.open_now ? 'Aberto' : 'Fechado'}
             </span>
@@ -118,14 +127,9 @@ function PlaceCard({
           </p>
         )}
 
-        <a
-          href={mapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1.5"
-        >
-          Ver no Maps <ExternalLink className="w-3 h-3" />
-        </a>
+        <span className="inline-flex items-center gap-0.5 text-xs text-primary font-semibold mt-1.5 group-hover:gap-1.5 transition-all">
+          Ver detalhes <ChevronRight className="w-3 h-3" />
+        </span>
       </div>
     </motion.div>
   );
@@ -179,6 +183,11 @@ function LoadingSkeleton() {
 
 export function PlacesRecommendations({ destination }: { destination: string }) {
   const [activeTab, setActiveTab] = useState<'restaurants' | 'hotels' | 'attractions'>('restaurants');
+  const [selectedPlace, setSelectedPlace] = useState<{
+    placeId: string;
+    name: string;
+    favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
+  } | null>(null);
 
   const { data, isLoading, isError } = useQuery<RecommendationsData>({
     queryKey: ['recommendations', destination],
@@ -253,12 +262,32 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
                   key={place.place_id}
                   place={place}
                   favoriteType={tab.favoriteType}
+                  onOpen={() =>
+                    setSelectedPlace({
+                      placeId: place.place_id,
+                      name: place.name,
+                      favoriteType: tab.favoriteType,
+                    })
+                  }
                 />
               ))
             )}
           </motion.div>
         </AnimatePresence>
       )}
+
+      {/* Native place detail modal */}
+      <AnimatePresence>
+        {selectedPlace && (
+          <PlaceDetailModal
+            key={selectedPlace.placeId}
+            placeId={selectedPlace.placeId}
+            favoriteType={selectedPlace.favoriteType}
+            fallbackName={selectedPlace.name}
+            onClose={() => setSelectedPlace(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
