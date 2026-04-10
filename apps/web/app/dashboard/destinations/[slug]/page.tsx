@@ -359,10 +359,10 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
           )}
         </motion.div>
 
-        {/* Bottom gradient — legibility only, not covering the full photo */}
-        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none" />
+        {/* Bottom gradient — strong overlay for text legibility */}
+        <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-black/85 via-black/50 to-transparent pointer-events-none" />
         {/* Top vignette — subtle, for top bar buttons */}
-        <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/50 to-transparent pointer-events-none" />
 
         {/* Top bar */}
         <motion.div

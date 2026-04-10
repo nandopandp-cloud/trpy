@@ -520,9 +520,9 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
           )}
         </motion.div>
 
-        {/* Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/70" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.3)_100%)]" />
+        {/* Overlays — stronger gradient for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/80" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.4)_100%)]" />
 
         {/* Top action bar */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 md:p-5">
