@@ -374,14 +374,14 @@ export default function DashboardPage() {
                   src={tripPhoto}
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover scale-105"
-                  style={{ opacity: 0.08 }}
+                  style={{ opacity: 0.06 }}
                 />
                 {/* Strong dark overlay for text readability */}
-                <div className="absolute inset-0 bg-black/50" />
+                <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }} />
                 {/* Gradient overlay — stronger on left (text area) */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/40 to-black/20" />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.2))' }} />
                 {/* Bottom fade — ensures bottom area is darkest */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent)' }} />
               </motion.div>
             )}
 
@@ -389,7 +389,7 @@ export default function DashboardPage() {
             {!tripPhoto && (
               <div className="absolute -top-24 -right-24 w-64 h-64 aurora opacity-20 pointer-events-none" />
             )}
-            <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-1/2" style={{ background: 'linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent)' }} />
 
             {/* Header */}
             <div className="relative z-10 flex items-center gap-2 mb-3">
