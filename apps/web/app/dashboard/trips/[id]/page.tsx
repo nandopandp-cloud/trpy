@@ -15,6 +15,8 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useTrip, useUpdateTrip } from '@/hooks/useTrip';
 import { useDeleteTrip } from '@/hooks/useTrips';
 import { ItineraryDay } from '@/components/itinerary/itinerary-day';
+import { ItineraryItemForm } from '@/components/itinerary/itinerary-item-form';
+import { AddDayForm } from '@/components/itinerary/add-day-form';
 import { BudgetDashboard } from '@/components/budget/budget-dashboard';
 import { ExpenseForm } from '@/components/budget/expense-form';
 import { Button } from '@/components/ui/button';
@@ -414,8 +416,16 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
   const [activeTab, setActiveTab] = useState<TabId>('itinerary');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
+  const [showAddDay, setShowAddDay] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [coverOverride, setCoverOverride] = useState<string | null | undefined>(undefined);
+  // Itinerary item form state
+  const [itemFormState, setItemFormState] = useState<{
+    open: boolean;
+    dayId: string;
+    dayLabel: string;
+    item?: ItineraryItem;
+  }>({ open: false, dayId: '', dayLabel: '' });
 
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
@@ -641,22 +651,47 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
                   <EmptyTab
                     icon="🗓️"
                     title="Itinerário vazio"
-                    desc="Adicione dias e atividades para planejar sua viagem."
-                    cta="Adicionar dia"
-                    onCta={() => toast.info('Em breve: adicionar dias de itinerário')}
+                    desc="Organize sua viagem adicionando dias e atividades."
+                    cta="Adicionar primeiro dia"
+                    onCta={() => setShowAddDay(true)}
                   />
                 ) : (
-                  trip.itineraryDays.map((day) => (
-                    <ItineraryDay
-                      key={day.id}
-                      day={day}
-                      onAddItem={(dayId) => toast.info(`Adicionar item ao dia ${dayId} (em breve)`)}
-                      onEditItem={(item: ItineraryItem) => toast.info(`Editar ${item.title} (em breve)`)}
-                      onDeleteItem={(itemId) => {
-                        if (confirm('Excluir atividade?')) deleteItemMutation.mutate(itemId);
-                      }}
-                    />
-                  ))
+                  <>
+                    {trip.itineraryDays.map((day) => {
+                      const dayLabel = `${day.title ?? `Dia ${day.dayNumber}`} · ${
+                        new Date(day.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+                      }`;
+                      return (
+                        <ItineraryDay
+                          key={day.id}
+                          day={day}
+                          onAddItem={(dayId) =>
+                            setItemFormState({ open: true, dayId, dayLabel })
+                          }
+                          onEditItem={(item: ItineraryItem) =>
+                            setItemFormState({
+                              open: true,
+                              dayId: item.dayId,
+                              dayLabel,
+                              item,
+                            })
+                          }
+                          onDeleteItem={(itemId) => {
+                            if (confirm('Excluir atividade?')) deleteItemMutation.mutate(itemId);
+                          }}
+                        />
+                      );
+                    })}
+
+                    {/* Add day button */}
+                    <button
+                      onClick={() => setShowAddDay(true)}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-3xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Adicionar dia ao itinerário
+                    </button>
+                  </>
                 )}
               </div>
             )}
@@ -771,6 +806,30 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
       <AnimatePresence>
         {showExpenseForm && (
           <ExpenseForm tripId={params.id} onClose={() => setShowExpenseForm(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* ── ITINERARY ITEM FORM MODAL ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {itemFormState.open && (
+          <ItineraryItemForm
+            tripId={params.id}
+            dayId={itemFormState.dayId}
+            dayLabel={itemFormState.dayLabel}
+            item={itemFormState.item}
+            onClose={() => setItemFormState({ open: false, dayId: '', dayLabel: '' })}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── ADD DAY FORM MODAL ────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showAddDay && (
+          <AddDayForm
+            tripId={params.id}
+            nextDayNumber={(trip?.itineraryDays.length ?? 0) + 1}
+            onClose={() => setShowAddDay(false)}
+          />
         )}
       </AnimatePresence>
 
