@@ -5,18 +5,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Wallet, LayoutDashboard, Settings,
-  ChevronLeft, Sparkles, PlaneTakeoff, Heart,
+  Wallet, Home, Settings,
+  ChevronLeft, PlaneTakeoff, Heart,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { cn } from '@/lib/utils';
 
 const NAV = [
-  { href: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard, exact: true },
+  { href: '/dashboard', label: 'Início', icon: Home, exact: true },
   { href: '/dashboard/trips', label: 'Viagens', icon: PlaneTakeoff },
   { href: '/dashboard/budget', label: 'Finanças', icon: Wallet },
   { href: '/dashboard/favorites', label: 'Favoritos', icon: Heart },
-  { href: '/dashboard/ai', label: 'IA', icon: Sparkles, badge: 'novo' },
 ];
 
 export function Sidebar() {
@@ -98,11 +97,6 @@ export function Sidebar() {
                       className="relative z-10 flex items-center gap-2 whitespace-nowrap"
                     >
                       <span className="text-sm font-medium">{item.label}</span>
-                      {item.badge && (
-                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary leading-none">
-                          {item.badge}
-                        </span>
-                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>

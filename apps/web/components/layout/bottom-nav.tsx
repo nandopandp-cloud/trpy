@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, PlaneTakeoff, Heart, Sparkles } from 'lucide-react';
+import { Home, PlaneTakeoff, Heart, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV = [
-  { href: '/dashboard', label: 'Início', icon: LayoutDashboard, exact: true },
+  { href: '/dashboard', label: 'Início', icon: Home, exact: true },
   { href: '/dashboard/trips', label: 'Viagens', icon: PlaneTakeoff },
+  { href: '/dashboard/budget', label: 'Finanças', icon: Wallet },
   { href: '/dashboard/favorites', label: 'Favoritos', icon: Heart },
-  { href: '/dashboard/ai', label: 'IA', icon: Sparkles },
 ];
 
 export function BottomNav() {
@@ -45,9 +45,6 @@ export function BottomNav() {
                     active ? 'text-primary' : 'text-muted-foreground'
                   )}>
                     <Icon className="w-5 h-5" />
-                    {item.href === '/dashboard/ai' && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary" />
-                    )}
                   </div>
                   <span className={cn(
                     'relative z-10 text-[10px] font-medium transition-colors',
