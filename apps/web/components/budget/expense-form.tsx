@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useEffect, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import {
   Home, Utensils, Bus, Zap, ShoppingBag, Heart, MoreHorizontal,
@@ -16,13 +17,13 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
-  { value: 'ACCOMMODATION', label: 'Hospedagem', icon: Home,         color: 'from-blue-500 to-blue-600',    bg: 'bg-blue-500/15 border-blue-500/30',    active: 'bg-blue-500 border-blue-500' },
-  { value: 'FOOD',          label: 'Alimentação', icon: Utensils,    color: 'from-amber-500 to-orange-500', bg: 'bg-amber-500/15 border-amber-500/30',  active: 'bg-amber-500 border-amber-500' },
-  { value: 'TRANSPORT',     label: 'Transporte',  icon: Bus,         color: 'from-violet-500 to-purple-600',bg: 'bg-violet-500/15 border-violet-500/30',active: 'bg-violet-500 border-violet-500' },
-  { value: 'ACTIVITIES',    label: 'Atividades',  icon: Zap,         color: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-500/15 border-emerald-500/30', active: 'bg-emerald-500 border-emerald-500' },
-  { value: 'SHOPPING',      label: 'Compras',     icon: ShoppingBag, color: 'from-rose-500 to-pink-500',    bg: 'bg-rose-500/15 border-rose-500/30',    active: 'bg-rose-500 border-rose-500' },
-  { value: 'HEALTH',        label: 'Saúde',       icon: Heart,       color: 'from-red-500 to-rose-600',     bg: 'bg-red-500/15 border-red-500/30',      active: 'bg-red-500 border-red-500' },
-  { value: 'OTHER',         label: 'Outros',      icon: MoreHorizontal, color: 'from-slate-500 to-slate-600', bg: 'bg-slate-500/15 border-slate-500/30', active: 'bg-slate-500 border-slate-500' },
+  { value: 'ACCOMMODATION', label: 'Hospedagem', icon: Home,         bg: 'bg-blue-500/15 border-blue-500/30',    active: 'bg-blue-500 border-blue-500' },
+  { value: 'FOOD',          label: 'Alimentação', icon: Utensils,    bg: 'bg-amber-500/15 border-amber-500/30',  active: 'bg-amber-500 border-amber-500' },
+  { value: 'TRANSPORT',     label: 'Transporte',  icon: Bus,         bg: 'bg-violet-500/15 border-violet-500/30',active: 'bg-violet-500 border-violet-500' },
+  { value: 'ACTIVITIES',    label: 'Atividades',  icon: Zap,         bg: 'bg-emerald-500/15 border-emerald-500/30', active: 'bg-emerald-500 border-emerald-500' },
+  { value: 'SHOPPING',      label: 'Compras',     icon: ShoppingBag, bg: 'bg-rose-500/15 border-rose-500/30',    active: 'bg-rose-500 border-rose-500' },
+  { value: 'HEALTH',        label: 'Saúde',       icon: Heart,       bg: 'bg-red-500/15 border-red-500/30',      active: 'bg-red-500 border-red-500' },
+  { value: 'OTHER',         label: 'Outros',      icon: MoreHorizontal, bg: 'bg-slate-500/15 border-slate-500/30', active: 'bg-slate-500 border-slate-500' },
 ] as const;
 
 const schema = z.object({
@@ -41,10 +42,9 @@ interface ExpenseFormProps {
   onSuccess?: () => void;
 }
 
-export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
+export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('OTHER');
   const queryClient = useQueryClient();
-
 
   const { register, handleSubmit, setValue, setError, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
@@ -52,6 +52,23 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
       date: format(new Date(), 'yyyy-MM-dd'),
     },
   });
+
+  const selectCategory = useCallback((value: string) => {
+    setSelectedCategory(value);
+    setValue('category', value as any);
+  }, [setValue]);
+
+  // Portal target + body scroll lock
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setPortalRoot(document.body);
+    // Lock scroll on the page behind
+    const scrollable = document.querySelector('main');
+    if (scrollable) (scrollable as HTMLElement).style.overflow = 'hidden';
+    return () => {
+      if (scrollable) (scrollable as HTMLElement).style.overflow = '';
+    };
+  }, []);
 
   async function onSubmit(values: FormValues) {
     try {
@@ -85,37 +102,39 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
     }
   }
 
-  return (
+  const modal = (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50"
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      /* Block ALL touch propagation to the page behind */
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
     >
       <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 40, scale: 0.95 }}
-        transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }}
-        className="w-full max-w-md bg-card border border-border rounded-3xl overflow-hidden shadow-2xl"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
+        className="w-full sm:max-w-md bg-card border border-border rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl max-h-[90dvh] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border shrink-0">
           <h3 className="font-bold text-lg">Nova despesa</h3>
-          <motion.button
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            whileTap={{ scale: 0.9 }}
-            transition={{ duration: 0.2 }}
+          <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground"
+            className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all"
           >
             <X className="w-4 h-4" />
-          </motion.button>
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
-          {/* Category picker */}
+        <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1 p-6 space-y-5">
+          {/* Category picker — simple CSS, no layoutId */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Categoria</label>
             <div className="grid grid-cols-4 gap-2">
@@ -123,42 +142,25 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
                 const Icon = cat.icon;
                 const active = selectedCategory === cat.value;
                 return (
-                  <motion.button
+                  <button
                     key={cat.value}
                     type="button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.93 }}
-                    onClick={() => {
-                      setSelectedCategory(cat.value);
-                      setValue('category', cat.value as any);
-                    }}
+                    onClick={() => selectCategory(cat.value)}
                     className={cn(
-                      'relative flex flex-col items-center gap-1 p-2.5 rounded-xl border transition-all duration-200',
+                      'relative flex flex-col items-center gap-1 p-2.5 rounded-xl border transition-colors duration-150',
                       active ? cn(cat.active, 'text-white') : cn(cat.bg, 'text-muted-foreground hover:text-foreground')
                     )}
                   >
-                    {active && (
-                      <motion.div
-                        layoutId="cat-active"
-                        className="absolute inset-0 rounded-xl"
-                        style={{ background: `linear-gradient(135deg, var(--tw-gradient-stops))` }}
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.3 }}
-                      />
-                    )}
-                    <Icon className={cn('w-4 h-4 relative z-10', active && 'text-white')} />
-                    <span className={cn('text-[9px] font-medium leading-tight text-center relative z-10', active && 'text-white')}>
+                    <Icon className="w-4 h-4" />
+                    <span className="text-[9px] font-medium leading-tight text-center">
                       {cat.label}
                     </span>
                     {active && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center z-20 shadow"
-                      >
+                      <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow">
                         <Check className="w-2.5 h-2.5 text-green-600" />
-                      </motion.div>
+                      </div>
                     )}
-                  </motion.button>
+                  </button>
                 );
               })}
             </div>
@@ -209,21 +211,23 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
           </div>
 
           {/* Submit */}
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full gap-2 h-11 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md shadow-primary/20"
-            >
-              {isSubmitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
-              ) : (
-                <><Check className="w-4 h-4" /> Adicionar despesa</>
-              )}
-            </Button>
-          </motion.div>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full gap-2 h-11 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md shadow-primary/20"
+          >
+            {isSubmitting ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
+            ) : (
+              <><Check className="w-4 h-4" /> Adicionar despesa</>
+            )}
+          </Button>
         </form>
       </motion.div>
     </motion.div>
   );
-}
+
+  // Render via portal so the modal lives outside the scrollable <main>
+  if (!portalRoot) return null;
+  return createPortal(modal, portalRoot);
+});
