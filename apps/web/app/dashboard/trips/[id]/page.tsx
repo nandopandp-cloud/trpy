@@ -458,6 +458,16 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
     ? (coverImage?.replace('gradient:', '') ?? gradientFallback)
     : null;
 
+  // If "Mapa" tab becomes unavailable while selected, fall back to itinerary
+  const hasCoords = trip?.itineraryDays?.some((d: any) =>
+    d.items?.some((item: any) => item.latitude != null && item.longitude != null)
+  ) ?? false;
+  useEffect(() => {
+    if (!hasCoords && activeTab === 'map') {
+      setActiveTab('itinerary');
+    }
+  }, [hasCoords, activeTab]);
+
   async function handleDeleteTrip() {
     setShowActions(false);
     if (!confirm(`Excluir "${trip?.title}"?`)) return;
@@ -498,19 +508,9 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
   const tripDays = Math.max(1, differenceInDays(new Date(trip.endDate), new Date(trip.startDate)));
 
   // Compute visible tabs — hide "Mapa" if no coordinates exist
-  const hasCoordinates = trip.itineraryDays.some((d: any) =>
-    d.items.some((item: any) => item.latitude != null && item.longitude != null)
-  );
-  const visibleTabs: Array<{ id: TabId; label: string }> = hasCoordinates
+  const visibleTabs: Array<{ id: TabId; label: string }> = hasCoords
     ? Array.from(TABS)
     : Array.from(TABS).filter((t) => t.id !== 'map');
-
-  // If "Mapa" tab is hidden while selected, redirect to itinerary
-  useEffect(() => {
-    if (!hasCoordinates && activeTab === 'map') {
-      setActiveTab('itinerary');
-    }
-  }, [hasCoordinates, activeTab]);
 
   return (
     <div className="min-h-screen bg-background pb-32 md:pb-8">
