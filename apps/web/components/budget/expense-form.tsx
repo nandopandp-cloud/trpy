@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,12 +45,6 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('OTHER');
   const queryClient = useQueryClient();
 
-  // Lock body scroll while modal is open (prevents jank on mobile)
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
 
   const { register, handleSubmit, setValue, setError, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
@@ -60,30 +54,35 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
   });
 
   async function onSubmit(values: FormValues) {
-    const result = schema.safeParse(values);
-    if (!result.success) {
-      for (const issue of result.error.issues) {
-        const field = issue.path[0] as keyof FormValues;
-        if (field) setError(field, { message: issue.message });
+    try {
+      const result = schema.safeParse(values);
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          const field = issue.path[0] as keyof FormValues;
+          if (field) setError(field, { message: issue.message });
+        }
+        return;
       }
-      return;
-    }
-    const validated = result.data;
-    const res = await fetch(`/api/trips/${tripId}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...validated,
-        date: new Date(validated.date).toISOString(),
-      }),
-    });
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error);
+      const validated = result.data;
+      const res = await fetch(`/api/trips/${tripId}/expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...validated,
+          date: new Date(validated.date).toISOString(),
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
 
-    queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
-    toast.success('Despesa adicionada!', { description: `${validated.title} — R$ ${validated.amount}` });
-    onSuccess?.();
-    onClose();
+      queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      toast.success('Despesa adicionada!', { description: `${validated.title} — R$ ${validated.amount}` });
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao adicionar despesa';
+      toast.error(message);
+    }
   }
 
   return (

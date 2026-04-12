@@ -591,9 +591,14 @@ export default function DashboardPage() {
         transition={{ delay: 0.35 }}
         className="space-y-4"
       >
-        <div className="flex items-center gap-2.5">
-          <Compass className="w-4 h-4 text-muted-foreground" />
-          <h2 className="text-base font-semibold text-foreground tracking-tight">Explorar por categoria</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Compass className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold text-foreground tracking-tight">Explorar por categoria</h2>
+          </div>
+          <Link href="/dashboard/destinations" className="text-xs text-primary font-medium hover:text-primary/80 transition-colors flex items-center gap-1">
+            Ver todas <ArrowRight className="w-3 h-3" />
+          </Link>
         </div>
 
         <div className="grid grid-cols-4 gap-2.5 md:grid-cols-8">

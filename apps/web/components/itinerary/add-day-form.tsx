@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,12 +28,6 @@ interface AddDayFormProps {
 export function AddDayForm({ tripId, nextDayNumber, onClose }: AddDayFormProps) {
   const queryClient = useQueryClient();
 
-  // Lock body scroll while modal is open (prevents jank on mobile)
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
 
   const {
     register,
