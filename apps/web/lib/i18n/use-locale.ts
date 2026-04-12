@@ -1,37 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Locale, DEFAULT_LOCALE, LOCALES } from './locales';
-import { detectLocaleFromBrowser } from './detect-locale';
+import { useContext } from 'react';
+import { LocaleContext } from './locale-context';
 
-const LOCALE_STORAGE_KEY = 'trpy_locale';
-
-export function useLocale(): [Locale, (locale: Locale) => void] {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    // Load from localStorage or browser detection
-    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
-    const detected = stored || detectLocaleFromBrowser();
-
-    if (LOCALES.includes(detected as Locale)) {
-      setLocaleState(detected as Locale);
-    } else {
-      setLocaleState(DEFAULT_LOCALE);
-    }
-
-    setIsHydrated(true);
-  }, []);
-
-  const setLocale = useCallback((newLocale: Locale) => {
-    if (LOCALES.includes(newLocale)) {
-      setLocaleState(newLocale);
-      localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
-      // Update document lang attribute
-      document.documentElement.lang = newLocale;
-    }
-  }, []);
-
-  return [locale, setLocale];
+export function useLocale() {
+  const ctx = useContext(LocaleContext);
+  if (!ctx) throw new Error('useLocale must be used inside <LocaleProvider>');
+  return [ctx.locale, ctx.setLocale] as const;
 }
