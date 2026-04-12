@@ -1,9 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { User, Bell, Palette, Globe, ShieldCheck, LogOut } from 'lucide-react';
+import { User, Palette, ShieldCheck, LogOut } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { LanguageSelector } from '@/components/language/language-selector';
 import { UserAvatar } from '@/components/user/user-avatar';
 import { cn } from '@/lib/utils';
 
@@ -18,13 +19,6 @@ const SECTIONS = [
     items: [
       { icon: User, label: 'Perfil', desc: 'Nome, foto e informações pessoais', soon: true },
       { icon: ShieldCheck, label: 'Segurança', desc: 'Senha e autenticação em dois fatores', soon: true },
-    ],
-  },
-  {
-    title: 'Preferências',
-    items: [
-      { icon: Bell, label: 'Notificações', desc: 'Alertas e lembretes de viagem', soon: true },
-      { icon: Globe, label: 'Idioma e região', desc: 'Português (BR) · R$ Real', soon: true },
     ],
   },
 ];
@@ -56,17 +50,19 @@ export default function SettingsPage() {
         </div>
       </motion.div>
 
-      {/* Aparência */}
+      {/* Preferências */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="rounded-3xl border border-border bg-card overflow-hidden shadow-card"
+        className="rounded-3xl border border-border bg-card overflow-hidden shadow-card space-y-4"
       >
         <div className="px-5 py-4 border-b border-border">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Aparência</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Preferências</p>
         </div>
-        <div className="px-5 py-4 flex items-center justify-between">
+
+        {/* Tema */}
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-2xl bg-muted flex items-center justify-center">
               <Palette className="w-4 h-4 text-muted-foreground" />
@@ -77,6 +73,11 @@ export default function SettingsPage() {
             </div>
           </div>
           <ThemeToggle showLabel />
+        </div>
+
+        {/* Idioma */}
+        <div className="px-5 py-4">
+          <LanguageSelector />
         </div>
       </motion.div>
 

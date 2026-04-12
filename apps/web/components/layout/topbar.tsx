@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Bell, Settings, User, LogOut, ChevronRight } from 'lucide-react';
+import { Settings, User, LogOut, ChevronRight } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -23,22 +23,22 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { useState } from 'react';
+import { useLocale, t } from '@/lib/i18n';
 
 const TITLES: Record<string, string> = {
-  '/dashboard': 'Visão Geral',
-  '/dashboard/trips': 'Minhas Viagens',
-  '/dashboard/budget': 'Finanças',
-  '/dashboard/favorites': 'Favoritos',
-  '/dashboard/ai': 'Assistente IA',
-  '/dashboard/settings': 'Configurações',
+  '/dashboard': 'page.dashboard',
+  '/dashboard/trips': 'page.trips',
+  '/dashboard/budget': 'page.budget',
+  '/dashboard/favorites': 'page.favorites',
+  '/dashboard/settings': 'page.settings',
 };
 
-function getTitle(pathname: string) {
-  if (pathname.match(/\/dashboard\/trips\/[^/]+\/edit/)) return 'Editar Viagem';
-  if (pathname.match(/\/dashboard\/trips\/new/)) return 'Nova Viagem';
-  if (pathname.match(/\/dashboard\/trips\/[^/]+/)) return 'Detalhes da Viagem';
-  if (pathname.match(/\/dashboard\/destinations\/[^/]+/)) return 'Destino';
-  if (pathname === '/dashboard/destinations') return 'Explorar';
+function getTitle(pathname: string): string {
+  if (pathname.match(/\/dashboard\/trips\/[^/]+\/edit/)) return 'page.edit-trip';
+  if (pathname.match(/\/dashboard\/trips\/new/)) return 'page.new-trip';
+  if (pathname.match(/\/dashboard\/trips\/[^/]+/)) return 'page.trip-details';
+  if (pathname.match(/\/dashboard\/destinations\/[^/]+/)) return 'page.destination';
+  if (pathname === '/dashboard/destinations') return 'page.explore';
   return TITLES[pathname] ?? 'Trpy';
 }
 
@@ -46,6 +46,7 @@ function getTitle(pathname: string) {
 
 function MenuActions({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
+  const [locale] = useLocale();
 
   function navigate(href: string) {
     onClose?.();
@@ -62,8 +63,8 @@ function MenuActions({ onClose }: { onClose?: () => void }) {
           <User className="w-4 h-4 text-muted-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">Ver perfil</p>
-          <p className="text-xs text-muted-foreground">Conta e preferências</p>
+          <p className="text-sm font-semibold text-foreground">{t(locale, 'common.profile')}</p>
+          <p className="text-xs text-muted-foreground">{t(locale, 'common.account')}</p>
         </div>
         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
       </button>
@@ -76,7 +77,7 @@ function MenuActions({ onClose }: { onClose?: () => void }) {
           <Settings className="w-4 h-4 text-muted-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">Configurações</p>
+          <p className="text-sm font-semibold text-foreground">{t(locale, 'page.settings')}</p>
           <p className="text-xs text-muted-foreground">Tema, idioma e segurança</p>
         </div>
         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -88,6 +89,8 @@ function MenuActions({ onClose }: { onClose?: () => void }) {
 // ─── Desktop dropdown ─────────────────────────────────────────────────────────
 
 function DesktopUserMenu({ user }: { user: { name?: string | null; email?: string | null; image?: string | null } }) {
+  const [locale] = useLocale();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -125,7 +128,7 @@ function DesktopUserMenu({ user }: { user: { name?: string | null; email?: strin
           className="gap-2.5 rounded-xl py-2 px-2.5 cursor-pointer"
         >
           <User className="w-4 h-4 text-muted-foreground" />
-          Ver perfil
+          {t(locale, 'common.profile')}
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -133,13 +136,13 @@ function DesktopUserMenu({ user }: { user: { name?: string | null; email?: strin
           className="gap-2.5 rounded-xl py-2 px-2.5 cursor-pointer"
         >
           <Settings className="w-4 h-4 text-muted-foreground" />
-          Configurações
+          {t(locale, 'page.settings')}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
         <div className="flex items-center justify-between px-2.5 py-1.5">
-          <span className="text-xs text-muted-foreground">Tema</span>
+          <span className="text-xs text-muted-foreground">{t(locale, 'common.theme')}</span>
           <ThemeToggle showLabel />
         </div>
 
@@ -151,7 +154,7 @@ function DesktopUserMenu({ user }: { user: { name?: string | null; email?: strin
           className="gap-2.5 rounded-xl py-2 px-2.5 cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
-          Sair da conta
+          {t(locale, 'common.logout')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -162,6 +165,7 @@ function DesktopUserMenu({ user }: { user: { name?: string | null; email?: strin
 
 function MobileUserMenu({ user }: { user: { name?: string | null; email?: string | null; image?: string | null } }) {
   const [open, setOpen] = useState(false);
+  const [locale] = useLocale();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -204,7 +208,7 @@ function MobileUserMenu({ user }: { user: { name?: string | null; email?: string
 
         {/* Theme row */}
         <div className="flex items-center justify-between px-5 py-3 border-t border-border mx-3 rounded-2xl bg-muted/30 mb-2">
-          <span className="text-sm font-semibold text-foreground">Tema</span>
+          <span className="text-sm font-semibold text-foreground">{t(locale, 'common.theme')}</span>
           <ThemeToggle showLabel />
         </div>
 
@@ -215,7 +219,7 @@ function MobileUserMenu({ user }: { user: { name?: string | null; email?: string
             className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-destructive/10 hover:bg-destructive/15 text-destructive transition-colors"
           >
             <LogOut className="w-4 h-4 shrink-0" />
-            <span className="text-sm font-semibold">Sair da conta</span>
+            <span className="text-sm font-semibold">{t(locale, 'common.logout')}</span>
           </button>
         </div>
       </SheetContent>
@@ -227,7 +231,9 @@ function MobileUserMenu({ user }: { user: { name?: string | null; email?: string
 
 export function Topbar() {
   const pathname = usePathname();
-  const title = getTitle(pathname);
+  const [locale] = useLocale();
+  const titleKey = getTitle(pathname);
+  const title = titleKey === 'Trpy' ? titleKey : t(locale, titleKey as any);
   const { data: session } = useSession();
   const user = session?.user ?? {};
 
@@ -249,17 +255,8 @@ export function Topbar() {
         <h2 className="hidden md:block font-medium text-foreground text-base tracking-tight">{title}</h2>
       </div>
 
-      {/* Right: bell + avatar */}
+      {/* Right: avatar */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative text-muted-foreground hover:text-foreground rounded-xl"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-primary" />
-        </Button>
-
         {/* Desktop dropdown (hidden on mobile) */}
         <div className="hidden md:block">
           <DesktopUserMenu user={user} />
