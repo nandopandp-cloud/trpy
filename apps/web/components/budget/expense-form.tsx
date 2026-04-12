@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,6 +44,13 @@ interface ExpenseFormProps {
 export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('OTHER');
   const queryClient = useQueryClient();
+
+  // Lock body scroll while modal is open (prevents jank on mobile)
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
   const { register, handleSubmit, setValue, setError, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
@@ -207,7 +214,7 @@ export function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full gap-2 h-11 text-base font-semibold bg-ocean hover:opacity-90 border-0 glow-teal"
+              className="w-full gap-2 h-11 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md shadow-primary/20"
             >
               {isSubmitting ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>

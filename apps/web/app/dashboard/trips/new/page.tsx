@@ -72,7 +72,7 @@ export default function NewTripPage() {
               <div className={cn(
                 'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300',
                 step === s || (i === 0 && step === 'form')
-                  ? 'bg-ocean text-white glow-teal'
+                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
                   : 'bg-muted text-muted-foreground'
               )}>
                 {i === 0 && step === 'form' ? <Check className="w-3.5 h-3.5" /> : i + 1}
@@ -139,7 +139,7 @@ export default function NewTripPage() {
                 className="w-full flex items-center justify-between gap-4 p-5 rounded-3xl border-2 border-dashed border-border hover:border-primary/50 bg-card hover:bg-primary/5 transition-all group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-ocean/10 flex items-center justify-center group-hover:bg-ocean group-hover:glow-teal transition-all">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:shadow-md group-hover:shadow-primary/20 transition-all">
                     <MapPin className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
                   </div>
                   <div className="text-left">
@@ -158,7 +158,7 @@ export default function NewTripPage() {
                 className="w-full flex items-center justify-between gap-4 p-5 rounded-3xl border border-primary/20 bg-gradient-to-r from-emerald-500/6 to-teal-500/6 hover:from-emerald-500/12 hover:to-teal-500/12 transition-all group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-ocean flex items-center justify-center glow-teal">
+                  <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left">

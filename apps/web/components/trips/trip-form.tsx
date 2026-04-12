@@ -100,7 +100,7 @@ export function TripForm({ defaultValues, onSubmit, submitLabel = 'Salvar' }: Tr
         />
       </Field>
 
-      <Button type="submit" disabled={isSubmitting} className="w-full gap-2 bg-ocean hover:opacity-90 border-0 glow-teal h-11 text-base font-semibold">
+      <Button type="submit" disabled={isSubmitting} className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md shadow-primary/20 h-11 text-base font-semibold">
         {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
         {isSubmitting ? 'Salvando...' : submitLabel}
       </Button>

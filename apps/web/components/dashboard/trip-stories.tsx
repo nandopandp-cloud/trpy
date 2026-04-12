@@ -280,6 +280,7 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   const isDraggingRef = useRef(false);
   const frameWidthRef = useRef(0);               // card width (set on touchstart)
   const frameRef = useRef<HTMLDivElement>(null);
+  const swipeAnimatingRef = useRef(false);       // true while commit/cancel spring is in flight
 
   /* ── Touch gesture ── */
   type TouchState = { x: number; y: number; time: number };
@@ -388,24 +389,28 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   }, [stopRaf]);
 
   /* ── Start/restart progress when indices or loading changes ── */
+  // Single unified effect: reset progress on index change, start RAF only when not loading
+  const prevIndicesRef = useRef({ storyIdx, videoIdx });
   useEffect(() => {
-    isPausedRef.current = false;
-    setIsPaused(false);
-    savedPctRef.current = 0;
-    setProgress(0);
-    if (!loading) startRaf();
-    return stopRaf;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storyIdx, videoIdx]);
+    const indicesChanged =
+      prevIndicesRef.current.storyIdx !== storyIdx ||
+      prevIndicesRef.current.videoIdx !== videoIdx;
+    prevIndicesRef.current = { storyIdx, videoIdx };
 
-  useEffect(() => {
-    if (!loading && videos.length > 0) {
+    if (indicesChanged) {
+      isPausedRef.current = false;
+      setIsPaused(false);
+      savedPctRef.current = 0;
+      setProgress(0);
+    }
+
+    if (!loading) {
       savedPctRef.current = 0;
       startRaf();
     }
     return stopRaf;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  }, [storyIdx, videoIdx, loading]);
 
   /* ── Keyboard shortcuts ── */
   useEffect(() => {
@@ -423,6 +428,8 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
 
   /* Commit a cube-swipe: animate dragX to its end position, then swap storyIdx */
   const commitCubeSwipe = useCallback((direction: 1 | -1) => {
+    if (swipeAnimatingRef.current) return;
+    swipeAnimatingRef.current = true;
     const width = frameWidthRef.current || window.innerWidth;
     const target = direction === 1 ? -width : width;
     animateMotion(dragX, target, {
@@ -444,12 +451,15 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
         setIsDragging(false);
         isDraggingRef.current = false;
         gestureModeRef.current = 'idle';
+        swipeAnimatingRef.current = false;
       },
     });
   }, [dragX]);
 
   /* Rubber-band back to current story */
   const cancelCubeSwipe = useCallback(() => {
+    if (swipeAnimatingRef.current) return;
+    swipeAnimatingRef.current = true;
     animateMotion(dragX, 0, {
       type: 'spring',
       stiffness: 420,
@@ -459,6 +469,7 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
         setIsDragging(false);
         isDraggingRef.current = false;
         gestureModeRef.current = 'idle';
+        swipeAnimatingRef.current = false;
         // Resume progress since we paused on drag start
         if (isPausedRef.current) resumeRaf();
       },
@@ -466,6 +477,8 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   }, [dragX, resumeRaf]);
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
+    // Block new gestures while a swipe animation is in flight
+    if (swipeAnimatingRef.current) return;
     didSwipeRef.current = false;
     gestureModeRef.current = 'idle';
     touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
@@ -932,8 +945,12 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
               onTouchEnd={onTouchEnd}
               onMouseDown={onMouseDown}
               onMouseUp={onMouseUp}
-              /* Desktop click zones */
+              /* Desktop-only click zones — skip on touch devices to avoid double-fire */
               onClick={e => {
+                // Touch devices already handle taps in onTouchEnd.
+                // The browser synthesises a click ~300ms after touchend,
+                // which would double-fire advance/goBack. Block it.
+                if (isMobile) return;
                 const x = e.clientX;
                 const w = (e.currentTarget as HTMLElement).getBoundingClientRect().width;
                 if (x < w * 0.35) goBackFn(); else advanceFn();

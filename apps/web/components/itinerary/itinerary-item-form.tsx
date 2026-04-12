@@ -98,6 +98,13 @@ export function ItineraryItemForm({
   const queryClient = useQueryClient();
   const isEdit = !!item;
 
+  // Lock body scroll while modal is open (prevents jank on mobile)
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   const {
     register,
     handleSubmit,

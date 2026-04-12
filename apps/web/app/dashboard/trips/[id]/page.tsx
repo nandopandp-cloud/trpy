@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -435,10 +435,6 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
     item?: ItineraryItem;
   }>({ open: false, dayId: '', dayLabel: '' });
 
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollY } = useScroll();
-  const heroOpacity = useTransform(scrollY, [0, 200], [1, 0.6]);
-
   const { data: trip, isLoading, isError } = useTrip(params.id);
   const deleteTrip = useDeleteTrip();
 
@@ -501,11 +497,26 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
   const spent = Number(trip.totalSpent);
   const tripDays = Math.max(1, differenceInDays(new Date(trip.endDate), new Date(trip.startDate)));
 
+  // Compute visible tabs — hide "Mapa" if no coordinates exist
+  const hasCoordinates = trip.itineraryDays.some((d: any) =>
+    d.items.some((item: any) => item.latitude != null && item.longitude != null)
+  );
+  const visibleTabs: Array<{ id: TabId; label: string }> = hasCoordinates
+    ? Array.from(TABS)
+    : Array.from(TABS).filter((t) => t.id !== 'map');
+
+  // If "Mapa" tab is hidden while selected, redirect to itinerary
+  useEffect(() => {
+    if (!hasCoordinates && activeTab === 'map') {
+      setActiveTab('itinerary');
+    }
+  }, [hasCoordinates, activeTab]);
+
   return (
     <div className="min-h-screen bg-background pb-32 md:pb-8">
 
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
-      <div ref={heroRef} className="relative h-64 md:h-80 overflow-hidden">
+      <div className="relative h-64 md:h-80 overflow-hidden">
 
         {/* Cover layer with parallax */}
         <motion.div className="absolute inset-0" style={{ scale: 1.05 }}>
@@ -625,32 +636,15 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
       </div>
 
       {/* ── STICKY TABS ───────────────────────────────────────────────────── */}
-      {(() => {
-        // Filter out "Mapa" tab if no coordinates exist in itinerary
-        const hasCoordinates = trip.itineraryDays.some((d: any) =>
-          d.items.some((item: any) => item.latitude != null && item.longitude != null)
-        );
-        const visibleTabs: Array<{ id: TabId; label: string }> = hasCoordinates
-          ? Array.from(TABS)
-          : Array.from(TABS).filter((t) => t.id !== 'map');
-
-        // If "Mapa" is hidden and user is on it, switch to itinerary
-        if (!hasCoordinates && activeTab === 'map') {
-          setActiveTab('itinerary');
-        }
-
-        return (
-          <StickyTabs
-            active={activeTab}
-            onChange={setActiveTab}
-            counts={{
-              itinerary: trip.itineraryDays.length,
-              budget: trip.expenses.length,
-            }}
-            availableTabs={visibleTabs}
-          />
-        );
-      })()}
+      <StickyTabs
+        active={activeTab}
+        onChange={setActiveTab}
+        counts={{
+          itinerary: trip.itineraryDays.length,
+          budget: trip.expenses.length,
+        }}
+        availableTabs={visibleTabs}
+      />
 
       {/* ── BODY ──────────────────────────────────────────────────────────── */}
       <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-6">
