@@ -368,7 +368,7 @@ export default function HomePage() {
               const Icon = f.icon;
               return (
                 <motion.div
-                  key={f.label}
+                  key={f.labelKey}
                   initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -380,8 +380,8 @@ export default function HomePage() {
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${f.bgColor} flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${f.color}`} />
                   </div>
-                  <h3 className="text-white font-medium mb-1.5 sm:mb-2 text-base sm:text-lg tracking-tight">{f.label}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed font-light">{f.desc}</p>
+                  <h3 className="text-white font-medium mb-1.5 sm:mb-2 text-base sm:text-lg tracking-tight">{t(locale, f.labelKey as any)}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed font-light">{t(locale, f.descKey as any)}</p>
                 </motion.div>
               );
             })}
@@ -407,13 +407,12 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border mb-4 sm:mb-6 shadow-sm">
               <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">02</span>
               <span className="w-px h-3 bg-border" />
-              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Por que o TRPY</span>
+              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">{t(locale, 'landing.why_title' as any)}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-medium text-foreground tracking-tight mb-3 sm:mb-4">
-              Tudo que você precisa,{' '}
-              <span className="text-gradient-accent">num só lugar.</span>
+              {t(locale, 'landing.why_heading' as any)}
             </h2>
-            <p className="text-sm sm:text-base text-muted-foreground font-light max-w-lg">Do planejamento à memória, cada etapa da sua jornada coberta.</p>
+            <p className="text-sm sm:text-base text-muted-foreground font-light max-w-lg">{t(locale, 'landing.why_sub' as any)}</p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
@@ -421,7 +420,7 @@ export default function HomePage() {
               const Icon = b.icon;
               return (
                 <motion.div
-                  key={b.label}
+                  key={b.labelKey}
                   initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -433,8 +432,8 @@ export default function HomePage() {
                       <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${b.color}`} />
                     </div>
                     <div>
-                      <h4 className="text-sm sm:text-base font-medium text-foreground tracking-tight mb-1">{b.label}</h4>
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-light">{b.desc}</p>
+                      <h4 className="text-sm sm:text-base font-medium text-foreground tracking-tight mb-1">{t(locale, b.labelKey as any)}</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-light">{t(locale, b.descKey as any)}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -463,13 +462,13 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-4 sm:mb-6">
               <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">03</span>
               <span className="w-px h-3 bg-white/10" />
-              <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">Como funciona</span>
+              <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">{t(locale, 'landing.how_title' as any)}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-medium text-white tracking-tight mb-3 sm:mb-4">
-              Do sonho à{' '}
-              <span className="text-gradient-accent">realidade.</span>
+              {t(locale, 'landing.how_heading_1' as any)}{' '}
+              <span className="text-gradient-accent">{t(locale, 'landing.how_heading_2' as any)}</span>
             </h2>
-            <p className="text-sm sm:text-base text-zinc-500 font-light max-w-lg mx-auto">Três passos simples para transformar sua ideia de viagem em um roteiro completo e organizado.</p>
+            <p className="text-sm sm:text-base text-zinc-500 font-light max-w-lg mx-auto">{t(locale, 'landing.how_sub' as any)}</p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8 sm:gap-6 lg:gap-10 relative">
@@ -496,13 +495,13 @@ export default function HomePage() {
                   <span className="text-white text-[10px] sm:text-xs font-bold font-mono">01</span>
                 </div>
               </div>
-              <h3 className="text-white font-medium text-lg sm:text-xl tracking-tight mb-2 sm:mb-3">Escolha o destino</h3>
+              <h3 className="text-white font-medium text-lg sm:text-xl tracking-tight mb-2 sm:mb-3">{t(locale, 'landing.step1_title' as any)}</h3>
               <p className="text-zinc-400 text-sm leading-relaxed font-light max-w-xs">
-                Informe para onde quer ir, as datas e quantas pessoas. Deixe a sua imaginação guiar.
+                {t(locale, 'landing.step1_desc' as any)}
               </p>
               <div className="mt-4 sm:mt-6 inline-flex items-center gap-1.5 text-xs text-indigo-400/70 font-medium">
                 <span className="w-1 h-1 rounded-full bg-indigo-400/50" />
-                <span>30 segundos</span>
+                <span>{t(locale, 'landing.step1_time' as any)}</span>
               </div>
             </motion.div>
 
@@ -522,13 +521,13 @@ export default function HomePage() {
                   <span className="text-zinc-900 text-[10px] sm:text-xs font-bold font-mono">02</span>
                 </div>
               </div>
-              <h3 className="text-white font-medium text-lg sm:text-xl tracking-tight mb-2 sm:mb-3">A IA planeja tudo</h3>
+              <h3 className="text-white font-medium text-lg sm:text-xl tracking-tight mb-2 sm:mb-3">{t(locale, 'landing.step2_title' as any)}</h3>
               <p className="text-zinc-400 text-sm leading-relaxed font-light max-w-xs">
-                Nossa IA gera um itinerário completo: atividades, restaurantes, hospedagem e orçamento.
+                {t(locale, 'landing.step2_desc' as any)}
               </p>
               <div className="mt-4 sm:mt-6 inline-flex items-center gap-1.5 text-xs text-amber-400/70 font-medium">
                 <span className="w-1 h-1 rounded-full bg-amber-400/50" />
-                <span>Menos de 2 minutos</span>
+                <span>{t(locale, 'landing.step2_time' as any)}</span>
               </div>
             </motion.div>
 
@@ -548,13 +547,13 @@ export default function HomePage() {
                   <span className="text-zinc-900 text-[10px] sm:text-xs font-bold font-mono">03</span>
                 </div>
               </div>
-              <h3 className="text-white font-medium text-lg sm:text-xl tracking-tight mb-2 sm:mb-3">Viaje sem preocupações</h3>
+              <h3 className="text-white font-medium text-lg sm:text-xl tracking-tight mb-2 sm:mb-3">{t(locale, 'landing.step3_title' as any)}</h3>
               <p className="text-zinc-400 text-sm leading-relaxed font-light max-w-xs">
-                Acesse seu roteiro offline, acompanhe os gastos e guarde memórias da sua aventura.
+                {t(locale, 'landing.step3_desc' as any)}
               </p>
               <div className="mt-4 sm:mt-6 inline-flex items-center gap-1.5 text-xs text-emerald-400/70 font-medium">
                 <span className="w-1 h-1 rounded-full bg-emerald-400/50" />
-                <span>Disponível no celular</span>
+                <span>{t(locale, 'landing.step3_time' as any)}</span>
               </div>
             </motion.div>
           </div>
@@ -569,7 +568,7 @@ export default function HomePage() {
             <Link href="/dashboard/ai">
               <button className="group inline-flex items-center gap-2.5 sm:gap-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/30 text-white text-sm font-medium px-6 py-3.5 sm:px-8 sm:py-4 rounded-full transition-all duration-300">
                 <Sparkles className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
-                <span>Ver IA gerando um roteiro</span>
+                <span>{t(locale, 'landing.how_cta' as any)}</span>
                 <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
               </button>
             </Link>
@@ -595,10 +594,10 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border mb-4 sm:mb-6 shadow-sm">
               <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">04</span>
               <span className="w-px h-3 bg-border" />
-              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Destinos</span>
+              <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">{t(locale, 'landing.dest_title' as any)}</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-medium text-foreground tracking-tight mb-3 sm:mb-4">Descubra o mundo.</h2>
-            <p className="text-sm sm:text-base text-muted-foreground font-light max-w-lg">Destinos curados com fotos reais e experiências únicas.</p>
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-medium text-foreground tracking-tight mb-3 sm:mb-4">{t(locale, 'landing.dest_heading' as any)}</h2>
+            <p className="text-sm sm:text-base text-muted-foreground font-light max-w-lg">{t(locale, 'landing.dest_sub' as any)}</p>
           </motion.div>
 
           <motion.div
@@ -614,7 +613,7 @@ export default function HomePage() {
                 <span className="text-[10px] sm:text-xs font-medium text-white/80 mb-1 sm:mb-2 uppercase tracking-wider">Grécia</span>
                 <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-white tracking-tight">Santorini</h3>
                 <div className="h-0 overflow-hidden group-hover:h-10 sm:group-hover:h-12 transition-all duration-300">
-                  <p className="text-xs sm:text-sm text-white/90 mt-1.5 sm:mt-2 font-light">Vilas privadas com vista para a caldeira.</p>
+                  <p className="text-xs sm:text-sm text-white/90 mt-1.5 sm:mt-2 font-light">{t(locale, 'landing.dest_santorini_desc' as any)}</p>
                 </div>
               </div>
             </div>
@@ -623,7 +622,7 @@ export default function HomePage() {
               <img alt="Kyoto" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=800" />
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors p-3.5 sm:p-5 md:p-6 flex flex-col justify-end">
                 <span className="text-[10px] sm:text-xs font-medium text-white/80 mb-0.5 sm:mb-1 uppercase tracking-wider">Japão</span>
-                <h3 className="text-sm sm:text-base md:text-lg font-medium text-white tracking-tight">Outono em Kyoto</h3>
+                <h3 className="text-sm sm:text-base md:text-lg font-medium text-white tracking-tight">{t(locale, 'landing.dest_kyoto' as any)}</h3>
               </div>
             </div>
             {/* Small Card 2 */}
@@ -639,7 +638,7 @@ export default function HomePage() {
               <img alt="Maldivas" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&q=80&w=1200" />
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors p-4 sm:p-6 md:p-8 flex flex-col justify-end">
                 <span className="text-[10px] sm:text-xs font-medium text-white/80 mb-1 sm:mb-2 uppercase tracking-wider">Maldivas</span>
-                <h3 className="text-base sm:text-lg md:text-xl font-medium text-white tracking-tight">Paraíso no Oceano</h3>
+                <h3 className="text-base sm:text-lg md:text-xl font-medium text-white tracking-tight">{t(locale, 'landing.dest_maldives_title' as any)}</h3>
               </div>
             </div>
           </motion.div>
@@ -672,11 +671,11 @@ export default function HomePage() {
           >
             <div className="space-y-3">
               <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-medium text-white tracking-tight leading-[0.95]">
-                Sua próxima viagem<br />
-                <span className="text-gradient-accent">começa aqui.</span>
+                {t(locale, 'landing.cta_heading_1' as any)}<br />
+                <span className="text-gradient-accent">{t(locale, 'landing.cta_heading_2' as any)}</span>
               </h2>
               <p className="text-sm sm:text-base md:text-lg text-zinc-400 md:text-xl font-light max-w-xl mx-auto leading-relaxed">
-                Planeie, organize e viva cada aventura com mais intenção. Grátis para sempre.
+                {t(locale, 'landing.cta_desc' as any)}
               </p>
             </div>
 
@@ -690,7 +689,7 @@ export default function HomePage() {
                       <span className="absolute inset-0 overflow-hidden rounded-full">
                         <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                       </span>
-                      <span className="relative z-10 text-sm sm:text-base font-medium tracking-wide text-white">Começar grátis</span>
+                      <span className="relative z-10 text-sm sm:text-base font-medium tracking-wide text-white">{t(locale, 'landing.cta_start' as any)}</span>
                       <span className="relative z-10 ml-2.5 sm:ml-3 flex items-center text-indigo-300 transition duration-200 group-hover:translate-x-1 group-hover:text-white">
                         <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                       </span>
@@ -701,7 +700,7 @@ export default function HomePage() {
               <Link href="/dashboard/ai">
                 <button className="px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-sm font-medium text-zinc-400 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300 flex items-center gap-2 group">
                   <Sparkles className="w-4 h-4 text-indigo-400" />
-                  Ver demo da IA
+                  {t(locale, 'landing.cta_demo' as any)}
                   <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
                 </button>
               </Link>
@@ -735,23 +734,23 @@ export default function HomePage() {
                 <span className="text-lg font-bold tracking-tight text-white">TRPY</span>
               </Link>
               <p className="text-sm text-zinc-500 leading-relaxed max-w-xs font-light">
-                O super-app de viagens que combina planejamento inteligente, IA generativa e controle financeiro em um só lugar.
+                {t(locale, 'landing.footer_brand' as any)}
               </p>
             </div>
 
             {/* Produto */}
             <div>
-              <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-5">Produto</h5>
+              <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-5">{t(locale, 'landing.footer_product' as any)}</h5>
               <ul className="space-y-3">
                 {[
-                  { label: 'Dashboard', href: '/dashboard' },
-                  { label: 'Planejar com IA', href: '/dashboard/ai' },
-                  { label: 'Minhas viagens', href: '/dashboard/trips' },
-                  { label: 'Orçamento', href: '/dashboard/budget' },
+                  { labelKey: 'Dashboard', href: '/dashboard', isStatic: true },
+                  { labelKey: 'landing.footer_plan_ai', href: '/dashboard/ai' },
+                  { labelKey: 'landing.footer_my_trips', href: '/dashboard/trips' },
+                  { labelKey: 'landing.footer_budget', href: '/dashboard/budget' },
                 ].map((l) => (
-                  <li key={l.label}>
+                  <li key={l.labelKey}>
                     <Link href={l.href} className="text-sm text-zinc-500 hover:text-white transition-colors duration-200">
-                      {l.label}
+                      {l.isStatic ? l.labelKey : t(locale, l.labelKey as any)}
                     </Link>
                   </li>
                 ))}
@@ -760,16 +759,16 @@ export default function HomePage() {
 
             {/* Recursos */}
             <div>
-              <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-5">Recursos</h5>
+              <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-5">{t(locale, 'landing.footer_resources' as any)}</h5>
               <ul className="space-y-3">
                 {[
-                  { label: 'Favoritos', href: '/dashboard/favorites' },
-                  { label: 'Destinos', href: '/dashboard' },
-                  { label: 'Configurações', href: '/dashboard/settings' },
+                  { labelKey: 'landing.footer_favorites', href: '/dashboard/favorites' },
+                  { labelKey: 'landing.footer_destinations', href: '/dashboard' },
+                  { labelKey: 'landing.footer_settings', href: '/dashboard/settings' },
                 ].map((l) => (
-                  <li key={l.label}>
+                  <li key={l.labelKey}>
                     <Link href={l.href} className="text-sm text-zinc-500 hover:text-white transition-colors duration-200">
-                      {l.label}
+                      {t(locale, l.labelKey as any)}
                     </Link>
                   </li>
                 ))}
@@ -778,16 +777,16 @@ export default function HomePage() {
 
             {/* Legal */}
             <div>
-              <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-5">Legal</h5>
+              <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-5">{t(locale, 'landing.footer_legal' as any)}</h5>
               <ul className="space-y-3">
                 {[
-                  { label: 'Privacidade', href: '#' },
-                  { label: 'Termos de uso', href: '#' },
-                  { label: 'Cookies', href: '#' },
+                  { labelKey: 'landing.footer_privacy', href: '#' },
+                  { labelKey: 'landing.footer_terms', href: '#' },
+                  { labelKey: 'landing.footer_cookies', href: '#' },
                 ].map((l) => (
-                  <li key={l.label}>
+                  <li key={l.labelKey}>
                     <Link href={l.href} className="text-sm text-zinc-500 hover:text-white transition-colors duration-200">
-                      {l.label}
+                      {t(locale, l.labelKey as any)}
                     </Link>
                   </li>
                 ))}
@@ -798,12 +797,12 @@ export default function HomePage() {
           {/* Bottom bar */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/[0.06]">
             <p className="text-xs text-zinc-600 order-2 md:order-1">
-              © {new Date().getFullYear()} TRPY. Todos os direitos reservados.
+              {t(locale, 'landing.footer_rights' as any).replace('{year}', String(new Date().getFullYear()))}
             </p>
             <div className="flex items-center gap-1.5 order-1 md:order-2">
-              <span className="text-xs text-zinc-600">Feito com</span>
+              <span className="text-xs text-zinc-600">{t(locale, 'landing.footer_made' as any)}</span>
               <span className="text-xs text-indigo-500/70">✦</span>
-              <span className="text-xs text-zinc-600">para viajantes do mundo todo</span>
+              <span className="text-xs text-zinc-600">{t(locale, 'landing.footer_for' as any)}</span>
             </div>
           </div>
         </footer>

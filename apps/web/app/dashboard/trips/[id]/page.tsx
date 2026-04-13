@@ -290,7 +290,7 @@ function StickyTabs({
   onChange: (tab: TabId) => void;
   counts: Partial<Record<TabId, number>>;
   availableTabs: Array<{ id: TabId; labelKey: string }>;
-  locale: string;
+  locale: any;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -514,7 +514,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
   const tripDays = Math.max(1, differenceInDays(new Date(trip.endDate), new Date(trip.startDate)));
 
   // Compute visible tabs — hide "Mapa" if no coordinates exist
-  const visibleTabs: Array<{ id: TabId; label: string }> = hasCoords
+  const visibleTabs: Array<{ id: TabId; labelKey: string }> = hasCoords
     ? Array.from(TABS)
     : Array.from(TABS).filter((t) => t.id !== 'map');
 

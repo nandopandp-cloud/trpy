@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search } from 'lucide-react';
 import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
 import { cn } from '@/lib/utils';
-import { useLocale, t } from '@/lib/i18n';
+import { useLocale, t, type Locale } from '@/lib/i18n';
 
 const ALL_CATEGORIES = [
   { labelKey: 'dest_cat.beaches', emoji: '🏖️', gradient: 'from-sky-400 to-cyan-500', descKey: 'dest_cat.beaches_desc', query: 'tropical beach ocean waves' },
@@ -42,7 +42,7 @@ interface CatItem {
   query: string;
 }
 
-function CategoryCard({ cat, locale }: { cat: CatItem; locale: string }) {
+function CategoryCard({ cat, locale }: { cat: CatItem; locale: Locale }) {
   const router = useRouter();
   const photo = useDestinationPhoto(cat.query);
 
