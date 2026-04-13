@@ -8,6 +8,7 @@ import {
   Compass, Shield, Star as StarIcon,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { useLocale, t } from '@/lib/i18n';
 
 const stagger = {
   container: { hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } } },
@@ -20,22 +21,22 @@ const stagger = {
 const FEATURES = [
   {
     icon: Compass,
-    label: 'Itinerário inteligente',
-    desc: 'IA gera roteiros personalizados para o seu estilo de viagem.',
+    labelKey: 'landing.feat_itinerary',
+    descKey: 'landing.feat_itinerary_desc',
     color: 'text-indigo-400',
     bgColor: 'bg-indigo-500/10',
   },
   {
     icon: Shield,
-    label: 'Controle financeiro',
-    desc: 'Acompanhe gastos por categoria com gráficos em tempo real.',
+    labelKey: 'landing.feat_budget',
+    descKey: 'landing.feat_budget_desc',
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/10',
   },
   {
     icon: Sparkles,
-    label: 'IA generativa',
-    desc: 'Descreva o destino dos sonhos e a IA planeja tudo para você.',
+    labelKey: 'landing.feat_ai',
+    descKey: 'landing.feat_ai_desc',
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/10',
   },
@@ -44,29 +45,29 @@ const FEATURES = [
 const BENEFITS = [
   {
     icon: Users,
-    label: 'Planejamento colaborativo',
-    desc: 'Convide amigos e família para planejar juntos. Todos editam o roteiro em tempo real.',
+    labelKey: 'landing.feat_collab',
+    descKey: 'landing.feat_collab_desc',
     color: 'text-indigo-500',
     bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
   },
   {
     icon: MapPin,
-    label: 'Mapas interativos',
-    desc: 'Visualize todos os pontos do seu roteiro no mapa. Calcule distâncias automaticamente.',
+    labelKey: 'landing.feat_maps',
+    descKey: 'landing.feat_maps_desc',
     color: 'text-amber-500',
     bgColor: 'bg-amber-50 dark:bg-amber-500/10',
   },
   {
     icon: Shield,
-    label: 'Dados seguros',
-    desc: 'Seus documentos e informações de viagem protegidos com criptografia de ponta a ponta.',
+    labelKey: 'landing.feat_security',
+    descKey: 'landing.feat_security_desc',
     color: 'text-emerald-500',
     bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
   },
   {
     icon: StarIcon,
-    label: 'Memórias organizadas',
-    desc: 'Salve fotos, anotações e lembranças de cada viagem em um único lugar.',
+    labelKey: 'landing.feat_memories',
+    descKey: 'landing.feat_memories_desc',
     color: 'text-purple-500',
     bgColor: 'bg-purple-50 dark:bg-purple-500/10',
   },
@@ -93,6 +94,7 @@ const MARQUEE_ROW2 = [
 ];
 
 export default function HomePage() {
+  const [locale] = useLocale();
   const flashlightRef = useRef<(HTMLDivElement | null)[]>([]);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -154,8 +156,8 @@ export default function HomePage() {
             <ThemeToggle />
             <Link href="/login">
               <button className="group bg-foreground text-background text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:opacity-90 transition-all shadow-sm hover:shadow-md flex items-center gap-2 relative overflow-hidden">
-                <span className="relative z-10 hidden sm:inline">Entrar</span>
-                <span className="relative z-10 sm:hidden text-xs">Entrar</span>
+                <span className="relative z-10 hidden sm:inline">{t(locale, 'landing.nav_login' as any)}</span>
+                <span className="relative z-10 sm:hidden text-xs">{t(locale, 'landing.nav_login' as any)}</span>
                 <ArrowRight className="w-3.5 sm:w-4 h-3.5 sm:h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                 <span className="absolute inset-0 overflow-hidden rounded-full">
                   <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
@@ -196,17 +198,16 @@ export default function HomePage() {
               variants={stagger.item}
               className="text-[2.25rem] leading-[0.93] sm:text-5xl md:text-7xl lg:text-8xl font-medium text-white tracking-tight max-w-4xl mx-auto"
             >
-              Viaje com
+              {t(locale, 'landing.hero_title_1' as any)}
               <br />
-              <span className="text-gradient-accent">Propósito.</span>
+              <span className="text-gradient-accent">{t(locale, 'landing.hero_title_2' as any)}</span>
             </motion.h1>
 
             <motion.p
               variants={stagger.item}
               className="text-sm sm:text-base md:text-lg text-white/70 max-w-xl mx-auto font-light leading-relaxed"
             >
-              Do itinerário ao orçamento, tudo em um só app.
-              <br className="hidden md:inline" /> Deixe a IA planejar enquanto você sonha com o próximo destino.
+              {t(locale, 'landing.hero_desc' as any)}
             </motion.p>
 
             <motion.div variants={stagger.item} className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
@@ -219,7 +220,7 @@ export default function HomePage() {
                       <span className="absolute inset-0 overflow-hidden rounded-full">
                         <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                       </span>
-                      <span className="relative z-10 text-sm sm:text-base font-medium tracking-wide text-white">Começar grátis</span>
+                      <span className="relative z-10 text-sm sm:text-base font-medium tracking-wide text-white">{t(locale, 'landing.cta_start' as any)}</span>
                       <span className="relative z-10 ml-2.5 sm:ml-3 flex items-center text-indigo-300 transition duration-200 group-hover:translate-x-1 group-hover:text-white">
                         <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                       </span>
@@ -231,7 +232,7 @@ export default function HomePage() {
               <Link href="/dashboard/ai">
                 <button className="px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-sm font-medium text-white border border-white/20 bg-white/10 hover:bg-white/20 transition-all hover:shadow-lg flex items-center gap-2 group backdrop-blur-sm">
                   <Sparkles className="w-4 h-4 text-indigo-300" />
-                  Ver IA em ação
+                  {t(locale, 'landing.cta_ai' as any)}
                   <ArrowRight className="w-4 h-4 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
                 </button>
               </Link>
@@ -252,10 +253,10 @@ export default function HomePage() {
                 {/* Destination */}
                 <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
                   <div className="px-3.5 py-3 sm:px-4 sm:py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">Destino</p>
+                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">{t(locale, 'landing.search_dest' as any)}</p>
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-white/70 shrink-0" />
-                      <span className="text-sm font-medium text-white truncate">Para onde vamos?</span>
+                      <span className="text-sm font-medium text-white truncate">{t(locale, 'landing.search_where' as any)}</span>
                     </div>
                   </div>
                 </Link>
@@ -265,10 +266,10 @@ export default function HomePage() {
                 {/* Date */}
                 <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
                   <div className="px-3.5 py-3 sm:px-4 sm:py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">Quando</p>
+                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">{t(locale, 'landing.search_when' as any)}</p>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-white/70 shrink-0" />
-                      <span className="text-sm font-medium text-white/70 truncate">Datas flexíveis</span>
+                      <span className="text-sm font-medium text-white/70 truncate">{t(locale, 'landing.search_dates' as any)}</span>
                     </div>
                   </div>
                 </Link>
@@ -278,10 +279,10 @@ export default function HomePage() {
                 {/* Travelers */}
                 <Link href="/dashboard/trips/new" className="flex-1 min-w-0">
                   <div className="px-3.5 py-3 sm:px-4 sm:py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">Viajantes</p>
+                    <p className="text-[10px] font-semibold text-white/50 mb-1 tracking-widest uppercase">{t(locale, 'landing.search_travelers' as any)}</p>
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-white/70 shrink-0" />
-                      <span className="text-sm font-medium text-white truncate">2 pessoas</span>
+                      <span className="text-sm font-medium text-white truncate">{t(locale, 'landing.search_travelers_val' as any)}</span>
                     </div>
                   </div>
                 </Link>
@@ -291,7 +292,7 @@ export default function HomePage() {
                   <Link href="/dashboard/trips/new" className="block">
                     <button className="w-full sm:w-auto h-full sm:min-h-[52px] px-5 py-3 sm:px-5 sm:py-0 bg-white text-zinc-900 rounded-xl font-medium text-sm hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 group relative overflow-hidden">
                       <Search className="w-4 h-4" />
-                      <span>Buscar</span>
+                      <span>{t(locale, 'landing.search_btn' as any)}</span>
                       <span className="absolute inset-0 overflow-hidden rounded-xl">
                         <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                       </span>
@@ -354,13 +355,12 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-4 sm:mb-6">
               <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">01</span>
               <span className="w-px h-3 bg-white/10" />
-              <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">Funcionalidades</span>
+              <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">{t(locale, 'landing.features_title' as any)}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-medium text-white tracking-tight mb-3 sm:mb-4">
-              Tudo que você precisa,{' '}
-              <span className="text-gradient-accent">num só lugar.</span>
+              {t(locale, 'landing.features_desc' as any)}
             </h2>
-            <p className="text-sm sm:text-base text-zinc-500 font-light max-w-lg">Ferramentas interativas com animações, efeitos e transições para a melhor experiência de planejamento.</p>
+            <p className="text-sm sm:text-base text-zinc-500 font-light max-w-lg">{t(locale, 'landing.features_sub' as any)}</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
