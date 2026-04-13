@@ -15,15 +15,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
 const CATEGORIES = [
-  { value: 'ACCOMMODATION', label: 'Hospedagem', icon: Home,         bg: 'bg-blue-500/15 border-blue-500/30',    active: 'bg-blue-500 border-blue-500' },
-  { value: 'FOOD',          label: 'Alimentação', icon: Utensils,    bg: 'bg-amber-500/15 border-amber-500/30',  active: 'bg-amber-500 border-amber-500' },
-  { value: 'TRANSPORT',     label: 'Transporte',  icon: Bus,         bg: 'bg-violet-500/15 border-violet-500/30',active: 'bg-violet-500 border-violet-500' },
-  { value: 'ACTIVITIES',    label: 'Atividades',  icon: Zap,         bg: 'bg-emerald-500/15 border-emerald-500/30', active: 'bg-emerald-500 border-emerald-500' },
-  { value: 'SHOPPING',      label: 'Compras',     icon: ShoppingBag, bg: 'bg-rose-500/15 border-rose-500/30',    active: 'bg-rose-500 border-rose-500' },
-  { value: 'HEALTH',        label: 'Saúde',       icon: Heart,       bg: 'bg-red-500/15 border-red-500/30',      active: 'bg-red-500 border-red-500' },
-  { value: 'OTHER',         label: 'Outros',      icon: MoreHorizontal, bg: 'bg-slate-500/15 border-slate-500/30', active: 'bg-slate-500 border-slate-500' },
+  { value: 'ACCOMMODATION', labelKey: 'category.accommodation', icon: Home,         bg: 'bg-blue-500/15 border-blue-500/30',    active: 'bg-blue-500 border-blue-500' },
+  { value: 'FOOD',          labelKey: 'category.food',          icon: Utensils,    bg: 'bg-amber-500/15 border-amber-500/30',  active: 'bg-amber-500 border-amber-500' },
+  { value: 'TRANSPORT',     labelKey: 'category.transport',     icon: Bus,         bg: 'bg-violet-500/15 border-violet-500/30',active: 'bg-violet-500 border-violet-500' },
+  { value: 'ACTIVITIES',    labelKey: 'category.activities',    icon: Zap,         bg: 'bg-emerald-500/15 border-emerald-500/30', active: 'bg-emerald-500 border-emerald-500' },
+  { value: 'SHOPPING',      labelKey: 'category.shopping',      icon: ShoppingBag, bg: 'bg-rose-500/15 border-rose-500/30',    active: 'bg-rose-500 border-rose-500' },
+  { value: 'HEALTH',        labelKey: 'category.health',        icon: Heart,       bg: 'bg-red-500/15 border-red-500/30',      active: 'bg-red-500 border-red-500' },
+  { value: 'OTHER',         labelKey: 'category.other',         icon: MoreHorizontal, bg: 'bg-slate-500/15 border-slate-500/30', active: 'bg-slate-500 border-slate-500' },
 ] as const;
 
 const schema = z.object({
@@ -44,6 +45,7 @@ interface ExpenseFormProps {
 
 export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('OTHER');
+  const [locale] = useLocale();
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, setError, formState: { errors, isSubmitting } } = useForm<FormValues>({
@@ -93,11 +95,11 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
       if (!json.success) throw new Error(json.error);
 
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
-      toast.success('Despesa adicionada!', { description: `${validated.title} — R$ ${validated.amount}` });
+      toast.success(t(locale, 'expense.success'), { description: `${validated.title} — R$ ${validated.amount}` });
       onSuccess?.();
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao adicionar despesa';
+      const message = error instanceof Error ? error.message : t(locale, 'expense.error');
       toast.error(message);
     }
   }
@@ -124,7 +126,7 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border shrink-0">
-          <h3 className="font-bold text-lg">Nova despesa</h3>
+          <h3 className="font-bold text-lg">{t(locale, 'expense.new')}</h3>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all"
@@ -136,7 +138,7 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
         <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1 p-6 space-y-5">
           {/* Category picker — simple CSS, no layoutId */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Categoria</label>
+            <label className="text-sm font-medium text-foreground">{t(locale, 'expense.category')}</label>
             <div className="grid grid-cols-4 gap-2">
               {CATEGORIES.map((cat) => {
                 const Icon = cat.icon;
@@ -153,7 +155,7 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
                   >
                     <Icon className="w-4 h-4" />
                     <span className="text-[9px] font-medium leading-tight text-center">
-                      {cat.label}
+                      {t(locale, cat.labelKey)}
                     </span>
                     {active && (
                       <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow">
@@ -168,15 +170,15 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
 
           {/* Title */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Descrição</label>
-            <Input placeholder="Ex: Jantar no restaurante" {...register('title')} />
+            <label className="text-sm font-medium">{t(locale, 'expense.description')}</label>
+            <Input placeholder={t(locale, 'expense.description_placeholder')} {...register('title')} />
             {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
           </div>
 
           {/* Amount + Date */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Valor (R$)</label>
+              <label className="text-sm font-medium">{t(locale, 'expense.amount')}</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
                 <Input
@@ -191,7 +193,7 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
               {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Data</label>
+              <label className="text-sm font-medium">{t(locale, 'expense.date')}</label>
               <Input type="date" {...register('date')} />
               {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
             </div>
@@ -200,12 +202,12 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
           {/* Notes */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">
-              Notas <span className="text-muted-foreground font-normal">(opcional)</span>
+              {t(locale, 'expense.notes')} <span className="text-muted-foreground font-normal">({t(locale, 'common.optional')})</span>
             </label>
             <textarea
               {...register('notes')}
               rows={2}
-              placeholder="Alguma observação..."
+              placeholder={t(locale, 'expense.notes_placeholder')}
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             />
           </div>
@@ -217,9 +219,9 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
             className="w-full gap-2 h-11 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md shadow-primary/20"
           >
             {isSubmitting ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
+              <><Loader2 className="w-4 h-4 animate-spin" /> {t(locale, 'common.saving')}</>
             ) : (
-              <><Check className="w-4 h-4" /> Adicionar despesa</>
+              <><Check className="w-4 h-4" /> {t(locale, 'expense.submit')}</>
             )}
           </Button>
         </form>

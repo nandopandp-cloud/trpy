@@ -10,9 +10,10 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useLocale, t } from '@/lib/i18n';
 
 const schema = z.object({
-  date: z.string().min(1, 'Data obrigatória'),
+  date: z.string().min(1),
   title: z.string().max(100).optional(),
   notes: z.string().max(500).optional(),
 });
@@ -27,7 +28,7 @@ interface AddDayFormProps {
 
 export function AddDayForm({ tripId, nextDayNumber, onClose }: AddDayFormProps) {
   const queryClient = useQueryClient();
-
+  const [locale] = useLocale();
 
   const {
     register,
@@ -54,10 +55,10 @@ export function AddDayForm({ tripId, nextDayNumber, onClose }: AddDayFormProps) 
       }),
     });
     const json = await res.json();
-    if (!json.success) throw new Error(json.error ?? 'Erro ao adicionar dia');
+    if (!json.success) throw new Error(json.error ?? t(locale, 'itinerary.day_error'));
 
     queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
-    toast.success(`Dia ${nextDayNumber} adicionado!`);
+    toast.success(t(locale, 'itinerary.day_added').replace('{number}', String(nextDayNumber)));
     onClose();
   }
 
@@ -83,8 +84,8 @@ export function AddDayForm({ tripId, nextDayNumber, onClose }: AddDayFormProps) 
               <CalendarDays className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <p className="font-bold text-foreground text-sm">Adicionar dia</p>
-              <p className="text-xs text-muted-foreground">Dia {nextDayNumber} do itinerário</p>
+              <p className="font-bold text-foreground text-sm">{t(locale, 'itinerary.add_day')}</p>
+              <p className="text-xs text-muted-foreground">{t(locale, 'itinerary.day_of').replace('{number}', String(nextDayNumber))}</p>
             </div>
           </div>
           <motion.button
@@ -101,7 +102,7 @@ export function AddDayForm({ tripId, nextDayNumber, onClose }: AddDayFormProps) 
           {/* Date */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">
-              Data <span className="text-destructive">*</span>
+              {t(locale, 'itinerary.date')} <span className="text-destructive">*</span>
             </label>
             <Input
               type="date"
@@ -116,12 +117,12 @@ export function AddDayForm({ tripId, nextDayNumber, onClose }: AddDayFormProps) 
           {/* Title */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">
-              Título do dia{' '}
-              <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
+              {t(locale, 'itinerary.day_title')}{' '}
+              <span className="text-muted-foreground font-normal text-xs">({t(locale, 'common.optional')})</span>
             </label>
             <Input
               {...register('title')}
-              placeholder="Ex: Chegada em Paris"
+              placeholder={t(locale, 'itinerary.day_title_placeholder')}
               className="h-10"
             />
           </div>
@@ -129,13 +130,13 @@ export function AddDayForm({ tripId, nextDayNumber, onClose }: AddDayFormProps) 
           {/* Notes */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">
-              Notas{' '}
-              <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
+              {t(locale, 'itinerary.notes')}{' '}
+              <span className="text-muted-foreground font-normal text-xs">({t(locale, 'common.optional')})</span>
             </label>
             <textarea
               {...register('notes')}
               rows={2}
-              placeholder="Observações gerais do dia..."
+              placeholder={t(locale, 'itinerary.notes_placeholder')}
               className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-all resize-none"
             />
           </div>
@@ -143,13 +144,13 @@ export function AddDayForm({ tripId, nextDayNumber, onClose }: AddDayFormProps) 
           {/* Footer */}
           <div className="flex gap-3 pt-1">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 h-11">
-              Cancelar
+              {t(locale, 'common.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting} className="flex-1 h-11 font-semibold gap-2">
               {isSubmitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Salvando…</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> {t(locale, 'common.saving')}</>
               ) : (
-                <><Check className="w-4 h-4" /> Adicionar dia</>
+                <><Check className="w-4 h-4" /> {t(locale, 'itinerary.add_day')}</>
               )}
             </Button>
           </div>

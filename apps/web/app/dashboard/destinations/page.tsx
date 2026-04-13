@@ -6,24 +6,25 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search } from 'lucide-react';
 import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
 const ALL_CATEGORIES = [
-  { label: 'Praias', emoji: '🏖️', gradient: 'from-sky-400 to-cyan-500', desc: 'Mar, sol e areia branca', query: 'tropical beach ocean waves' },
-  { label: 'Montanhas', emoji: '⛰️', gradient: 'from-emerald-500 to-green-700', desc: 'Trilhas e altitudes', query: 'mountain peaks landscape snow' },
-  { label: 'Cidades', emoji: '🏙️', gradient: 'from-violet-500 to-indigo-700', desc: 'Arte e arquitetura urbana', query: 'city architecture skyline urban' },
-  { label: 'Aventura', emoji: '🪂', gradient: 'from-amber-400 to-orange-600', desc: 'Adrenalina pura', query: 'extreme adventure sports nature' },
-  { label: 'Gastronomia', emoji: '🍣', gradient: 'from-rose-500 to-red-600', desc: 'Culinária do mundo', query: 'gourmet food cuisine restaurant' },
-  { label: 'Cultura', emoji: '🏛️', gradient: 'from-purple-500 to-violet-700', desc: 'História e tradição', query: 'historical temple ruins architecture' },
-  { label: 'Relax', emoji: '🧖', gradient: 'from-teal-400 to-cyan-600', desc: 'Spa e bem-estar', query: 'spa pool resort infinity wellness' },
-  { label: 'Família', emoji: '👨‍👩‍👧', gradient: 'from-pink-400 to-fuchsia-600', desc: 'Para toda a família', query: 'family vacation kids park fun' },
-  { label: 'Natureza', emoji: '🌿', gradient: 'from-green-500 to-emerald-700', desc: 'Ecoturismo e fauna', query: 'rainforest wildlife nature jungle' },
-  { label: 'Inverno', emoji: '❄️', gradient: 'from-blue-400 to-sky-600', desc: 'Neve e esqui', query: 'snow winter ski mountain landscape' },
-  { label: 'Cruzeiros', emoji: '🛳️', gradient: 'from-blue-600 to-indigo-700', desc: 'Viagens de navio', query: 'cruise ship ocean sea travel' },
-  { label: 'Safari', emoji: '🦁', gradient: 'from-yellow-500 to-amber-700', desc: 'África e vida selvagem', query: 'safari africa wildlife savanna lion' },
-  { label: 'Festas', emoji: '🎉', gradient: 'from-fuchsia-500 to-pink-600', desc: 'Carnaval e festivais', query: 'festival carnival celebration fireworks' },
-  { label: 'Compras', emoji: '🛍️', gradient: 'from-orange-400 to-red-500', desc: 'Centros comerciais', query: 'shopping mall market street fashion' },
-  { label: 'Esportes', emoji: '🤿', gradient: 'from-cyan-500 to-blue-600', desc: 'Mergulho e surf', query: 'surf diving underwater ocean sport' },
-  { label: 'Lua de mel', emoji: '💑', gradient: 'from-rose-400 to-pink-600', desc: 'Destinos românticos', query: 'romantic sunset couple beach travel' },
+  { labelKey: 'dest_cat.beaches', emoji: '🏖️', gradient: 'from-sky-400 to-cyan-500', descKey: 'dest_cat.beaches_desc', query: 'tropical beach ocean waves' },
+  { labelKey: 'dest_cat.mountains', emoji: '⛰️', gradient: 'from-emerald-500 to-green-700', descKey: 'dest_cat.mountains_desc', query: 'mountain peaks landscape snow' },
+  { labelKey: 'dest_cat.cities', emoji: '🏙️', gradient: 'from-violet-500 to-indigo-700', descKey: 'dest_cat.cities_desc', query: 'city architecture skyline urban' },
+  { labelKey: 'dest_cat.adventure', emoji: '🪂', gradient: 'from-amber-400 to-orange-600', descKey: 'dest_cat.adventure_desc', query: 'extreme adventure sports nature' },
+  { labelKey: 'dest_cat.gastronomy', emoji: '🍣', gradient: 'from-rose-500 to-red-600', descKey: 'dest_cat.gastronomy_desc', query: 'gourmet food cuisine restaurant' },
+  { labelKey: 'dest_cat.culture', emoji: '🏛️', gradient: 'from-purple-500 to-violet-700', descKey: 'dest_cat.culture_desc', query: 'historical temple ruins architecture' },
+  { labelKey: 'dest_cat.relax', emoji: '🧖', gradient: 'from-teal-400 to-cyan-600', descKey: 'dest_cat.relax_desc', query: 'spa pool resort infinity wellness' },
+  { labelKey: 'dest_cat.family', emoji: '👨‍👩‍👧', gradient: 'from-pink-400 to-fuchsia-600', descKey: 'dest_cat.family_desc', query: 'family vacation kids park fun' },
+  { labelKey: 'dest_cat.nature', emoji: '🌿', gradient: 'from-green-500 to-emerald-700', descKey: 'dest_cat.nature_desc', query: 'rainforest wildlife nature jungle' },
+  { labelKey: 'dest_cat.winter', emoji: '❄️', gradient: 'from-blue-400 to-sky-600', descKey: 'dest_cat.winter_desc', query: 'snow winter ski mountain landscape' },
+  { labelKey: 'dest_cat.cruises', emoji: '🛳️', gradient: 'from-blue-600 to-indigo-700', descKey: 'dest_cat.cruises_desc', query: 'cruise ship ocean sea travel' },
+  { labelKey: 'dest_cat.safari', emoji: '🦁', gradient: 'from-yellow-500 to-amber-700', descKey: 'dest_cat.safari_desc', query: 'safari africa wildlife savanna lion' },
+  { labelKey: 'dest_cat.parties', emoji: '🎉', gradient: 'from-fuchsia-500 to-pink-600', descKey: 'dest_cat.parties_desc', query: 'festival carnival celebration fireworks' },
+  { labelKey: 'dest_cat.shopping', emoji: '🛍️', gradient: 'from-orange-400 to-red-500', descKey: 'dest_cat.shopping_desc', query: 'shopping mall market street fashion' },
+  { labelKey: 'dest_cat.sports', emoji: '🤿', gradient: 'from-cyan-500 to-blue-600', descKey: 'dest_cat.sports_desc', query: 'surf diving underwater ocean sport' },
+  { labelKey: 'dest_cat.honeymoon', emoji: '💑', gradient: 'from-rose-400 to-pink-600', descKey: 'dest_cat.honeymoon_desc', query: 'romantic sunset couple beach travel' },
 ];
 
 const stagger = {
@@ -34,14 +35,14 @@ const stagger = {
 // ─── Each card manages its own photo hook ────────────────────────────────────
 
 interface CatItem {
-  label: string;
+  labelKey: string;
   emoji: string;
   gradient: string;
-  desc: string;
+  descKey: string;
   query: string;
 }
 
-function CategoryCard({ cat }: { cat: CatItem }) {
+function CategoryCard({ cat, locale }: { cat: CatItem; locale: string }) {
   const router = useRouter();
   const photo = useDestinationPhoto(cat.query);
 
@@ -50,7 +51,7 @@ function CategoryCard({ cat }: { cat: CatItem }) {
       variants={stagger.item}
       whileHover={{ scale: 1.03, y: -4 }}
       whileTap={{ scale: 0.96 }}
-      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
+      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(t(locale, cat.labelKey as any).toLowerCase())}`)}
       className="group relative overflow-hidden rounded-2xl text-left cursor-pointer"
     >
       <div className={cn('h-[120px] relative overflow-hidden', !photo && `bg-gradient-to-br ${cat.gradient}`)}>
@@ -58,7 +59,7 @@ function CategoryCard({ cat }: { cat: CatItem }) {
         {photo && (
           <img
             src={photo}
-            alt={cat.label}
+            alt={t(locale, cat.labelKey as any)}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         )}
@@ -72,8 +73,8 @@ function CategoryCard({ cat }: { cat: CatItem }) {
         {/* Text — only when there's a photo (no emoji, cleaner look) */}
         {photo && (
           <div className="absolute bottom-0 left-0 right-0 p-3">
-            <p className="text-sm font-bold text-white leading-tight">{cat.label}</p>
-            <p className="text-[10px] text-white/65 mt-0.5 leading-tight">{cat.desc}</p>
+            <p className="text-sm font-bold text-white leading-tight">{t(locale, cat.labelKey as any)}</p>
+            <p className="text-[10px] text-white/65 mt-0.5 leading-tight">{t(locale, cat.descKey as any)}</p>
           </div>
         )}
         {/* Fallback when no photo: emoji + text */}
@@ -85,8 +86,8 @@ function CategoryCard({ cat }: { cat: CatItem }) {
               {cat.emoji}
             </span>
             <div className="absolute bottom-0 left-0 right-0 p-3">
-              <p className="text-sm font-bold text-white leading-tight">{cat.label}</p>
-              <p className="text-[10px] text-white/65 mt-0.5 leading-tight">{cat.desc}</p>
+              <p className="text-sm font-bold text-white leading-tight">{t(locale, cat.labelKey as any)}</p>
+              <p className="text-[10px] text-white/65 mt-0.5 leading-tight">{t(locale, cat.descKey as any)}</p>
             </div>
           </>
         )}
@@ -99,11 +100,12 @@ function CategoryCard({ cat }: { cat: CatItem }) {
 
 export default function DestinationsPage() {
   const router = useRouter();
+  const [locale] = useLocale();
   const [search, setSearch] = useState('');
 
   const filtered = ALL_CATEGORIES.filter(c =>
-    c.label.toLowerCase().includes(search.toLowerCase()) ||
-    c.desc.toLowerCase().includes(search.toLowerCase())
+    t(locale, c.labelKey as any).toLowerCase().includes(search.toLowerCase()) ||
+    t(locale, c.descKey as any).toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -121,8 +123,8 @@ export default function DestinationsPage() {
           <ArrowLeft className="w-4 h-4 text-foreground" />
         </button>
         <div>
-          <h1 className="text-lg font-bold text-foreground leading-tight">Explorar destinos</h1>
-          <p className="text-xs text-muted-foreground">Escolha uma categoria para descobrir destinos</p>
+          <h1 className="text-lg font-bold text-foreground leading-tight">{t(locale, 'destinations.title' as any)}</h1>
+          <p className="text-xs text-muted-foreground">{t(locale, 'destinations.subtitle' as any)}</p>
         </div>
       </motion.div>
 
@@ -137,7 +139,7 @@ export default function DestinationsPage() {
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar categoria..."
+          placeholder={t(locale, 'destinations.search' as any)}
           className="w-full pl-10 pr-4 py-3 rounded-2xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
         />
       </motion.div>
@@ -150,7 +152,7 @@ export default function DestinationsPage() {
         className="grid grid-cols-2 sm:grid-cols-3 gap-3"
       >
         {filtered.map(cat => (
-          <CategoryCard key={cat.label} cat={cat} />
+          <CategoryCard key={cat.labelKey} cat={cat} locale={locale} />
         ))}
       </motion.div>
 
@@ -161,7 +163,7 @@ export default function DestinationsPage() {
           className="text-center py-16 text-muted-foreground"
         >
           <span className="text-4xl">🔍</span>
-          <p className="mt-3 text-sm">Nenhuma categoria encontrada para "{search}"</p>
+          <p className="mt-3 text-sm">{t(locale, 'destinations.no_results' as any).replace('{search}', search)}</p>
         </motion.div>
       )}
     </div>

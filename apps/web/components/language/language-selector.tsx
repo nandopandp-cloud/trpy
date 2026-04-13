@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale, LOCALES, LOCALE_NAMES } from '@/lib/i18n';
+import { useLocale, t, LOCALES, LOCALE_NAMES } from '@/lib/i18n';
 import {
   Select,
   SelectContent,
@@ -20,8 +20,8 @@ export function LanguageSelector() {
           <Globe className="w-4 h-4 text-muted-foreground" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-foreground">Idioma</p>
-          <p className="text-xs text-muted-foreground">Escolha seu idioma preferido</p>
+          <p className="text-sm font-semibold text-foreground">{t(locale, 'settings.language')}</p>
+          <p className="text-xs text-muted-foreground">{t(locale, 'settings.language_desc')}</p>
         </div>
       </div>
 

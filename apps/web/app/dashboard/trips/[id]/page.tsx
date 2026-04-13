@@ -27,6 +27,7 @@ import { InspirationGallery } from '@/components/trips/inspiration-gallery';
 import { GoogleMapView, type MapMarker } from '@/components/integrations/google/google-map-view';
 import { PlacesRecommendations } from '@/components/integrations/google/places-recommendations';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 import type { ItineraryItem } from '@trpy/database';
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -37,27 +38,27 @@ const STATUS_STYLE: Record<string, string> = {
   COMPLETED: 'bg-slate-500/25 text-slate-300 border border-slate-500/40',
   CANCELLED: 'bg-red-500/25 text-red-300 border border-red-500/40',
 };
-const STATUS_LABEL: Record<string, string> = {
-  PLANNING: 'Planejando', ONGOING: 'Em andamento',
-  COMPLETED: 'Concluída', CANCELLED: 'Cancelada',
+const STATUS_LABEL_KEY: Record<string, string> = {
+  PLANNING: 'status.planning', ONGOING: 'status.ongoing',
+  COMPLETED: 'status.completed', CANCELLED: 'status.cancelled',
 };
 
 const PRESET_GRADIENTS = [
-  { id: 'emerald',  class: 'from-emerald-600 via-teal-600 to-cyan-700',     label: 'Tropical' },
-  { id: 'violet',   class: 'from-violet-700 via-purple-700 to-indigo-800',   label: 'Noturno' },
-  { id: 'rose',     class: 'from-rose-600 via-pink-600 to-fuchsia-700',      label: 'Romance' },
-  { id: 'amber',    class: 'from-amber-600 via-orange-600 to-red-600',       label: 'Deserto' },
-  { id: 'blue',     class: 'from-sky-600 via-blue-700 to-indigo-700',        label: 'Oceano' },
-  { id: 'slate',    class: 'from-slate-600 via-slate-700 to-zinc-800',       label: 'Urbano' },
+  { id: 'emerald',  class: 'from-emerald-600 via-teal-600 to-cyan-700',     labelKey: 'gradient.tropical' },
+  { id: 'violet',   class: 'from-violet-700 via-purple-700 to-indigo-800',   labelKey: 'gradient.night' },
+  { id: 'rose',     class: 'from-rose-600 via-pink-600 to-fuchsia-700',      labelKey: 'gradient.romance' },
+  { id: 'amber',    class: 'from-amber-600 via-orange-600 to-red-600',       labelKey: 'gradient.desert' },
+  { id: 'blue',     class: 'from-sky-600 via-blue-700 to-indigo-700',        labelKey: 'gradient.ocean' },
+  { id: 'slate',    class: 'from-slate-600 via-slate-700 to-zinc-800',       labelKey: 'gradient.urban' },
 ];
 
 const TABS_BASE = [
-  { id: 'itinerary', label: 'Itinerário' },
-  { id: 'budget',    label: 'Despesas' },
-  { id: 'map',       label: 'Mapa' },
-  { id: 'discover',  label: 'Descobrir' },
-  { id: 'videos',    label: 'Vídeos' },
-  { id: 'inspo',     label: 'Inspiração' },
+  { id: 'itinerary', labelKey: 'tab.itinerary' },
+  { id: 'budget',    labelKey: 'tab.budget' },
+  { id: 'map',       labelKey: 'tab.map' },
+  { id: 'discover',  labelKey: 'tab.discover' },
+  { id: 'videos',    labelKey: 'tab.videos' },
+  { id: 'inspo',     labelKey: 'tab.inspo' },
 ] as const;
 
 const TABS = TABS_BASE;
@@ -79,6 +80,7 @@ interface CoverPickerProps {
 }
 
 function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: CoverPickerProps) {
+  const [locale] = useLocale();
   const [tab, setTab] = useState<'upload' | 'url' | 'gradient'>('gradient');
   const [urlInput, setUrlInput] = useState(current ?? '');
   const [selectedGradient, setSelectedGradient] = useState<string | null>(null);
@@ -96,10 +98,10 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       onSaved(coverImage);
-      toast.success('Capa atualizada!');
+      toast.success(t(locale, 'cover.saved' as any));
       onClose();
     } catch {
-      toast.error('Erro ao salvar capa');
+      toast.error(t(locale, 'cover.error' as any));
     } finally {
       setSaving(false);
     }
@@ -138,7 +140,7 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
               <Camera className="w-4 h-4 text-primary" />
             </div>
-            <p className="font-bold text-foreground">Editar capa</p>
+            <p className="font-bold text-foreground">{t(locale, 'cover.edit' as any)}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors">
             <X className="w-4 h-4" />
@@ -148,24 +150,24 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
         {/* Tab strip */}
         <div className="flex border-b border-border">
           {[
-            { id: 'gradient' as const, icon: Palette, label: 'Gradiente' },
-            { id: 'url' as const, icon: ImageIcon, label: 'URL' },
-            { id: 'upload' as const, icon: Upload, label: 'Upload' },
-          ].map((t) => {
-            const Icon = t.icon;
+            { id: 'gradient' as const, icon: Palette, labelKey: 'cover.gradient' },
+            { id: 'url' as const, icon: ImageIcon, labelKey: 'cover.url' },
+            { id: 'upload' as const, icon: Upload, labelKey: 'cover.upload' },
+          ].map((ct) => {
+            const Icon = ct.icon;
             return (
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
+                key={ct.id}
+                onClick={() => setTab(ct.id)}
                 className={cn(
                   'flex-1 flex flex-col items-center gap-1 py-3 text-xs font-semibold transition-colors border-b-2',
-                  tab === t.id
+                  tab === ct.id
                     ? 'text-primary border-primary'
                     : 'text-muted-foreground border-transparent hover:text-foreground'
                 )}
               >
                 <Icon className="w-4 h-4" />
-                {t.label}
+                {t(locale, ct.labelKey as any)}
               </button>
             );
           })}
@@ -175,7 +177,7 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
           {/* Gradient picker */}
           {tab === 'gradient' && (
             <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">Escolha um gradiente predefinido</p>
+              <p className="text-xs text-muted-foreground">{t(locale, 'cover.choose_gradient' as any)}</p>
               <div className="grid grid-cols-3 gap-2">
                 {PRESET_GRADIENTS.map((g) => (
                   <button
@@ -195,7 +197,7 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
                       </div>
                     )}
                     <span className="absolute bottom-2 left-0 right-0 text-center text-[10px] font-semibold text-white/90">
-                      {g.label}
+                      {t(locale, g.labelKey as any)}
                     </span>
                   </button>
                 ))}
@@ -207,7 +209,7 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
                   className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  Aplicar gradiente
+                  {t(locale, 'cover.apply_gradient' as any)}
                 </button>
               )}
             </div>
@@ -216,12 +218,12 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
           {/* URL tab */}
           {tab === 'url' && (
             <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">Cole a URL de uma imagem</p>
+              <p className="text-xs text-muted-foreground">{t(locale, 'cover.paste_url' as any)}</p>
               <input
                 type="url"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="https://exemplo.com/imagem.jpg"
+                placeholder={t(locale, 'cover.url_placeholder' as any)}
                 className="w-full px-4 py-3 rounded-2xl border border-border bg-muted/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
               {urlInput && (
@@ -235,7 +237,7 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
                 className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90 transition-opacity"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                Salvar imagem
+                {t(locale, 'cover.save_image' as any)}
               </button>
             </div>
           )}
@@ -243,7 +245,7 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
           {/* Upload tab */}
           {tab === 'upload' && (
             <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">Envie uma imagem do dispositivo</p>
+              <p className="text-xs text-muted-foreground">{t(locale, 'cover.upload_desc' as any)}</p>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               <button
                 onClick={() => fileRef.current?.click()}
@@ -252,7 +254,7 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
               >
                 <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                 <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                  {saving ? 'Salvando…' : 'Clique para selecionar'}
+                  {saving ? t(locale, 'cover.saving' as any) : t(locale, 'cover.click_select' as any)}
                 </span>
               </button>
             </div>
@@ -266,7 +268,7 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
               className="w-full py-2.5 rounded-2xl text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex items-center justify-center gap-1.5"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Remover capa personalizada
+              {t(locale, 'cover.remove' as any)}
             </button>
           )}
         </div>
@@ -282,11 +284,13 @@ function StickyTabs({
   onChange,
   counts,
   availableTabs,
+  locale,
 }: {
   active: TabId;
   onChange: (tab: TabId) => void;
   counts: Partial<Record<TabId, number>>;
-  availableTabs: Array<{ id: TabId; label: string }>;
+  availableTabs: Array<{ id: TabId; labelKey: string }>;
+  locale: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -309,7 +313,7 @@ function StickyTabs({
                   isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                {tab.label}
+                {t(locale, tab.labelKey as any)}
                 {count != null && count > 0 && (
                   <span className={cn(
                     'text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-tight',
@@ -337,6 +341,7 @@ function StickyTabs({
 // ─── Budget summary strip ─────────────────────────────────────────────────────
 
 function BudgetStrip({ currency, budget, spent }: { currency: string; budget: number; spent: number }) {
+  const [locale] = useLocale();
   const remaining = budget - spent;
   const progress = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
   const isOver = remaining < 0;
@@ -347,14 +352,14 @@ function BudgetStrip({ currency, budget, spent }: { currency: string; budget: nu
         <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center">
           <Wallet className="w-3.5 h-3.5 text-primary" />
         </div>
-        <span className="text-sm font-bold text-foreground">Orçamento</span>
+        <span className="text-sm font-bold text-foreground">{t(locale, 'trip.budget_label' as any)}</span>
         <span className={cn(
           'ml-auto text-xs font-bold px-2 py-0.5 rounded-full',
           isOver ? 'bg-destructive/15 text-destructive' :
           progress >= 80 ? 'bg-amber-500/15 text-amber-500' :
           'bg-emerald-500/15 text-emerald-500'
         )}>
-          {isOver ? 'Estourado' : `${progress.toFixed(0)}%`}
+          {isOver ? t(locale, 'trip.over_budget' as any) : `${progress.toFixed(0)}%`}
         </span>
       </div>
 
@@ -376,13 +381,13 @@ function BudgetStrip({ currency, budget, spent }: { currency: string; budget: nu
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: 'Total', value: budget, color: 'text-foreground' },
-          { label: 'Gasto', value: spent, color: progress >= 90 ? 'text-destructive' : 'text-foreground' },
-          { label: 'Restante', value: Math.abs(remaining), color: isOver ? 'text-destructive' : 'text-emerald-500' },
+          { label: t(locale, 'trip.total' as any), key: 'total', value: budget, color: 'text-foreground' },
+          { label: t(locale, 'trip.spent' as any), key: 'spent', value: spent, color: progress >= 90 ? 'text-destructive' : 'text-foreground' },
+          { label: t(locale, 'trip.remaining' as any), key: 'remaining', value: Math.abs(remaining), color: isOver ? 'text-destructive' : 'text-emerald-500' },
         ].map((stat) => (
           <div key={stat.label} className="bg-muted/50 rounded-2xl px-3 py-2.5 text-center">
             <p className={cn('text-sm font-bold tabular-nums', stat.color)}>
-              {isOver && stat.label === 'Restante' && '-'}
+              {isOver && stat.key === 'remaining' && '-'}
               {stat.value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
             </p>
             <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
@@ -421,6 +426,7 @@ function EmptyTab({ icon, title, desc, cta, onCta }: {
 export default function TripDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [locale] = useLocale();
   const [activeTab, setActiveTab] = useState<TabId>('itinerary');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
@@ -493,10 +499,10 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center space-y-4">
           <div className="text-5xl">🗺️</div>
-          <p className="text-base font-semibold text-foreground">Viagem não encontrada</p>
-          <p className="text-sm text-muted-foreground">Ela pode ter sido removida ou você não tem acesso.</p>
+          <p className="text-base font-semibold text-foreground">{t(locale, 'trip.not_found' as any)}</p>
+          <p className="text-sm text-muted-foreground">{t(locale, 'trip.not_found_desc' as any)}</p>
           <Button variant="outline" onClick={() => router.push('/dashboard/trips')}>
-            Voltar para viagens
+            {t(locale, 'trip.back_to_trips' as any)}
           </Button>
         </div>
       </div>
@@ -555,7 +561,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}
               onClick={() => setShowCoverPicker(true)}
               className="w-9 h-9 rounded-2xl bg-black/30 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/45 transition-colors"
-              title="Editar capa"
+              title={t(locale, 'cover.edit' as any)}
             >
               <Camera className="w-4 h-4" />
             </motion.button>
@@ -613,7 +619,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 md:px-6 md:pb-6">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <span className={cn('inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full mb-2', STATUS_STYLE[trip.status])}>
-              {STATUS_LABEL[trip.status]}
+              {t(locale, (STATUS_LABEL_KEY[trip.status] ?? 'status.planning') as any)}
             </span>
             <h1 className="text-2xl md:text-3xl font-black text-white leading-tight drop-shadow-md">
               {trip.title}
@@ -644,6 +650,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
           budget: trip.expenses.length,
         }}
         availableTabs={visibleTabs}
+        locale={locale}
       />
 
       {/* ── BODY ──────────────────────────────────────────────────────────── */}

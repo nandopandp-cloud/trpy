@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Loader2, Mail, Lock, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { useLocale, t } from '@/lib/i18n';
 
 export default function LoginPage() {
   return (
@@ -20,6 +21,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
   const errorParam = searchParams.get('error');
+  const [locale] = useLocale();
 
   const [emailExpanded, setEmailExpanded] = useState(false);
   const [email, setEmail] = useState('');
@@ -29,9 +31,9 @@ function LoginForm() {
   const [loadingProvider, setLoadingProvider] = useState<'google' | 'apple' | 'email' | null>(null);
   const [error, setError] = useState(
     errorParam === 'CredentialsSignin'
-      ? 'Email ou senha incorretos.'
+      ? t(locale, 'auth.wrong_credentials' as any)
       : errorParam
-        ? 'Ocorreu um erro. Tente novamente.'
+        ? t(locale, 'auth.generic_error' as any)
         : ''
   );
 
@@ -51,7 +53,7 @@ function LoginForm() {
     });
 
     if (result?.error) {
-      setError('Email ou senha incorretos.');
+      setError(t(locale, 'auth.wrong_credentials' as any));
       setIsLoading(false);
       setLoadingProvider(null);
     } else if (result?.url) {
@@ -71,8 +73,8 @@ function LoginForm() {
 
       {/* Heading — visible only inside desktop glass card */}
       <div className="hidden md:block space-y-1 mb-5">
-        <h2 className="text-xl font-semibold text-white tracking-tight">Bem-vindo de volta</h2>
-        <p className="text-[13px] text-white/60">Entre para continuar planejando.</p>
+        <h2 className="text-xl font-semibold text-white tracking-tight">{t(locale, 'auth.welcome' as any)}</h2>
+        <p className="text-[13px] text-white/60">{t(locale, 'auth.continue' as any)}</p>
       </div>
 
       {/* Error */}
@@ -89,12 +91,14 @@ function LoginForm() {
       {/* OAuth buttons */}
       <OAuthButton
         provider="google"
+        label={t(locale, 'auth.google' as any)}
         onClick={() => handleOAuthLogin('google')}
         loading={loadingProvider === 'google'}
         disabled={isLoading}
       />
       <OAuthButton
         provider="apple"
+        label={t(locale, 'auth.apple' as any)}
         onClick={() => handleOAuthLogin('apple')}
         loading={loadingProvider === 'apple'}
         disabled={isLoading}
@@ -109,7 +113,7 @@ function LoginForm() {
           disabled={isLoading}
           className="w-full flex items-center justify-between h-12 px-4 rounded-2xl bg-white/[0.06] border border-white/12 text-[13px] text-white/65 hover:bg-white/[0.1] hover:text-white/80 transition-all"
         >
-          <span>Entrar com email e senha</span>
+          <span>{t(locale, 'auth.login_email' as any)}</span>
           <motion.span
             animate={{ rotate: emailExpanded ? 180 : 0 }}
             transition={{ duration: 0.25 }}
@@ -134,7 +138,7 @@ function LoginForm() {
                   type="email"
                   value={email}
                   onChange={setEmail}
-                  placeholder="seu@email.com"
+                  placeholder={t(locale, 'auth.email_placeholder' as any)}
                   autoComplete="email"
                   required
                 />
@@ -143,7 +147,7 @@ function LoginForm() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={setPassword}
-                  placeholder="Sua senha"
+                  placeholder={t(locale, 'auth.password_placeholder' as any)}
                   autoComplete="current-password"
                   required
                   rightSlot={
@@ -165,7 +169,7 @@ function LoginForm() {
                 >
                   {loadingProvider === 'email'
                     ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <><span>Entrar</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
+                    : <><span>{t(locale, 'auth.login' as any)}</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
                   }
                 </motion.button>
               </form>
@@ -178,7 +182,7 @@ function LoginForm() {
       <div className="hidden md:block">
         <div className="relative flex items-center gap-3 py-2">
           <div className="flex-1 h-px bg-white/15" />
-          <span className="text-[11px] font-medium tracking-wider uppercase text-white/50">ou com email</span>
+          <span className="text-[11px] font-medium tracking-wider uppercase text-white/50">{t(locale, 'auth.or_email' as any)}</span>
           <div className="flex-1 h-px bg-white/15" />
         </div>
 
@@ -188,7 +192,7 @@ function LoginForm() {
             type="email"
             value={email}
             onChange={setEmail}
-            placeholder="seu@email.com"
+            placeholder={t(locale, 'auth.email_placeholder' as any)}
             autoComplete="email"
             required
           />
@@ -197,7 +201,7 @@ function LoginForm() {
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={setPassword}
-            placeholder="Sua senha"
+            placeholder={t(locale, 'auth.password_placeholder' as any)}
             autoComplete="current-password"
             required
             rightSlot={
@@ -220,7 +224,7 @@ function LoginForm() {
           >
             {loadingProvider === 'email'
               ? <Loader2 className="w-4 h-4 animate-spin" />
-              : <><span>Começar a jornada</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
+              : <><span>{t(locale, 'auth.start_journey' as any)}</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
             }
           </motion.button>
         </form>
@@ -228,9 +232,9 @@ function LoginForm() {
 
       {/* Sign up link */}
       <p className="text-center text-[13px] text-white/60 pt-1">
-        Não tem conta?{' '}
+        {t(locale, 'auth.no_account' as any)}{' '}
         <Link href="/signup" className="text-white font-semibold hover:underline underline-offset-4">
-          Criar conta
+          {t(locale, 'auth.signup' as any)}
         </Link>
       </p>
     </div>
@@ -311,14 +315,14 @@ function OAuthButton({
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
           </svg>
-          {label ?? 'Continuar com Google'}
+          {label}
         </>
       ) : (
         <>
           <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 fill-white">
             <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
           </svg>
-          {label ?? 'Continuar com Apple'}
+          {label}
         </>
       )}
     </motion.button>

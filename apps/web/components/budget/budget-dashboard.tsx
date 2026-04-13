@@ -10,15 +10,16 @@ import { ptBR } from 'date-fns/locale';
 import type { Expense, Trip } from '@trpy/database';
 import { GradientProgress } from '@/components/ui/gradient-progress';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  ACCOMMODATION: 'Hospedagem',
-  FOOD: 'Alimentação',
-  TRANSPORT: 'Transporte',
-  ACTIVITIES: 'Atividades',
-  SHOPPING: 'Compras',
-  HEALTH: 'Saúde',
-  OTHER: 'Outros',
+const CATEGORY_LABEL_KEYS: Record<string, string> = {
+  ACCOMMODATION: 'category.accommodation',
+  FOOD: 'category.food',
+  TRANSPORT: 'category.transport',
+  ACTIVITIES: 'category.activities',
+  SHOPPING: 'category.shopping',
+  HEALTH: 'category.health',
+  OTHER: 'category.other',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -37,6 +38,7 @@ interface BudgetDashboardProps {
 }
 
 export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
+  const [locale] = useLocale();
   const budget = Number(trip.budget);
   const spent = Number(trip.totalSpent);
   const remaining = budget - spent;
@@ -51,7 +53,7 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
   }, {} as Record<string, number>);
 
   const pieData = Object.entries(byCategory)
-    .map(([name, value]) => ({ name, value, label: CATEGORY_LABELS[name] ?? name }))
+    .map(([name, value]) => ({ name, value, label: t(locale, (CATEGORY_LABEL_KEYS[name] ?? 'category.other') as any) }))
     .sort((a, b) => b.value - a.value);
 
   // Spending over time (cumulative)
@@ -79,25 +81,25 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
-          label="Orçamento"
+          label={t(locale, 'budget.total')}
           value={`${trip.currency} ${budget.toLocaleString('pt-BR')}`}
           icon={<Wallet className="w-4 h-4" />}
           color="green"
         />
         <StatCard
-          label="Gasto"
+          label={t(locale, 'budget.spent')}
           value={`${trip.currency} ${spent.toLocaleString('pt-BR')}`}
           icon={<TrendingUp className="w-4 h-4" />}
           color={progress >= 90 ? 'red' : 'amber'}
         />
         <StatCard
-          label="Restante"
+          label={t(locale, 'budget.remaining')}
           value={`${trip.currency} ${Math.max(remaining, 0).toLocaleString('pt-BR')}`}
           icon={<TrendingDown className="w-4 h-4" />}
           color="green"
         />
         <StatCard
-          label="Utilizado"
+          label={t(locale, 'budget.used')}
           value={`${Math.round(progress)}%`}
           icon={<DollarSign className="w-4 h-4" />}
           color={progress >= 90 ? 'red' : progress >= 70 ? 'amber' : 'green'}
@@ -106,12 +108,12 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
 
       {/* Progress bar */}
       <div className="rounded-3xl border border-border bg-card p-4">
-        <p className="text-sm font-bold text-foreground mb-3">Progresso do orçamento</p>
+        <p className="text-sm font-bold text-foreground mb-3">{t(locale, 'budget.progress')}</p>
         <GradientProgress
           value={spent}
           max={budget}
           color={progressColor}
-          label={`${trip.currency} ${spent.toLocaleString('pt-BR')} gasto de ${budget.toLocaleString('pt-BR')}`}
+          label={t(locale, 'budget.spent_of').replace('{spent}', `${trip.currency} ${spent.toLocaleString('pt-BR')}`).replace('{total}', budget.toLocaleString('pt-BR'))}
         />
       </div>
 
@@ -120,7 +122,7 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
           {/* Spending trend */}
           {trendData.length > 1 && (
             <div className="rounded-3xl border border-border bg-card p-4">
-              <p className="text-sm font-bold text-foreground mb-4">Evolução dos gastos</p>
+              <p className="text-sm font-bold text-foreground mb-4">{t(locale, 'budget.trend')}</p>
               <ResponsiveContainer width="100%" height={160}>
                 <AreaChart data={trendData}>
                   <defs>
@@ -164,7 +166,7 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Donut chart */}
             <div className="rounded-3xl border border-border bg-card p-4">
-              <p className="text-sm font-bold text-foreground mb-4">Por categoria</p>
+              <p className="text-sm font-bold text-foreground mb-4">{t(locale, 'budget.by_category')}</p>
               <div className="flex items-center gap-4">
                 <ResponsiveContainer width={110} height={110}>
                   <PieChart>
@@ -215,7 +217,7 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
 
             {/* Recent expenses */}
             <div className="rounded-3xl border border-border bg-card p-4">
-              <p className="text-sm font-bold text-foreground mb-3">Últimas despesas</p>
+              <p className="text-sm font-bold text-foreground mb-3">{t(locale, 'budget.recent')}</p>
               <div className="space-y-2.5">
                 {expenses.slice(0, 6).map((expense) => (
                   <div key={expense.id} className="flex items-center gap-2.5">
@@ -238,9 +240,9 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
       {expenses.length === 0 && (
         <div className="rounded-3xl border border-dashed border-border p-10 text-center">
           <div className="text-3xl mb-3">💸</div>
-          <p className="text-sm font-medium text-foreground">Nenhuma despesa ainda</p>
+          <p className="text-sm font-medium text-foreground">{t(locale, 'budget.empty')}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Use o botão abaixo para registrar seus primeiros gastos.
+            {t(locale, 'budget.empty_desc')}
           </p>
         </div>
       )}

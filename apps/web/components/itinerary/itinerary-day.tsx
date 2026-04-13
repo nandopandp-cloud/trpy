@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { ItineraryDay as IDay, ItineraryItem } from '@trpy/database';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
 const TYPE_CONFIG: Record<
   string,
@@ -31,6 +32,7 @@ interface ItineraryDayProps {
 
 export function ItineraryDay({ day, onAddItem, onEditItem, onDeleteItem }: ItineraryDayProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [locale] = useLocale();
 
   return (
     <motion.div
@@ -101,15 +103,15 @@ export function ItineraryDay({ day, onAddItem, onEditItem, onDeleteItem }: Itine
                   className="py-10 px-4 text-center"
                 >
                   <div className="text-3xl mb-2.5">📅</div>
-                  <p className="text-sm font-medium text-foreground">Nenhuma atividade</p>
+                  <p className="text-sm font-medium text-foreground">{t(locale, 'itinerary.no_activity')}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Adicione restaurantes, atrações, hotéis e mais.
+                    {t(locale, 'itinerary.add_hint')}
                   </p>
                   <button
                     onClick={() => onAddItem(day.id)}
                     className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Adicionar atividade
+                    <Plus className="w-3.5 h-3.5" /> {t(locale, 'itinerary.add_activity')}
                   </button>
                 </motion.div>
               ) : (
@@ -134,7 +136,7 @@ export function ItineraryDay({ day, onAddItem, onEditItem, onDeleteItem }: Itine
                     <div className="w-7 h-7 rounded-xl bg-muted group-hover:bg-primary/10 flex items-center justify-center transition-colors shrink-0">
                       <Plus className="w-3.5 h-3.5" />
                     </div>
-                    Adicionar atividade
+                    {t(locale, 'itinerary.add_activity')}
                   </button>
                 </div>
               )}

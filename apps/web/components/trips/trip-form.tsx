@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useLocale, t } from '@/lib/i18n';
 
 const schema = z
   .object({
@@ -30,7 +31,8 @@ interface TripFormProps {
   submitLabel?: string;
 }
 
-export function TripForm({ defaultValues, onSubmit, submitLabel = 'Salvar' }: TripFormProps) {
+export function TripForm({ defaultValues, onSubmit, submitLabel }: TripFormProps) {
+  const [locale] = useLocale();
   const {
     register,
     handleSubmit,
@@ -57,52 +59,52 @@ export function TripForm({ defaultValues, onSubmit, submitLabel = 'Salvar' }: Tr
 
   return (
     <form onSubmit={handleSubmit(handleValidSubmit)} className="space-y-5">
-      <Field label="Título da viagem" error={errors.title?.message}>
-        <Input placeholder="Ex: Férias em Lisboa" {...register('title')} />
+      <Field label={t(locale, 'form.trip.title')} error={errors.title?.message}>
+        <Input placeholder={t(locale, 'form.trip.title_placeholder')} {...register('title')} />
       </Field>
 
-      <Field label="Destino" error={errors.destination?.message}>
-        <Input placeholder="Ex: Lisboa, Portugal" {...register('destination')} />
+      <Field label={t(locale, 'form.trip.destination')} error={errors.destination?.message}>
+        <Input placeholder={t(locale, 'form.trip.destination_placeholder')} {...register('destination')} />
       </Field>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Data de início" error={errors.startDate?.message}>
+        <Field label={t(locale, 'form.trip.start_date')} error={errors.startDate?.message}>
           <Input type="date" {...register('startDate')} />
         </Field>
-        <Field label="Data de fim" error={errors.endDate?.message}>
+        <Field label={t(locale, 'form.trip.end_date')} error={errors.endDate?.message}>
           <Input type="date" {...register('endDate')} />
         </Field>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Orçamento" error={errors.budget?.message}>
+        <Field label={t(locale, 'form.trip.budget')} error={errors.budget?.message}>
           <Input type="number" step="0.01" min="0" placeholder="5000" {...register('budget')} />
         </Field>
-        <Field label="Moeda" error={errors.currency?.message}>
+        <Field label={t(locale, 'form.trip.currency')} error={errors.currency?.message}>
           <select
             {...register('currency')}
             className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="BRL">BRL — Real</option>
-            <option value="USD">USD — Dólar</option>
-            <option value="EUR">EUR — Euro</option>
-            <option value="GBP">GBP — Libra</option>
+            <option value="BRL">{t(locale, 'form.trip.currency_brl')}</option>
+            <option value="USD">{t(locale, 'form.trip.currency_usd')}</option>
+            <option value="EUR">{t(locale, 'form.trip.currency_eur')}</option>
+            <option value="GBP">{t(locale, 'form.trip.currency_gbp')}</option>
           </select>
         </Field>
       </div>
 
-      <Field label="Descrição (opcional)" error={errors.description?.message}>
+      <Field label={t(locale, 'form.trip.description')} error={errors.description?.message}>
         <textarea
           {...register('description')}
           rows={3}
-          placeholder="Conte um pouco sobre essa viagem..."
+          placeholder={t(locale, 'form.trip.description_placeholder')}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
         />
       </Field>
 
       <Button type="submit" disabled={isSubmitting} className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md shadow-primary/20 h-11 text-base font-semibold">
         {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-        {isSubmitting ? 'Salvando...' : submitLabel}
+        {isSubmitting ? t(locale, 'common.saving') : (submitLabel || t(locale, 'common.save'))}
       </Button>
     </form>
   );

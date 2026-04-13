@@ -9,6 +9,7 @@ import { useCreateTrip } from '@/hooks/useTrips';
 import { TripForm, type TripFormValues } from '@/components/trips/trip-form';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
 const INSPIRATIONS = [
   { emoji: '🗼', label: 'Paris', desc: '7 dias' },
@@ -21,6 +22,7 @@ const INSPIRATIONS = [
 
 export default function NewTripPage() {
   const router = useRouter();
+  const [locale] = useLocale();
   const createTrip = useCreateTrip();
   const [step, setStep] = useState<'inspire' | 'form'>('inspire');
 
@@ -31,10 +33,10 @@ export default function NewTripPage() {
         startDate: new Date(values.startDate).toISOString(),
         endDate: new Date(values.endDate).toISOString(),
       });
-      toast.success('Viagem criada!', { description: `${values.title} — ${values.destination}` });
+      toast.success(t(locale, 'new_trip.success'), { description: `${values.title} — ${values.destination}` });
       router.push('/dashboard/trips');
     } catch (e) {
-      toast.error((e as Error).message ?? 'Erro ao criar viagem');
+      toast.error((e as Error).message ?? t(locale, 'new_trip.error'));
     }
   }
 
@@ -57,10 +59,10 @@ export default function NewTripPage() {
           </Button>
           <div>
             <h1 className="text-xl font-black">
-              {step === 'inspire' ? 'Para onde vamos?' : 'Detalhes da viagem'}
+              {step === 'inspire' ? t(locale, 'new_trip.where') : t(locale, 'new_trip.details')}
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {step === 'inspire' ? 'Escolha um destino ou crie do zero' : 'Preencha os dados da sua aventura'}
+              {step === 'inspire' ? t(locale, 'new_trip.where_sub') : t(locale, 'new_trip.details_sub')}
             </p>
           </div>
         </motion.div>
@@ -100,7 +102,7 @@ export default function NewTripPage() {
               {/* Inspiration grid */}
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                  Destinos populares
+                  {t(locale, 'new_trip.popular')}
                 </p>
                 <div className="grid grid-cols-3 gap-3">
                   {INSPIRATIONS.map((ins, i) => (
@@ -127,7 +129,7 @@ export default function NewTripPage() {
               {/* Divider */}
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground">ou</span>
+                <span className="text-xs text-muted-foreground">{t(locale, 'common.or')}</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
 
@@ -143,8 +145,8 @@ export default function NewTripPage() {
                     <MapPin className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-bold text-foreground">Criar do zero</p>
-                    <p className="text-xs text-muted-foreground">Defina o destino e datas</p>
+                    <p className="text-sm font-bold text-foreground">{t(locale, 'new_trip.scratch')}</p>
+                    <p className="text-xs text-muted-foreground">{t(locale, 'new_trip.scratch_sub')}</p>
                   </div>
                 </div>
                 <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -162,8 +164,8 @@ export default function NewTripPage() {
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-bold text-foreground">Gerar com IA</p>
-                    <p className="text-xs text-muted-foreground">A IA cria o itinerário por você</p>
+                    <p className="text-sm font-bold text-foreground">{t(locale, 'new_trip.ai')}</p>
+                    <p className="text-xs text-muted-foreground">{t(locale, 'new_trip.ai_sub')}</p>
                   </div>
                 </div>
                 <ArrowRight className="w-5 h-5 text-primary" />
@@ -180,7 +182,7 @@ export default function NewTripPage() {
               transition={{ duration: 0.25 }}
             >
               <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
-                <TripForm onSubmit={handleSubmit} submitLabel="Criar viagem" />
+                <TripForm onSubmit={handleSubmit} submitLabel={t(locale, 'trips.create')} />
               </div>
             </motion.div>
           )}

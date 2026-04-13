@@ -8,6 +8,7 @@ import {
   Youtube, Image as ImageIcon, Star, Trash2, Play, X, ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 import { PlaceDetailModal } from '@/components/integrations/google/place-detail-modal';
 
 type FavoriteType = 'PLACE' | 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' | 'VIDEO' | 'PIN';
@@ -26,14 +27,14 @@ interface Favorite {
   createdAt: string;
 }
 
-const TABS: { type: FavoriteType | 'ALL'; label: string; icon: React.ElementType }[] = [
-  { type: 'ALL', label: 'Todos', icon: Heart },
-  { type: 'PLACE', label: 'Locais', icon: MapPin },
-  { type: 'RESTAURANT', label: 'Restaurantes', icon: Utensils },
-  { type: 'HOTEL', label: 'Hotéis', icon: Hotel },
-  { type: 'ACTIVITY', label: 'Atividades', icon: Zap },
-  { type: 'VIDEO', label: 'Vídeos', icon: Youtube },
-  { type: 'PIN', label: 'Pins', icon: ImageIcon },
+const TABS: { type: FavoriteType | 'ALL'; labelKey: string; icon: React.ElementType }[] = [
+  { type: 'ALL', labelKey: 'favorites.all', icon: Heart },
+  { type: 'PLACE', labelKey: 'favorites.places', icon: MapPin },
+  { type: 'RESTAURANT', labelKey: 'favorites.restaurants', icon: Utensils },
+  { type: 'HOTEL', labelKey: 'favorites.hotels', icon: Hotel },
+  { type: 'ACTIVITY', labelKey: 'favorites.activities', icon: Zap },
+  { type: 'VIDEO', labelKey: 'favorites.videos', icon: Youtube },
+  { type: 'PIN', labelKey: 'favorites.pins', icon: ImageIcon },
 ];
 
 const TYPE_COLOR: Record<FavoriteType, { text: string; bg: string }> = {
@@ -148,6 +149,7 @@ function FavoriteCard({ favorite, onRemove, onClick }: { favorite: Favorite; onR
 }
 
 export default function FavoritesPage() {
+  const [locale] = useLocale();
   const [activeTab, setActiveTab] = useState<FavoriteType | 'ALL'>('ALL');
   const [selectedPlace, setSelectedPlace] = useState<{
     placeId: string;
@@ -219,8 +221,8 @@ export default function FavoritesPage() {
       <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
       {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-2xl font-medium text-foreground tracking-tight">Favoritos</h1>
-        <p className="text-sm text-muted-foreground">{total} itens salvos</p>
+        <h1 className="text-2xl font-medium text-foreground tracking-tight">{t(locale, 'favorites.title' as any)}</h1>
+        <p className="text-sm text-muted-foreground">{t(locale, 'favorites.items_saved' as any).replace('{count}', String(total))}</p>
       </div>
 
       {/* Stats — compact row */}
@@ -246,7 +248,7 @@ export default function FavoritesPage() {
                 <Icon className={cn('w-3.5 h-3.5', colors.text)} />
               </div>
               <span className="text-sm font-medium text-foreground">{count}</span>
-              <span className="text-xs text-muted-foreground hidden sm:inline">{tab.label}</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline">{t(locale, tab.labelKey as any)}</span>
             </motion.button>
           );
         })}
@@ -269,7 +271,7 @@ export default function FavoritesPage() {
               )}
             >
               <Icon className="w-3.5 h-3.5" />
-              {tab.label}
+              {t(locale, tab.labelKey as any)}
               {count > 0 && (
                 <span className={cn(
                   'text-[10px] rounded-full px-1.5 py-0.5 font-normal',
@@ -300,9 +302,9 @@ export default function FavoritesPage() {
             <Heart className="w-8 h-8 text-muted-foreground/40" />
           </div>
           <div>
-            <p className="font-medium text-foreground">Nenhum favorito ainda</p>
+            <p className="font-medium text-foreground">{t(locale, 'favorites.empty_title' as any)}</p>
             <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-              Explore locais, restaurantes e atividades para salvar seus preferidos
+              {t(locale, 'favorites.empty_desc' as any)}
             </p>
           </div>
         </motion.div>
@@ -400,7 +402,7 @@ function VideoPlayerModal({ video, onClose }: { video: Favorite | null; onClose:
               />
               <button
                 onClick={onClose}
-                aria-label="Fechar"
+                aria-label="Close"
                 className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-black/80 transition-colors z-10"
               >
                 <X className="w-5 h-5" />

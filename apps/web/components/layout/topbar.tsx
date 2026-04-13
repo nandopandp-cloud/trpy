@@ -78,7 +78,7 @@ function MenuActions({ onClose }: { onClose?: () => void }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">{t(locale, 'page.settings')}</p>
-          <p className="text-xs text-muted-foreground">Tema, idioma e segurança</p>
+          <p className="text-xs text-muted-foreground">{t(locale, 'topbar.settings_hint')}</p>
         </div>
         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
       </button>

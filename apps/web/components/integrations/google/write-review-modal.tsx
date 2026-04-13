@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -41,15 +42,15 @@ interface WriteReviewModalProps {
 
 // ─── Star Picker ──────────────────────────────────────────────────────────────
 
-const RATING_LABELS: Record<number, string> = {
-  1: 'Péssimo',
-  2: 'Ruim',
-  3: 'Regular',
-  4: 'Bom',
-  5: 'Excelente',
+const RATING_LABEL_KEYS: Record<number, string> = {
+  1: 'review.1',
+  2: 'review.2',
+  3: 'review.3',
+  4: 'review.4',
+  5: 'review.5',
 };
 
-function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+function StarPicker({ value, onChange, locale }: { value: number; onChange: (v: number) => void; locale: string }) {
   const [hover, setHover] = useState(0);
   const display = hover || value;
 
@@ -88,7 +89,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
               transition={{ duration: 0.15 }}
               className="ml-2 text-sm font-semibold text-foreground"
             >
-              {RATING_LABELS[display]}
+              {t(locale as any, RATING_LABEL_KEYS[display] as any)}
             </motion.span>
           )}
         </AnimatePresence>
@@ -105,6 +106,7 @@ export function WriteReviewModal({
   existing,
   onClose,
 }: WriteReviewModalProps) {
+  const [locale] = useLocale();
   const queryClient = useQueryClient();
   const isEdit = !!existing;
 
@@ -134,7 +136,7 @@ export function WriteReviewModal({
 
   async function onSubmit(values: FormValues) {
     if (!values.rating || values.rating < 1) {
-      toast.error('Selecione uma nota antes de publicar.');
+      toast.error(t(locale, 'review.select_error' as any));
       return;
     }
 
@@ -152,12 +154,12 @@ export function WriteReviewModal({
     });
 
     const json = await res.json();
-    if (!json.success) throw new Error(json.error ?? 'Erro ao publicar avaliação');
+    if (!json.success) throw new Error(json.error ?? t(locale, 'review.publish_error' as any));
 
     // Invalidate place reviews cache
     queryClient.invalidateQueries({ queryKey: ['place-reviews', googlePlaceId] });
-    toast.success(isEdit ? 'Avaliação atualizada!' : 'Avaliação publicada!', {
-      description: `${values.rating} estrela${values.rating !== 1 ? 's' : ''} em ${placeName}`,
+    toast.success(isEdit ? t(locale, 'review.updated' as any) : t(locale, 'review.published' as any), {
+      description: `${values.rating} ${values.rating !== 1 ? t(locale, 'review.stars' as any) : t(locale, 'review.star' as any)} — ${placeName}`,
     });
     onClose();
   }
@@ -167,11 +169,11 @@ export function WriteReviewModal({
     const res = await fetch(`/api/place-reviews/${existing.id}`, { method: 'DELETE' });
     const json = await res.json();
     if (!json.success) {
-      toast.error('Erro ao excluir avaliação');
+      toast.error(t(locale, 'review.delete_error' as any));
       return;
     }
     queryClient.invalidateQueries({ queryKey: ['place-reviews', googlePlaceId] });
-    toast.success('Avaliação excluída');
+    toast.success(t(locale, 'review.deleted' as any));
     onClose();
   }
 
@@ -198,7 +200,7 @@ export function WriteReviewModal({
             </div>
             <div>
               <p className="font-bold text-foreground text-sm">
-                {isEdit ? 'Editar avaliação' : 'Escrever avaliação'}
+                {isEdit ? t(locale, 'review.edit' as any) : t(locale, 'review.write' as any)}
               </p>
               <p className="text-xs text-muted-foreground line-clamp-1 max-w-[220px]">{placeName}</p>
             </div>
@@ -220,11 +222,12 @@ export function WriteReviewModal({
             {/* Star rating */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Sua nota <span className="text-destructive">*</span>
+                {t(locale, 'review.your_rating' as any)} <span className="text-destructive">*</span>
               </label>
               <StarPicker
                 value={ratingValue ?? 0}
                 onChange={(v) => setValue('rating', v, { shouldValidate: true })}
+                locale={locale}
               />
               {errors.rating && (
                 <p className="text-xs text-destructive">{errors.rating.message}</p>
@@ -234,12 +237,12 @@ export function WriteReviewModal({
             {/* Title */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Título{' '}
-                <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
+                {t(locale, 'review.title' as any)}{' '}
+                <span className="text-muted-foreground font-normal text-xs">({t(locale, 'common.optional' as any)})</span>
               </label>
               <Input
                 {...register('title')}
-                placeholder="Resumo da sua experiência"
+                placeholder={t(locale, 'review.title_placeholder' as any)}
                 className="h-10"
               />
             </div>
@@ -247,13 +250,13 @@ export function WriteReviewModal({
             {/* Body */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Sua experiência{' '}
-                <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
+                {t(locale, 'review.experience' as any)}{' '}
+                <span className="text-muted-foreground font-normal text-xs">({t(locale, 'common.optional' as any)})</span>
               </label>
               <textarea
                 {...register('body')}
                 rows={4}
-                placeholder="O que você achou? Dicas para quem vai visitar, o que comeu, como foi o atendimento..."
+                placeholder={t(locale, 'review.experience_placeholder' as any)}
                 className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-all resize-none"
               />
               <p className="text-[11px] text-muted-foreground text-right">
@@ -268,8 +271,8 @@ export function WriteReviewModal({
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
                 <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
-                Quando você visitou?{' '}
-                <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
+                {t(locale, 'review.visit_date' as any)}{' '}
+                <span className="text-muted-foreground font-normal text-xs">({t(locale, 'common.optional' as any)})</span>
               </label>
               <Input
                 {...register('visitedOn')}
@@ -281,7 +284,7 @@ export function WriteReviewModal({
             {/* Info note */}
             <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Sua avaliação será publicada no Trpy e ficará visível para outros viajantes. Ela é diferente das avaliações do Google.
+                {t(locale, 'review.disclaimer' as any)}
               </p>
             </div>
 
@@ -296,12 +299,12 @@ export function WriteReviewModal({
               onClick={handleDelete}
               className="w-full text-xs font-semibold text-destructive hover:text-destructive/80 transition-colors text-center py-1"
             >
-              Excluir avaliação
+              {t(locale, 'review.delete' as any)}
             </button>
           )}
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 h-11">
-              Cancelar
+              {t(locale, 'common.cancel' as any)}
             </Button>
             <Button
               type="submit"
@@ -310,9 +313,9 @@ export function WriteReviewModal({
               className="flex-1 h-11 font-semibold gap-2"
             >
               {isSubmitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Publicando…</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> {t(locale, 'review.publishing' as any)}</>
               ) : (
-                <><Check className="w-4 h-4" /> {isEdit ? 'Salvar' : 'Publicar avaliação'}</>
+                <><Check className="w-4 h-4" /> {isEdit ? t(locale, 'common.save' as any) : t(locale, 'review.publish' as any)}</>
               )}
             </Button>
           </div>

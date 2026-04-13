@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ActivityCard } from '@/components/cards/activity-card';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
 const SUGGESTIONS = [
   { label: '7 dias em Lisboa', sub: 'Gastronomia e cultura' },
@@ -67,6 +68,7 @@ const MOCK_RESULT: GeneratedDay[] = [
 ];
 
 export default function AIPage() {
+  const [locale] = useLocale();
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<GeneratedDay[] | null>(null);
@@ -106,9 +108,9 @@ export default function AIPage() {
           <Sparkles className="w-8 h-8 text-primary" />
         </motion.div>
         <div>
-          <h1 className="text-2xl font-medium text-foreground tracking-tight">Planejar com IA</h1>
+          <h1 className="text-2xl font-medium text-foreground tracking-tight">{t(locale, 'ai.title' as any)}</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto leading-relaxed">
-            Descreva sua viagem ideal e a IA cria um itinerário completo, com atividades, restaurantes e dicas.
+            {t(locale, 'ai.desc' as any)}
           </p>
         </div>
       </motion.div>
@@ -123,7 +125,7 @@ export default function AIPage() {
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Ex: 7 dias em Lisboa, Portugal — interesse em gastronomia, cultura e história. Orçamento médio de R$ 8.000..."
+          placeholder={t(locale, 'ai.placeholder' as any)}
           rows={3}
           className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 resize-none outline-none leading-relaxed"
           onKeyDown={(e) => {
@@ -132,9 +134,9 @@ export default function AIPage() {
         />
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Datas</span>
-            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Destino</span>
-            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Duração</span>
+            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {t(locale, 'ai.dates' as any)}</span>
+            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {t(locale, 'ai.destination' as any)}</span>
+            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {t(locale, 'ai.duration' as any)}</span>
           </div>
           <button
             onClick={() => handleGenerate()}
@@ -142,9 +144,9 @@ export default function AIPage() {
             className="inline-flex items-center gap-2 bg-foreground text-background text-xs font-medium px-4 py-2 rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
           >
             {isGenerating ? (
-              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Gerando...</>
+              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {t(locale, 'ai.generating' as any)}</>
             ) : (
-              <><Send className="w-3.5 h-3.5" /> Gerar</>
+              <><Send className="w-3.5 h-3.5" /> {t(locale, 'ai.generate' as any)}</>
             )}
             <span className="absolute inset-0 overflow-hidden rounded-full">
               <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
@@ -156,7 +158,7 @@ export default function AIPage() {
       {/* Suggestion pills */}
       {!result && !isGenerating && (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Experimente</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t(locale, 'ai.try_it' as any)}</p>
           <div className="flex flex-wrap gap-2">
             {SUGGESTIONS.map((s, i) => (
               <motion.button
@@ -197,8 +199,8 @@ export default function AIPage() {
               />
             </div>
             <div className="text-center space-y-1">
-              <p className="font-medium text-foreground">Criando seu itinerário...</p>
-              <p className="text-sm text-muted-foreground">Analisando destino e personalizando cada detalhe</p>
+              <p className="font-medium text-foreground">{t(locale, 'ai.creating' as any)}</p>
+              <p className="text-sm text-muted-foreground">{t(locale, 'ai.creating_desc' as any)}</p>
             </div>
             <div className="flex gap-1.5">
               {[0, 0.2, 0.4].map((delay, i) => (
@@ -231,10 +233,10 @@ export default function AIPage() {
             >
               <Sparkles className="w-5 h-5 text-primary shrink-0" />
               <div className="flex-1 flex flex-wrap gap-x-4 gap-y-0.5">
-                <span className="text-sm font-medium text-foreground">{result.length} dias</span>
-                <span className="text-sm text-muted-foreground">{totalActivities} atividades</span>
+                <span className="text-sm font-medium text-foreground">{result.length} {t(locale, 'ai.days' as any)}</span>
+                <span className="text-sm text-muted-foreground">{totalActivities} {t(locale, 'ai.activities' as any)}</span>
                 <span className="text-sm text-muted-foreground">
-                  ~R$ {totalCost.toLocaleString('pt-BR')} estimado
+                  ~R$ {totalCost.toLocaleString('pt-BR')} {t(locale, 'ai.estimated' as any)}
                 </span>
               </div>
               <Button
@@ -243,7 +245,7 @@ export default function AIPage() {
                 className="text-xs shrink-0"
                 onClick={() => { setResult(null); setPrompt(''); }}
               >
-                Refazer
+                {t(locale, 'ai.redo' as any)}
               </Button>
             </motion.div>
 
@@ -264,11 +266,11 @@ export default function AIPage() {
                     {day.day}
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-foreground">Dia {day.day}</p>
+                    <p className="text-sm font-medium text-foreground">{t(locale, 'ai.day' as any).replace('{number}', String(day.day))}</p>
                     <p className="text-xs text-muted-foreground">{day.theme}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-muted-foreground">{day.activities.length} atividades</span>
+                    <span className="text-xs text-muted-foreground">{day.activities.length} {t(locale, 'ai.activities' as any)}</span>
                     <motion.div
                       animate={{ rotate: expandedDay === di ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
@@ -318,15 +320,15 @@ export default function AIPage() {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mx-auto">
                 <Sparkles className="w-5 h-5 text-emerald-500" />
               </div>
-              <p className="text-sm font-medium text-foreground">Gostou do itinerário?</p>
+              <p className="text-sm font-medium text-foreground">{t(locale, 'ai.liked' as any)}</p>
               <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                A integração com Claude API está chegando — em breve você poderá salvar diretamente na sua viagem!
+                {t(locale, 'ai.coming_soon' as any)}
               </p>
               <button
                 onClick={() => window.location.href = '/dashboard/trips/new'}
                 className="inline-flex items-center gap-2 bg-foreground text-background text-sm font-medium px-6 py-3 rounded-full hover:opacity-90 transition-all group relative overflow-hidden"
               >
-                <span className="relative z-10">Criar viagem manualmente</span>
+                <span className="relative z-10">{t(locale, 'ai.create_manual' as any)}</span>
                 <span className="absolute inset-0 overflow-hidden rounded-full">
                   <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                 </span>

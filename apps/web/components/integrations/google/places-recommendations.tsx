@@ -7,6 +7,7 @@ import { Star, MapPin, Clock, ExternalLink, Utensils, Hotel, Landmark, Building2
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { PlaceDetailModal } from './place-detail-modal';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
+import { useLocale, t } from '@/lib/i18n';
 
 interface RecommendationsData {
   restaurants: PlaceSearchResult[];
@@ -15,9 +16,9 @@ interface RecommendationsData {
 }
 
 const TABS = [
-  { key: 'restaurants', label: 'Restaurantes', icon: Utensils, favoriteType: 'RESTAURANT' },
-  { key: 'hotels',      label: 'Hotéis',       icon: Hotel,    favoriteType: 'HOTEL' },
-  { key: 'attractions', label: 'Atrações',     icon: Landmark, favoriteType: 'ACTIVITY' },
+  { key: 'restaurants', labelKey: 'places.restaurants', icon: Utensils, favoriteType: 'RESTAURANT' },
+  { key: 'hotels',      labelKey: 'places.hotels',       icon: Hotel,    favoriteType: 'HOTEL' },
+  { key: 'attractions', labelKey: 'places.attractions',     icon: Landmark, favoriteType: 'ACTIVITY' },
 ] as const;
 
 const PRICE = ['', '$', '$$', '$$$', '$$$$'];
@@ -41,10 +42,12 @@ function StarRating({ value }: { value: number }) {
 function PlaceCard({
   place,
   favoriteType,
+  locale,
   onOpen,
 }: {
   place: PlaceSearchResult;
   favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
+  locale: string;
   onOpen: () => void;
 }) {
   const photo = place.photos?.[0];
@@ -115,7 +118,7 @@ function PlaceCard({
           {place.opening_hours?.open_now != null && (
             <span className={`text-xs font-medium flex items-center gap-1 ${place.opening_hours.open_now ? 'text-emerald-500' : 'text-red-500'}`}>
               <Clock className="w-3 h-3" />
-              {place.opening_hours.open_now ? 'Aberto' : 'Fechado'}
+              {place.opening_hours.open_now ? t(locale as any, 'places.open' as any) : t(locale as any, 'places.closed' as any)}
             </span>
           )}
         </div>
@@ -128,16 +131,17 @@ function PlaceCard({
         )}
 
         <span className="inline-flex items-center gap-0.5 text-xs text-primary font-semibold mt-1.5 group-hover:gap-1.5 transition-all">
-          Ver detalhes <ChevronRight className="w-3 h-3" />
+          {t(locale as any, 'places.details' as any)} <ChevronRight className="w-3 h-3" />
         </span>
       </div>
     </motion.div>
   );
 }
 
-function EmptyState({ tab, destination }: { tab: typeof TABS[number]; destination: string }) {
+function EmptyState({ tab, destination, locale }: { tab: typeof TABS[number]; destination: string; locale: string }) {
+  const tabLabel = t(locale as any, tab.labelKey as any);
   const mapsQuery = encodeURIComponent(
-    `${tab.label} em ${destination}`
+    `${tabLabel} ${destination}`
   );
   const mapsUrl = `https://www.google.com/maps/search/${mapsQuery}`;
   const Icon = tab.icon;
@@ -147,9 +151,9 @@ function EmptyState({ tab, destination }: { tab: typeof TABS[number]; destinatio
         <Icon className="w-5 h-5 text-muted-foreground" />
       </div>
       <div>
-        <p className="text-sm font-medium text-foreground">Nenhum resultado encontrado</p>
+        <p className="text-sm font-medium text-foreground">{t(locale as any, 'places.empty' as any)}</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Não encontramos {tab.label.toLowerCase()} para este destino via API.
+          {t(locale as any, 'places.no_results_for' as any).replace('{label}', tabLabel.toLowerCase())}
         </p>
       </div>
       <a
@@ -158,7 +162,7 @@ function EmptyState({ tab, destination }: { tab: typeof TABS[number]; destinatio
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
       >
-        Buscar no Google Maps <ExternalLink className="w-3 h-3" />
+        {t(locale as any, 'places.search_gmaps' as any)} <ExternalLink className="w-3 h-3" />
       </a>
     </div>
   );
@@ -182,6 +186,7 @@ function LoadingSkeleton() {
 }
 
 export function PlacesRecommendations({ destination }: { destination: string }) {
+  const [locale] = useLocale();
   const [activeTab, setActiveTab] = useState<'restaurants' | 'hotels' | 'attractions'>('restaurants');
   const [selectedPlace, setSelectedPlace] = useState<{
     placeId: string;
@@ -208,23 +213,23 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
     <div className="space-y-4">
       {/* Tab pills */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {TABS.map((t) => {
-          const Icon = t.icon;
-          const count = data?.[t.key]?.length;
+        {TABS.map((tb) => {
+          const Icon = tb.icon;
+          const count = data?.[tb.key]?.length;
           return (
             <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
+              key={tb.key}
+              onClick={() => setActiveTab(tb.key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-                activeTab === t.key
+                activeTab === tb.key
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
-              {t.label}
+              {t(locale, tb.labelKey as any)}
               {count != null && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === t.key ? 'bg-white/20' : 'bg-background'}`}>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === tb.key ? 'bg-white/20' : 'bg-background'}`}>
                   {count}
                 </span>
               )}
@@ -255,13 +260,14 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
             className="space-y-3"
           >
             {places.length === 0 ? (
-              <EmptyState tab={tab} destination={destination} />
+              <EmptyState tab={tab} destination={destination} locale={locale} />
             ) : (
               places.map((place) => (
                 <PlaceCard
                   key={place.place_id}
                   place={place}
                   favoriteType={tab.favoriteType}
+                  locale={locale}
                   onOpen={() =>
                     setSelectedPlace({
                       placeId: place.place_id,

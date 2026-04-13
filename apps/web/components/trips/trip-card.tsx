@@ -6,13 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { MapPin, Calendar, ArrowRight, Wallet } from 'lucide-react';
 import type { Trip } from '@trpy/database';
 import { cn } from '@/lib/utils';
-
-const STATUS_LABEL: Record<string, string> = {
-  PLANNING: 'Planejando',
-  ONGOING: 'Em andamento',
-  COMPLETED: 'Concluída',
-  CANCELLED: 'Cancelada',
-};
+import { useLocale, t } from '@/lib/i18n';
 
 const STATUS_STYLE: Record<string, string> = {
   PLANNING: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/20',
@@ -38,6 +32,15 @@ interface TripCardProps {
 }
 
 export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCardProps) {
+  const [locale] = useLocale();
+
+  const STATUS_LABEL: Record<string, string> = {
+    PLANNING: t(locale, 'status.planning'),
+    ONGOING: t(locale, 'status.ongoing'),
+    COMPLETED: t(locale, 'status.completed'),
+    CANCELLED: t(locale, 'status.cancelled'),
+  };
+
   const spent = Number(trip.totalSpent);
   const budget = Number(trip.budget);
   const progress = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
@@ -119,7 +122,7 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1 text-muted-foreground">
                 <Wallet className="w-3.5 h-3.5" />
-                Orçamento
+                {t(locale, 'budget.total')}
               </span>
               <span className="font-medium text-foreground">
                 {trip.currency} {spent.toLocaleString('pt-BR')}
@@ -144,7 +147,7 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
                   onClick={(e) => { e.stopPropagation(); onEdit(); }}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-muted"
                 >
-                  Editar
+                  {t(locale, 'common.edit')}
                 </button>
               )}
             </div>
@@ -153,7 +156,7 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
               onClick={(e) => { e.stopPropagation(); onClick?.(); }}
               className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors group relative overflow-hidden px-3 py-1.5 rounded-full hover:bg-primary/5"
             >
-              <span className="relative z-10 flex items-center gap-1.5">Ver detalhes <ArrowRight className="w-3.5 h-3.5" /></span>
+              <span className="relative z-10 flex items-center gap-1.5">{t(locale, 'common.details')} <ArrowRight className="w-3.5 h-3.5" /></span>
             </motion.button>
           </div>
         </div>

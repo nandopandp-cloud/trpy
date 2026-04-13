@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { RefreshCw, Home, Compass, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
 /* ── Types ──────────────────────────────────────────────── */
 
@@ -21,36 +22,13 @@ interface ErrorSceneProps {
   showExplore?: boolean;
 }
 
-/* ── Copy per variant ───────────────────────────────────── */
+/* ── Icon per variant ──────────────────────────────────── */
 
-const VARIANTS: Record<
-  ErrorVariant,
-  { icon: string; title: string; subtitle: string }
-> = {
-  'not-found': {
-    icon: '🧭',
-    title: 'Parece que saímos da rota',
-    subtitle:
-      'Essa página não existe ou pode ter sido movida. Que tal explorar um novo destino?',
-  },
-  'server-error': {
-    icon: '✈️',
-    title: 'Encontramos uma turbulência',
-    subtitle:
-      'Mas não se preocupe, estamos ajustando a rota para você continuar sua jornada.',
-  },
-  network: {
-    icon: '🌧️',
-    title: 'Conexão instável',
-    subtitle:
-      'Parece que a comunicação entre você e nossos servidores encontrou uma nuvem. Tente novamente em alguns segundos.',
-  },
-  empty: {
-    icon: '🗺️',
-    title: 'Nada por aqui… ainda',
-    subtitle:
-      'Esse trecho do mapa ainda está em branco. Que tal começar a preenchê-lo?',
-  },
+const VARIANT_ICONS: Record<ErrorVariant, string> = {
+  'not-found': '🧭',
+  'server-error': '✈️',
+  network: '🌧️',
+  empty: '🗺️',
 };
 
 /* ── Floating particle ──────────────────────────────────── */
@@ -108,6 +86,34 @@ export function ErrorScene({
   showExplore = true,
 }: ErrorSceneProps) {
   const router = useRouter();
+  const [locale] = useLocale();
+
+  const VARIANTS: Record<
+    ErrorVariant,
+    { icon: string; title: string; subtitle: string }
+  > = {
+    'not-found': {
+      icon: VARIANT_ICONS['not-found'],
+      title: t(locale, 'error.not_found'),
+      subtitle: t(locale, 'error.not_found_desc'),
+    },
+    'server-error': {
+      icon: VARIANT_ICONS['server-error'],
+      title: t(locale, 'error.server'),
+      subtitle: t(locale, 'error.server_desc'),
+    },
+    network: {
+      icon: VARIANT_ICONS.network,
+      title: t(locale, 'error.network'),
+      subtitle: t(locale, 'error.network_desc'),
+    },
+    empty: {
+      icon: VARIANT_ICONS.empty,
+      title: t(locale, 'error.empty'),
+      subtitle: t(locale, 'error.empty_desc'),
+    },
+  };
+
   const copy = VARIANTS[variant];
   const displayTitle = title ?? copy.title;
   const displaySubtitle = subtitle ?? copy.subtitle;
@@ -234,7 +240,7 @@ export function ErrorScene({
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 h-12 px-7 rounded-full bg-foreground text-background text-sm font-semibold shadow-sm hover:shadow-md hover:opacity-90 active:scale-95 transition-all"
             >
               <RefreshCw className="w-4 h-4 transition-transform group-hover:rotate-180 duration-500" />
-              Tentar novamente
+              {t(locale, 'common.retry')}
             </button>
           )}
 
@@ -246,7 +252,7 @@ export function ErrorScene({
                 className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full border border-border bg-card/80 backdrop-blur-sm text-sm font-medium text-foreground hover:bg-muted hover:border-muted-foreground/20 active:scale-95 transition-all"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Voltar
+                {t(locale, 'common.back')}
               </button>
             )}
 
@@ -256,7 +262,7 @@ export function ErrorScene({
                 className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full border border-border bg-card/80 backdrop-blur-sm text-sm font-medium text-foreground hover:bg-muted hover:border-muted-foreground/20 active:scale-95 transition-all"
               >
                 <Home className="w-4 h-4" />
-                <span className="hidden sm:inline">Início</span>
+                <span className="hidden sm:inline">{t(locale, 'nav.inicio')}</span>
               </Link>
             )}
 
@@ -266,7 +272,7 @@ export function ErrorScene({
                 className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full border border-border bg-card/80 backdrop-blur-sm text-sm font-medium text-foreground hover:bg-muted hover:border-muted-foreground/20 active:scale-95 transition-all"
               >
                 <Compass className="w-4 h-4" />
-                <span className="hidden sm:inline">Explorar</span>
+                <span className="hidden sm:inline">{t(locale, 'error.explore')}</span>
               </Link>
             )}
           </div>

@@ -9,9 +9,11 @@ import { useTrip, useUpdateTrip } from '@/hooks/useTrip';
 import { TripForm, type TripFormValues } from '@/components/trips/trip-form';
 import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/ui/skeletons';
+import { useLocale, t } from '@/lib/i18n';
 
 export default function EditTripPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const [locale] = useLocale();
   const { data: trip, isLoading } = useTrip(params.id);
   const updateTrip = useUpdateTrip(params.id);
 
@@ -22,7 +24,7 @@ export default function EditTripPage({ params }: { params: { id: string } }) {
       endDate: new Date(values.endDate),
       budget: values.budget,
     } as any);
-    toast.success('Viagem atualizada!');
+    toast.success(t(locale, 'edit_trip.success'));
     router.push(`/dashboard/trips/${params.id}`);
   }
 
@@ -35,7 +37,7 @@ export default function EditTripPage({ params }: { params: { id: string } }) {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Editar viagem</h1>
+              <h1 className="text-2xl font-bold">{t(locale, 'edit_trip.title')}</h1>
               <p className="text-sm text-muted-foreground">{trip?.title}</p>
             </div>
           </div>
@@ -55,10 +57,10 @@ export default function EditTripPage({ params }: { params: { id: string } }) {
                   description: trip.description ?? undefined,
                 }}
                 onSubmit={handleSubmit}
-                submitLabel="Salvar alterações"
+                submitLabel={t(locale, 'edit_trip.save')}
               />
             ) : (
-              <p className="text-muted-foreground text-sm">Viagem não encontrada.</p>
+              <p className="text-muted-foreground text-sm">{t(locale, 'edit_trip.not_found')}</p>
             )}
           </div>
         </motion.div>

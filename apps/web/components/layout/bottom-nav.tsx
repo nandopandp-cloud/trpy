@@ -4,17 +4,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Home, PlaneTakeoff, Heart, Wallet } from 'lucide-react';
+import { useLocale, t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
-
-const NAV = [
-  { href: '/dashboard', label: 'Início', icon: Home, exact: true },
-  { href: '/dashboard/trips', label: 'Viagens', icon: PlaneTakeoff },
-  { href: '/dashboard/budget', label: 'Finanças', icon: Wallet },
-  { href: '/dashboard/favorites', label: 'Favoritos', icon: Heart },
-];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const [locale] = useLocale();
+
+  const NAV = [
+    { href: '/dashboard', label: t(locale, 'nav.inicio'), icon: Home, exact: true },
+    { href: '/dashboard/trips', label: t(locale, 'nav.viagens'), icon: PlaneTakeoff },
+    { href: '/dashboard/budget', label: t(locale, 'nav.financas'), icon: Wallet },
+    { href: '/dashboard/favorites', label: t(locale, 'nav.favoritos'), icon: Heart },
+  ];
 
   function isActive(href: string, exact = false) {
     return exact ? pathname === href : pathname.startsWith(href);

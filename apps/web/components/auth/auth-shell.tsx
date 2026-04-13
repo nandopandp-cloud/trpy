@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaImages } from '@/components/integrations/media';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
 const DESTINATIONS = [
   { query: 'santorini greece sunset aerial travel', label: 'Santorini', country: 'Grécia' },
@@ -16,6 +17,7 @@ const DESTINATIONS = [
 ] as const;
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
+  const [locale] = useLocale();
   const [index, setIndex] = useState(0);
   const current = DESTINATIONS[index];
 
@@ -139,21 +141,19 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-300 animate-pulse" />
                 <span className="text-[11px] font-medium tracking-wider uppercase text-white/85">
-                  Planejamento inteligente
+                  {t(locale, 'auth.smart_planning' as any)}
                 </span>
               </motion.div>
 
               <h1 className="text-5xl lg:text-6xl xl:text-7xl font-medium text-white tracking-tight leading-[0.95] mb-5">
-                Sua próxima<br />
-                jornada<br />
+                {t(locale, 'auth.hero' as any).split(' ').slice(0, -1).join(' ')}<br />
                 <span className="italic font-light bg-gradient-to-r from-indigo-200 via-white to-amber-200 bg-clip-text text-transparent">
-                  começa aqui.
+                  {t(locale, 'auth.hero' as any).split(' ').slice(-1)[0]}
                 </span>
               </h1>
 
               <p className="text-base lg:text-lg text-white/70 font-light max-w-md leading-relaxed">
-                Planeje, descubra e viva experiências inesquecíveis.<br />
-                Do sonho ao embarque — tudo em um só lugar.
+                {t(locale, 'auth.hero_desc' as any)}
               </p>
             </motion.div>
 
@@ -175,18 +175,14 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
                     transition={{ duration: 0.4 }}
                     className="text-[10px] font-semibold tracking-[0.22em] uppercase text-white/55 mb-3"
                   >
-                    {current.label} · {current.country}
+                    {t(locale, 'auth.destination_label' as any).replace('{country}', current.country)}
                   </motion.p>
                 </AnimatePresence>
                 <h1 className="text-[2.6rem] font-bold text-white tracking-tight leading-[1.04] mb-3">
-                  Sua próxima<br />
-                  <span className="italic font-light bg-gradient-to-r from-indigo-200 via-white/90 to-amber-200 bg-clip-text text-transparent">
-                    jornada
-                  </span>{' '}
-                  começa<br />aqui.
+                  {t(locale, 'auth.hero' as any)}
                 </h1>
                 <p className="text-[13px] text-white/60 font-light">
-                  Planeje, descubra e viva experiências inesquecíveis.
+                  {t(locale, 'auth.hero_desc' as any)}
                 </p>
               </div>
 
@@ -209,7 +205,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
               <div className="flex items-center justify-between mt-4 md:mt-5 px-1">
                 <p className="text-[10px] md:text-[11px] text-white/35 md:text-white/40 leading-snug max-w-[200px]">
                   Ao continuar, aceita os{' '}
-                  <Link href="#" className="text-white/55 md:text-white/60 hover:text-white underline underline-offset-2">Termos</Link>.
+                  <Link href="#" className="text-white/55 md:text-white/60 hover:text-white underline underline-offset-2">{t(locale, 'auth.terms' as any)}</Link>.
                 </p>
                 <DestinationDots current={index} total={DESTINATIONS.length} onSelect={setIndex} />
               </div>

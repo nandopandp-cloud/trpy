@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useLocale, t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type { ItineraryItem } from '@trpy/database';
 
@@ -21,7 +22,7 @@ import type { ItineraryItem } from '@trpy/database';
 const ITEM_TYPES = [
   {
     value: 'ACTIVITY',
-    label: 'Atividade',
+    labelKey: 'item_type.activity' as const,
     icon: Zap,
     gradient: 'from-emerald-500 to-teal-600',
     bg: 'bg-emerald-500/12 border-emerald-500/30',
@@ -29,7 +30,7 @@ const ITEM_TYPES = [
   },
   {
     value: 'RESTAURANT',
-    label: 'Restaurante',
+    labelKey: 'item_type.restaurant' as const,
     icon: Utensils,
     gradient: 'from-amber-500 to-orange-500',
     bg: 'bg-amber-500/12 border-amber-500/30',
@@ -37,7 +38,7 @@ const ITEM_TYPES = [
   },
   {
     value: 'HOTEL',
-    label: 'Hospedagem',
+    labelKey: 'item_type.hotel' as const,
     icon: Hotel,
     gradient: 'from-sky-500 to-blue-600',
     bg: 'bg-sky-500/12 border-sky-500/30',
@@ -45,7 +46,7 @@ const ITEM_TYPES = [
   },
   {
     value: 'TRANSPORT',
-    label: 'Transporte',
+    labelKey: 'item_type.transport' as const,
     icon: Bus,
     gradient: 'from-violet-500 to-purple-600',
     bg: 'bg-violet-500/12 border-violet-500/30',
@@ -53,7 +54,7 @@ const ITEM_TYPES = [
   },
   {
     value: 'OTHER',
-    label: 'Outro',
+    labelKey: 'item_type.other' as const,
     icon: MoreHorizontal,
     gradient: 'from-slate-500 to-slate-600',
     bg: 'bg-slate-500/12 border-slate-500/30',
@@ -65,7 +66,7 @@ const ITEM_TYPES = [
 
 const schema = z.object({
   type: z.enum(['ACTIVITY', 'RESTAURANT', 'HOTEL', 'TRANSPORT', 'OTHER']),
-  title: z.string().min(1, 'Título obrigatório').max(200),
+  title: z.string().min(1).max(200),
   description: z.string().max(500).optional(),
   location: z.string().max(200).optional(),
   startTime: z.string().optional(),
@@ -97,7 +98,13 @@ export function ItineraryItemForm({
 }: ItineraryItemFormProps) {
   const queryClient = useQueryClient();
   const isEdit = !!item;
+  const [locale] = useLocale();
 
+  const PLACEHOLDER_MAP: Record<string, string> = {
+    RESTAURANT: t(locale, 'item_placeholder.restaurant'),
+    HOTEL: t(locale, 'item_placeholder.hotel'),
+    TRANSPORT: t(locale, 'item_placeholder.transport'),
+  };
 
   const {
     register,
@@ -151,10 +158,10 @@ export function ItineraryItemForm({
     }
 
     const json = await res.json();
-    if (!json.success) throw new Error(json.error ?? 'Erro ao salvar');
+    if (!json.success) throw new Error(json.error ?? t(locale, 'item_form.error'));
 
     queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
-    toast.success(isEdit ? 'Atividade atualizada!' : 'Atividade adicionada!', {
+    toast.success(isEdit ? t(locale, 'item_form.updated') : t(locale, 'item_form.added'), {
       description: values.title,
     });
     onClose();
@@ -183,7 +190,7 @@ export function ItineraryItemForm({
             </div>
             <div>
               <p className="font-bold text-foreground text-sm">
-                {isEdit ? 'Editar atividade' : 'Nova atividade'}
+                {isEdit ? t(locale, 'item_form.edit') : t(locale, 'item_form.new')}
               </p>
               <p className="text-xs text-muted-foreground">{dayLabel}</p>
             </div>
@@ -205,31 +212,31 @@ export function ItineraryItemForm({
             {/* Type picker */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Tipo de atividade
+                {t(locale, 'item_form.type')}
               </label>
               <Controller
                 control={control}
                 name="type"
                 render={({ field }) => (
                   <div className="grid grid-cols-5 gap-2">
-                    {ITEM_TYPES.map((t) => {
-                      const Icon = t.icon;
-                      const active = field.value === t.value;
+                    {ITEM_TYPES.map((tp) => {
+                      const Icon = tp.icon;
+                      const active = field.value === tp.value;
                       return (
                         <motion.button
-                          key={t.value}
+                          key={tp.value}
                           type="button"
                           whileHover={{ scale: 1.04 }}
                           whileTap={{ scale: 0.93 }}
-                          onClick={() => field.onChange(t.value)}
+                          onClick={() => field.onChange(tp.value)}
                           className={cn(
                             'relative flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl border transition-all duration-200',
-                            active ? t.active + ' text-white' : t.bg + ' text-muted-foreground hover:text-foreground'
+                            active ? tp.active + ' text-white' : tp.bg + ' text-muted-foreground hover:text-foreground'
                           )}
                         >
                           <Icon className="w-4 h-4" />
                           <span className="text-[9px] font-semibold leading-tight text-center">
-                            {t.label}
+                            {t(locale, tp.labelKey)}
                           </span>
                           {active && (
                             <motion.span
@@ -251,20 +258,15 @@ export function ItineraryItemForm({
             {/* Title */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
-                Título <span className="text-destructive">*</span>
+                {t(locale, 'item_form.title')} <span className="text-destructive">*</span>
               </label>
               <Input
                 {...register('title')}
-                placeholder={
-                  selectedType === 'RESTAURANT' ? 'Ex: Jantar no Le Cinq' :
-                  selectedType === 'HOTEL' ? 'Ex: Check-in no Hotel Ritz' :
-                  selectedType === 'TRANSPORT' ? 'Ex: Voo CDG → LHR' :
-                  'Ex: Tour pela Torre Eiffel'
-                }
+                placeholder={PLACEHOLDER_MAP[selectedType] || t(locale, 'item_placeholder.default')}
                 className="h-10"
               />
               {errors.title && (
-                <p className="text-xs text-destructive">{errors.title.message}</p>
+                <p className="text-xs text-destructive">{t(locale, 'item_form.title_required')}</p>
               )}
             </div>
 
@@ -272,7 +274,7 @@ export function ItineraryItemForm({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Horário
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" /> {t(locale, 'item_form.time')}
                 </label>
                 <Input
                   {...register('startTime')}
@@ -286,7 +288,7 @@ export function ItineraryItemForm({
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Duração (min)
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" /> {t(locale, 'item_form.duration')}
                 </label>
                 <Input
                   {...register('durationMins')}
@@ -304,11 +306,11 @@ export function ItineraryItemForm({
             {/* Location */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-muted-foreground" /> Local
+                <MapPin className="w-3.5 h-3.5 text-muted-foreground" /> {t(locale, 'item_form.location')}
               </label>
               <Input
                 {...register('location')}
-                placeholder="Ex: Champ de Mars, Paris"
+                placeholder={t(locale, 'item_form.location_placeholder')}
                 className="h-10"
               />
             </div>
@@ -316,7 +318,7 @@ export function ItineraryItemForm({
             {/* Cost */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-muted-foreground" /> Custo estimado
+                <DollarSign className="w-3.5 h-3.5 text-muted-foreground" /> {t(locale, 'item_form.cost')}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
@@ -340,13 +342,13 @@ export function ItineraryItemForm({
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-                Notas{' '}
-                <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
+                {t(locale, 'item_form.notes')}{' '}
+                <span className="text-muted-foreground font-normal text-xs">({t(locale, 'common.optional')})</span>
               </label>
               <textarea
                 {...register('description')}
                 rows={2}
-                placeholder="Reserva necessária, endereço, dicas..."
+                placeholder={t(locale, 'item_form.notes_placeholder')}
                 className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-all resize-none"
               />
               {errors.description && (
@@ -366,7 +368,7 @@ export function ItineraryItemForm({
               onClick={onClose}
               className="flex-1 h-11"
             >
-              Cancelar
+              {t(locale, 'common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -375,9 +377,9 @@ export function ItineraryItemForm({
               className="flex-1 h-11 font-semibold gap-2"
             >
               {isSubmitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Salvando…</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> {t(locale, 'common.saving')}</>
               ) : (
-                <><Check className="w-4 h-4" /> {isEdit ? 'Salvar alterações' : 'Adicionar'}</>
+                <><Check className="w-4 h-4" /> {isEdit ? t(locale, 'item_form.save') : t(locale, 'common.add')}</>
               )}
             </Button>
           </div>

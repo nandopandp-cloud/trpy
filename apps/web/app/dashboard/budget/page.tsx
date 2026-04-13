@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/ui/skeletons';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useLocale, t } from '@/lib/i18n';
 
 const stagger = {
   container: { hidden: {}, show: { transition: { staggerChildren: 0.07 } } },
@@ -24,13 +25,6 @@ const TRIP_COLORS = [
   '#6366f1', '#a855f7', '#f59e0b', '#10b981', '#ef4444', '#ec4899',
 ];
 
-const STATUS_LABEL: Record<string, string> = {
-  PLANNING: 'Planejando',
-  ONGOING: 'Em andamento',
-  COMPLETED: 'Concluída',
-  CANCELLED: 'Cancelada',
-};
-
 const STATUS_BAR_COLOR: Record<string, string> = {
   PLANNING: 'from-indigo-500 to-violet-600',
   ONGOING: 'from-emerald-500 to-teal-600',
@@ -40,8 +34,16 @@ const STATUS_BAR_COLOR: Record<string, string> = {
 
 export default function BudgetPage() {
   const router = useRouter();
+  const [locale] = useLocale();
   const { data, isLoading } = useTrips({ limit: 20 });
   const trips = data?.trips ?? [];
+
+  const STATUS_LABEL: Record<string, string> = {
+    PLANNING: t(locale, 'status.planning' as any),
+    ONGOING: t(locale, 'status.ongoing' as any),
+    COMPLETED: t(locale, 'status.completed' as any),
+    CANCELLED: t(locale, 'status.cancelled' as any),
+  };
 
   const totalBudget = trips.reduce((s, t) => s + Number(t.budget), 0);
   const totalSpent  = trips.reduce((s, t) => s + Number(t.totalSpent), 0);
@@ -52,8 +54,8 @@ export default function BudgetPage() {
     .filter(t => Number(t.budget) > 0)
     .map((t) => ({
       name: t.title.length > 12 ? t.title.slice(0, 12) + '…' : t.title,
-      orçamento: Number(t.budget),
-      gasto: Number(t.totalSpent),
+      budget: Number(t.budget),
+      spent: Number(t.totalSpent),
     }));
 
   const pieData = trips
@@ -68,28 +70,28 @@ export default function BudgetPage() {
 
   const stats = [
     {
-      label: 'Orçamento total',
+      label: t(locale, 'budget_page.total_budget' as any),
       value: `R$ ${totalBudget.toLocaleString('pt-BR')}`,
       icon: Wallet,
       color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
     },
     {
-      label: 'Total gasto',
+      label: t(locale, 'budget_page.total_spent' as any),
       value: `R$ ${totalSpent.toLocaleString('pt-BR')}`,
       icon: TrendingUp,
       color: totalProgress >= 90 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400',
       bgColor: totalProgress >= 90 ? 'bg-red-50 dark:bg-red-500/10' : 'bg-amber-50 dark:bg-amber-500/10',
     },
     {
-      label: 'Saldo restante',
+      label: t(locale, 'budget_page.balance' as any),
       value: `R$ ${Math.max(totalRemaining, 0).toLocaleString('pt-BR')}`,
       icon: TrendingDown,
       color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
     },
     {
-      label: 'Acima do orçamento',
+      label: t(locale, 'budget_page.over_budget' as any),
       value: overBudgetTrips.length,
-      suffix: ' viagens',
+      suffix: ` ${t(locale, 'budget_page.trips' as any)}`,
       icon: overBudgetTrips.length > 0 ? AlertTriangle : PiggyBank,
       color: overBudgetTrips.length > 0 ? 'text-red-600 dark:text-red-400' : 'text-purple-600 dark:text-purple-400',
       bgColor: overBudgetTrips.length > 0 ? 'bg-red-50 dark:bg-red-500/10' : 'bg-purple-50 dark:bg-purple-500/10',
@@ -103,8 +105,8 @@ export default function BudgetPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl font-medium text-foreground tracking-tight">Finanças</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Visão consolidada de orçamentos e gastos</p>
+        <h1 className="text-2xl font-medium text-foreground tracking-tight">{t(locale, 'budget_page.title' as any)}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'budget_page.subtitle' as any)}</p>
       </motion.div>
 
       {isLoading ? (
@@ -152,7 +154,7 @@ export default function BudgetPage() {
             className="rounded-2xl border border-border bg-card p-5 shadow-card"
           >
             <div className="flex items-center justify-between mb-4">
-              <p className="font-medium text-foreground">Orçamento total utilizado</p>
+              <p className="font-medium text-foreground">{t(locale, 'budget_page.used' as any)}</p>
               <span className="text-sm font-medium text-foreground">{totalProgress.toFixed(0)}%</span>
             </div>
             <div className="h-3 bg-muted rounded-full overflow-hidden">
@@ -169,8 +171,8 @@ export default function BudgetPage() {
               />
             </div>
             <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-              <span>R$ {totalSpent.toLocaleString('pt-BR')} gastos</span>
-              <span>R$ {totalBudget.toLocaleString('pt-BR')} total</span>
+              <span>R$ {totalSpent.toLocaleString('pt-BR')} {t(locale, 'budget_page.spent_label' as any)}</span>
+              <span>R$ {totalBudget.toLocaleString('pt-BR')} {t(locale, 'budget_page.total_label' as any)}</span>
             </div>
           </motion.div>
 
@@ -183,7 +185,7 @@ export default function BudgetPage() {
                 transition={{ delay: 0.2 }}
                 className="rounded-2xl border border-border bg-card p-5 shadow-card"
               >
-                <p className="font-medium text-foreground mb-4">Orçamento × Gasto por viagem</p>
+                <p className="font-medium text-foreground mb-4">{t(locale, 'budget_page.bar_title' as any)}</p>
                 {barData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={barData} barGap={4} barCategoryGap="30%">
@@ -209,13 +211,13 @@ export default function BudgetPage() {
                         }}
                         formatter={(value) => `R$ ${Number(value).toLocaleString('pt-BR')}`}
                       />
-                      <Bar dataKey="orçamento" fill="#6366f130" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="gasto" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="budget" fill="#6366f130" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="spent" fill="#6366f1" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">
-                    Nenhuma viagem com orçamento definido.
+                    {t(locale, 'budget_page.no_budget' as any)}
                   </div>
                 )}
               </motion.div>
@@ -227,7 +229,7 @@ export default function BudgetPage() {
                 transition={{ delay: 0.25 }}
                 className="rounded-2xl border border-border bg-card p-5 shadow-card"
               >
-                <p className="font-medium text-foreground mb-4">Distribuição de gastos</p>
+                <p className="font-medium text-foreground mb-4">{t(locale, 'budget_page.distribution' as any)}</p>
                 {pieData.length > 0 ? (
                   <div className="flex items-center gap-6">
                     <ResponsiveContainer width={140} height={140}>
@@ -272,7 +274,7 @@ export default function BudgetPage() {
                   </div>
                 ) : (
                   <div className="h-[140px] flex items-center justify-center text-sm text-muted-foreground">
-                    Nenhum gasto registrado ainda.
+                    {t(locale, 'budget_page.no_expenses' as any)}
                   </div>
                 )}
               </motion.div>
@@ -287,7 +289,7 @@ export default function BudgetPage() {
               transition={{ delay: 0.3 }}
               className="rounded-2xl border border-border bg-card p-5 shadow-card space-y-4"
             >
-              <p className="font-medium text-foreground">Por viagem</p>
+              <p className="font-medium text-foreground">{t(locale, 'budget_page.per_trip' as any)}</p>
               <div className="space-y-4">
                 {trips.map((trip) => {
                   const budget = Number(trip.budget);
@@ -349,15 +351,15 @@ export default function BudgetPage() {
               <div className="w-16 h-16 rounded-2xl bg-zinc-50 dark:bg-muted flex items-center justify-center mx-auto mb-5">
                 <Wallet className="w-8 h-8 text-muted-foreground/40" />
               </div>
-              <p className="font-medium text-foreground mb-1">Sem dados financeiros</p>
+              <p className="font-medium text-foreground mb-1">{t(locale, 'budget_page.empty_title' as any)}</p>
               <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
-                Crie viagens e registre despesas para ver análises aqui.
+                {t(locale, 'budget_page.empty_desc' as any)}
               </p>
               <button
                 onClick={() => router.push('/dashboard/trips/new')}
                 className="inline-flex items-center gap-2 bg-foreground text-background text-sm font-medium px-6 py-3 rounded-full hover:opacity-90 transition-all hover:scale-[1.02] active:scale-95 group relative overflow-hidden"
               >
-                <span className="relative z-10">Criar viagem</span>
+                <span className="relative z-10">{t(locale, 'trips.create' as any)}</span>
                 <span className="absolute inset-0 overflow-hidden rounded-full">
                   <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
                 </span>
