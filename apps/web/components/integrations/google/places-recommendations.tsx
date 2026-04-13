@@ -7,7 +7,7 @@ import { Star, MapPin, Clock, ExternalLink, Utensils, Hotel, Landmark, Building2
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { PlaceDetailModal } from './place-detail-modal';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
-import { useLocale, t } from '@/lib/i18n';
+import { useLocale, t, formatNumber, type Locale } from '@/lib/i18n';
 
 interface RecommendationsData {
   restaurants: PlaceSearchResult[];
@@ -47,7 +47,7 @@ function PlaceCard({
 }: {
   place: PlaceSearchResult;
   favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
-  locale: string;
+  locale: Locale;
   onOpen: () => void;
 }) {
   const photo = place.photos?.[0];
@@ -107,7 +107,7 @@ function PlaceCard({
               <span className="text-xs text-muted-foreground">
                 {place.rating.toFixed(1)}
                 {place.user_ratings_total != null && (
-                  <span className="ml-0.5">({place.user_ratings_total.toLocaleString('pt-BR')})</span>
+                  <span className="ml-0.5">({formatNumber(locale, place.user_ratings_total)})</span>
                 )}
               </span>
             </div>
@@ -138,7 +138,7 @@ function PlaceCard({
   );
 }
 
-function EmptyState({ tab, destination, locale }: { tab: typeof TABS[number]; destination: string; locale: string }) {
+function EmptyState({ tab, destination, locale }: { tab: typeof TABS[number]; destination: string; locale: Locale }) {
   const tabLabel = t(locale as any, tab.labelKey as any);
   const mapsQuery = encodeURIComponent(
     `${tabLabel} ${destination}`

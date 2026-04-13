@@ -13,6 +13,7 @@ import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { GoogleMapView } from './google-map-view';
 import { WriteReviewModal } from './write-review-modal';
 import { cn } from '@/lib/utils';
+import { useLocale, formatNumber } from '@/lib/i18n';
 import type { PlaceDetails, PlaceReview } from '@/lib/integrations/google/places-service';
 
 // ─── Trpy review shape (from our DB) ─────────────────────────────────────────
@@ -672,6 +673,7 @@ export function PlaceDetailModal({
   fallbackName,
   onClose,
 }: PlaceDetailModalProps) {
+  const [locale] = useLocale();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? null;
 
@@ -840,7 +842,7 @@ export function PlaceDetailModal({
                     </span>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {place.user_ratings_total?.toLocaleString('pt-BR') ?? 0} avaliações
+                    {place.user_ratings_total ? formatNumber(locale, place.user_ratings_total) : 0} avaliações
                   </p>
                 </div>
 

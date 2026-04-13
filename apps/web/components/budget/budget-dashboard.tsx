@@ -10,7 +10,7 @@ import { ptBR } from 'date-fns/locale';
 import type { Expense, Trip } from '@trpy/database';
 import { GradientProgress } from '@/components/ui/gradient-progress';
 import { cn } from '@/lib/utils';
-import { useLocale, t } from '@/lib/i18n';
+import { useLocale, t, formatNumber } from '@/lib/i18n';
 
 const CATEGORY_LABEL_KEYS: Record<string, string> = {
   ACCOMMODATION: 'category.accommodation',
@@ -82,19 +82,19 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
       <div className="grid grid-cols-2 gap-3">
         <StatCard
           label={t(locale, 'budget.total')}
-          value={`${trip.currency} ${budget.toLocaleString('pt-BR')}`}
+          value={`${trip.currency} ${formatNumber(locale, budget)}`}
           icon={<Wallet className="w-4 h-4" />}
           color="green"
         />
         <StatCard
           label={t(locale, 'budget.spent')}
-          value={`${trip.currency} ${spent.toLocaleString('pt-BR')}`}
+          value={`${trip.currency} ${formatNumber(locale, spent)}`}
           icon={<TrendingUp className="w-4 h-4" />}
           color={progress >= 90 ? 'red' : 'amber'}
         />
         <StatCard
           label={t(locale, 'budget.remaining')}
-          value={`${trip.currency} ${Math.max(remaining, 0).toLocaleString('pt-BR')}`}
+          value={`${trip.currency} ${formatNumber(locale, Math.max(remaining, 0))}`}
           icon={<TrendingDown className="w-4 h-4" />}
           color="green"
         />
@@ -113,7 +113,7 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
           value={spent}
           max={budget}
           color={progressColor}
-          label={t(locale, 'budget.spent_of').replace('{spent}', `${trip.currency} ${spent.toLocaleString('pt-BR')}`).replace('{total}', budget.toLocaleString('pt-BR'))}
+          label={t(locale, 'budget.spent_of').replace('{spent}', `${trip.currency} ${formatNumber(locale, spent)}`).replace('{total}', formatNumber(locale, budget))}
         />
       </div>
 
@@ -147,7 +147,7 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
                   />
                   <Tooltip
                     contentStyle={tooltipStyle}
-                    formatter={(value) => [`${trip.currency} ${Number(value).toLocaleString('pt-BR')}`, 'Total']}
+                    formatter={(value) => [`${trip.currency} ${formatNumber(locale, Number(value) || 0)}`, 'Total']}
                   />
                   <Area
                     type="monotone"

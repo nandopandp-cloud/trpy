@@ -6,6 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { MapPin, Calendar, ArrowRight, Wallet } from 'lucide-react';
 import type { Trip } from '@trpy/database';
 import { cn } from '@/lib/utils';
+import { useLocale, formatNumber } from '@/lib/i18n';
 
 const STATUS_LABEL: Record<string, string> = {
   PLANNING: 'Planejando',
@@ -28,6 +29,7 @@ interface HeroCardProps {
 }
 
 export function HeroCard({ trip, onClick, className }: HeroCardProps) {
+  const [locale] = useLocale();
   const budget = Number(trip.budget);
   const spent = Number(trip.totalSpent);
   const progress = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
@@ -98,8 +100,8 @@ export function HeroCard({ trip, onClick, className }: HeroCardProps) {
                 </div>
               </div>
               <span className="text-xs font-semibold text-white/80 shrink-0">
-                {trip.currency} {spent.toLocaleString('pt-BR')}
-                <span className="text-white/50 font-normal"> / {budget.toLocaleString('pt-BR')}</span>
+                {trip.currency} {formatNumber(locale, spent)}
+                <span className="text-white/50 font-normal"> / {formatNumber(locale, budget)}</span>
               </span>
             </div>
 

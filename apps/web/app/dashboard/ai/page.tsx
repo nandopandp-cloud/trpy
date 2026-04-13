@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ActivityCard } from '@/components/cards/activity-card';
 import { cn } from '@/lib/utils';
-import { useLocale, t } from '@/lib/i18n';
+import { useLocale, t, formatNumber } from '@/lib/i18n';
 
 const SUGGESTIONS = [
   { label: '7 dias em Lisboa', sub: 'Gastronomia e cultura' },
@@ -236,7 +236,7 @@ export default function AIPage() {
                 <span className="text-sm font-medium text-foreground">{result.length} {t(locale, 'ai.days' as any)}</span>
                 <span className="text-sm text-muted-foreground">{totalActivities} {t(locale, 'ai.activities' as any)}</span>
                 <span className="text-sm text-muted-foreground">
-                  ~R$ {totalCost.toLocaleString('pt-BR')} {t(locale, 'ai.estimated' as any)}
+                  ~R$ {formatNumber(locale, totalCost)} {t(locale, 'ai.estimated' as any)}
                 </span>
               </div>
               <Button

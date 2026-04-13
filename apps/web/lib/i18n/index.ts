@@ -5,3 +5,4 @@ export { translations, t } from './translations';
 export { detectLocaleFromBrowser, detectLocaleFromHeader } from './detect-locale';
 export { useLocale } from './use-locale';
 export { LocaleProvider } from './locale-context';
+export { formatNumber, formatDate, getCurrencySymbol } from './format-locale';

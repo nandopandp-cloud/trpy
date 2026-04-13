@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Star, ExternalLink } from 'lucide-react';
+import { useLocale, formatNumber } from '@/lib/i18n';
 import type { PlaceDetails, PlaceReview } from '@/lib/integrations/google/places-service';
 
 interface GoogleReviewsWidgetProps {
@@ -60,6 +61,7 @@ function ReviewCard({ review, index }: { review: PlaceReview; index: number }) {
 }
 
 export function GoogleReviewsWidget({ placeId, placeName }: GoogleReviewsWidgetProps) {
+  const [locale] = useLocale();
   const { data: place, isLoading } = useQuery<PlaceDetails>({
     queryKey: ['place-details', placeId],
     queryFn: async () => {
@@ -93,7 +95,7 @@ export function GoogleReviewsWidget({ placeId, placeName }: GoogleReviewsWidgetP
         <div className="text-center">
           <p className="text-3xl font-black text-foreground">{place.rating?.toFixed(1)}</p>
           <StarRating rating={place.rating ?? 0} size="md" />
-          <p className="text-xs text-muted-foreground mt-1">{place.user_ratings_total?.toLocaleString('pt-BR')} avaliações</p>
+          <p className="text-xs text-muted-foreground mt-1">{place.user_ratings_total ? formatNumber(locale, place.user_ratings_total) : 0} avaliações</p>
         </div>
         <div className="flex-1 space-y-1">
           {[5, 4, 3, 2, 1].map((stars) => {

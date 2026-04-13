@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { MapPin, Calendar, ArrowRight, Wallet } from 'lucide-react';
 import type { Trip } from '@trpy/database';
 import { cn } from '@/lib/utils';
-import { useLocale, t } from '@/lib/i18n';
+import { useLocale, t, formatNumber } from '@/lib/i18n';
 
 const STATUS_STYLE: Record<string, string> = {
   PLANNING: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/20',
@@ -125,8 +125,8 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
                 {t(locale, 'budget.total')}
               </span>
               <span className="font-medium text-foreground">
-                {trip.currency} {spent.toLocaleString('pt-BR')}
-                <span className="text-muted-foreground font-normal"> / {budget.toLocaleString('pt-BR')}</span>
+                {trip.currency} {formatNumber(locale, spent)}
+                <span className="text-muted-foreground font-normal"> / {formatNumber(locale, budget)}</span>
               </span>
             </div>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">

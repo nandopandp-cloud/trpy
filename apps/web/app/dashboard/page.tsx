@@ -16,10 +16,12 @@ import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
 import { TripStories } from '@/components/dashboard/trip-stories';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useLocale, formatNumber } from '@/lib/i18n';
 
 /* ── Animated Counter ─────────────────────────────────── */
 
 function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
+  const [locale] = useLocale();
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number; pr
 
   return (
     <span className="tabular-nums">
-      {prefix}{display.toLocaleString('pt-BR')}{suffix}
+      {prefix}{formatNumber(locale, display)}{suffix}
     </span>
   );
 }
@@ -213,6 +215,7 @@ const stagger = {
 /* ══════════════════════════════════════════════════════════ */
 
 export default function DashboardPage() {
+  const [locale] = useLocale();
   const router = useRouter();
   const { data, isLoading } = useTrips({ limit: 5 });
   const trips = data?.trips ?? [];
@@ -483,8 +486,8 @@ export default function DashboardPage() {
             </div>
 
             <div className="pt-1 flex justify-between text-[9px] text-muted-foreground">
-              <span>R$ {totalSpent.toLocaleString('pt-BR')}</span>
-              <span>R$ {totalBudget.toLocaleString('pt-BR')}</span>
+              <span>R$ {formatNumber(locale, totalSpent)}</span>
+              <span>R$ {formatNumber(locale, totalBudget)}</span>
             </div>
           </TiltCard>
         </motion.div>
@@ -549,7 +552,7 @@ export default function DashboardPage() {
                   {/* Bar */}
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
                     <span>Gasto</span>
-                    <span className="whitespace-nowrap">R$ {totalBudget.toLocaleString('pt-BR')}</span>
+                    <span className="whitespace-nowrap">R$ {formatNumber(locale, totalBudget)}</span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                     <motion.div
@@ -568,10 +571,10 @@ export default function DashboardPage() {
                   {/* Labels */}
                   <div className="flex items-center justify-between text-[10px] gap-2">
                     <span className={cn('font-semibold whitespace-nowrap', totalSpent > totalBudget * 0.9 ? 'text-amber-500' : 'text-indigo-500')}>
-                      R$ {totalSpent.toLocaleString('pt-BR')} gasto
+                      R$ {formatNumber(locale, totalSpent)} gasto
                     </span>
                     <span className="text-muted-foreground whitespace-nowrap">
-                      R$ {Math.max(0, totalBudget - totalSpent).toLocaleString('pt-BR')} restante
+                      R$ {formatNumber(locale, Math.max(0, totalBudget - totalSpent))} restante
                     </span>
                   </div>
                 </div>
