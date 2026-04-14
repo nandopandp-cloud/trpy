@@ -140,8 +140,38 @@ export default function HomePage() {
           {/* Logo */}
           <Logo href="/" size="md" hideText={true} />
 
-          {/* Right side — Login */}
+          {/* Right side — Language + Login */}
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Language selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLocaleMenu(!showLocaleMenu)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Globe className="w-4 h-4" />
+                <span className="hidden sm:inline text-xs font-medium">{LOCALES.find(l => l.value === locale)?.label}</span>
+              </button>
+              {showLocaleMenu && (
+                <div className="absolute right-0 top-full mt-2 bg-card border border-border rounded-lg shadow-lg py-1 z-50 min-w-max">
+                  {LOCALES.map(l => (
+                    <button
+                      key={l.value}
+                      onClick={() => {
+                        setLocale(l.value);
+                        setShowLocaleMenu(false);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
+                        locale === l.value
+                          ? 'bg-primary text-primary-foreground font-medium'
+                          : 'text-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link href="/login">
               <button className="group bg-foreground text-background text-xs sm:text-sm font-medium px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:opacity-90 transition-all shadow-sm hover:shadow-md flex items-center gap-2 relative overflow-hidden">
                 <span className="relative z-10 hidden sm:inline">{t(locale, 'landing.nav_login' as any)}</span>
