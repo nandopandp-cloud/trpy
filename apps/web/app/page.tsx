@@ -128,67 +128,61 @@ export default function HomePage() {
       <header className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-xl border-b border-border/50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center shrink-0 gap-2 group transition-transform hover:scale-105">
-            {/* Icon: Premium gradient TRPY */}
-            <div className="relative w-8 h-8 sm:w-10 sm:h-10">
+          <Link href="/" className="flex items-center shrink-0 gap-2 group transition-transform hover:scale-105 active:scale-95">
+            {/* Icon: Premium vectorized TRPY */}
+            <div className="relative w-8 h-8 sm:w-10 sm:h-10 drop-shadow-sm">
               <svg
-                viewBox="0 0 400 280"
+                viewBox="0 0 450 280"
                 className="w-full h-full"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 preserveAspectRatio="xMidYMid meet"
               >
                 <defs>
-                  {/* Main gradient: Purple → Magenta (for T, R, P) */}
-                  <linearGradient id="navPurpleMagenta" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+                  <linearGradient id="navGradientT" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#c855f7', stopOpacity: 1 }} />
                     <stop offset="100%" style={{ stopColor: '#d946ef', stopOpacity: 1 }} />
                   </linearGradient>
-
-                  {/* Cyan gradient (for R) */}
-                  <linearGradient id="navCyanBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: '#0084d4', stopOpacity: 1 }} />
+                  <linearGradient id="navGradientRTop" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+                    <stop offset="50%" style={{ stopColor: '#3b82f6', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#1e40af', stopOpacity: 1 }} />
                   </linearGradient>
-
-                  {/* Orange to Yellow gradient (for Y) */}
-                  <linearGradient id="navOrangeYellow" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient id="navGradientRBottom" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#7c3aed', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+                  </linearGradient>
+                  <linearGradient id="navGradientP" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#0ea5e9', stopOpacity: 1 }} />
+                  </linearGradient>
+                  <linearGradient id="navGradientYLeft" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 1 }} />
                     <stop offset="100%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
                   </linearGradient>
-
-                  {/* Red to Orange gradient (for Y bottom curve) */}
-                  <linearGradient id="navRedOrange" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#ef4444', stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: '#f97316', stopOpacity: 1 }} />
+                  <linearGradient id="navGradientYRight" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#f97316', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#fb923c', stopOpacity: 1 }} />
                   </linearGradient>
                 </defs>
-
-                {/* T: Purple rounded cross shape */}
                 <g>
-                  <rect x="65" y="55" width="88" height="28" rx="14" ry="14" fill="url(#navPurpleMagenta)" />
-                  <rect x="88" y="75" width="42" height="95" rx="21" ry="21" fill="url(#navPurpleMagenta)" />
+                  <rect x="65" y="55" width="95" height="32" rx="16" ry="16" fill="url(#navGradientT)" />
+                  <path d="M 85 87 L 85 175 Q 85 185 95 185 L 95 185 Q 105 185 105 175 L 105 87 Z" fill="url(#navGradientT)" />
                 </g>
-
-                {/* R: Purple stem with cyan bump and curl */}
                 <g>
-                  <rect x="160" y="55" width="42" height="115" rx="21" ry="21" fill="url(#navPurpleMagenta)" />
-                  <path d="M 202 75 Q 242 75 242 105 Q 242 135 202 135 Q 162 135 162 105 Q 162 75 202 75 Z" fill="url(#navCyanBlue)" />
-                  <path d="M 202 130 Q 250 140 280 175 Q 285 182 275 190 Q 250 160 202 150 Z" fill="url(#navCyanBlue)" />
+                  <path d="M 155 55 L 155 180 Q 155 190 165 190 L 165 190 Q 175 190 175 180 L 175 55 Q 175 45 165 45 L 165 45 Q 155 45 155 55 Z" fill="url(#navGradientRBottom)" />
+                  <path d="M 175 65 Q 240 65 250 110 Q 250 150 175 150 Q 165 150 165 140 L 165 75 Q 165 65 175 65 Z" fill="url(#navGradientRTop)" />
+                  <path d="M 215 145 Q 270 160 310 215 Q 315 222 305 230 Q 250 175 215 160 Z" fill="url(#navGradientRTop)" />
                 </g>
-
-                {/* P: Cyan stem with purple rounded top */}
                 <g>
-                  <rect x="245" y="80" width="42" height="110" rx="21" ry="21" fill="url(#navCyanBlue)" />
-                  <ellipse cx="287" cy="105" rx="48" ry="40" fill="url(#navPurpleMagenta)" />
+                  <path d="M 260 85 L 260 190 Q 260 195 270 195 L 270 195 Q 280 195 280 190 L 280 85 Q 280 80 270 80 L 270 80 Q 260 80 260 85 Z" fill="url(#navGradientP)" />
+                  <ellipse cx="315" cy="115" rx="60" ry="50" fill="url(#navGradientP)" />
                 </g>
-
-                {/* Y: Orange/Red flowing curves */}
                 <g>
-                  <path d="M 315 85 Q 325 100 340 120 Q 345 128 340 135 Q 335 132 330 120 Q 320 102 310 92 Z" fill="url(#navOrangeYellow)" />
-                  <rect x="315" y="125" width="40" height="85" rx="20" ry="20" fill="url(#navOrangeYellow)" />
-                  <path d="M 355 85 Q 345 100 330 120 Q 325 128 330 135 Q 335 132 340 120 Q 350 102 360 92 Z" fill="url(#navRedOrange)" />
-                  <path d="M 360 90 Q 375 110 380 140 Q 378 152 365 148 Q 358 125 355 100 Z" fill="url(#navRedOrange)" />
+                  <path d="M 320 65 Q 325 85 335 110 Q 340 118 330 125 Q 325 118 320 100 Q 315 85 312 70 Z" fill="url(#navGradientYLeft)" />
+                  <path d="M 370 65 Q 365 85 355 110 Q 350 118 360 125 Q 365 118 370 100 Q 375 85 378 70 Z" fill="url(#navGradientYRight)" />
+                  <path d="M 330 115 L 330 180 Q 330 190 340 190 L 340 190 Q 350 190 350 180 L 350 115 Q 350 105 340 105 L 340 105 Q 330 105 330 115 Z" fill="url(#navGradientYLeft)" />
+                  <path d="M 350 115 Q 370 130 380 160 Q 382 175 370 178 Q 355 150 350 125 Z" fill="url(#navGradientYRight)" />
                 </g>
               </svg>
             </div>
@@ -796,49 +790,58 @@ export default function HomePage() {
             {/* Brand column */}
             <div className="col-span-2">
               {/* Logo */}
-              <Link href="/" className="inline-flex items-center gap-2 mb-5 group transition-transform hover:scale-105">
-                <div className="w-8 h-8">
-                  <svg viewBox="0 0 400 280" className="w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none" preserveAspectRatio="xMidYMid meet">
+              <Link href="/" className="inline-flex items-center gap-2 mb-5 group transition-transform hover:scale-105 active:scale-95">
+                <div className="w-8 h-8 drop-shadow-sm">
+                  <svg viewBox="0 0 450 280" className="w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none" preserveAspectRatio="xMidYMid meet">
                     <defs>
-                      <linearGradient id="footerPurpleMagenta" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+                      <linearGradient id="footerGradientT" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#c855f7', stopOpacity: 1 }} />
                         <stop offset="100%" style={{ stopColor: '#d946ef', stopOpacity: 1 }} />
                       </linearGradient>
-                      <linearGradient id="footerCyanBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
-                        <stop offset="100%" style={{ stopColor: '#0084d4', stopOpacity: 1 }} />
+                      <linearGradient id="footerGradientRTop" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+                        <stop offset="50%" style={{ stopColor: '#3b82f6', stopOpacity: 1 }} />
+                        <stop offset="100%" style={{ stopColor: '#1e40af', stopOpacity: 1 }} />
                       </linearGradient>
-                      <linearGradient id="footerOrangeYellow" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <linearGradient id="footerGradientRBottom" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#7c3aed', stopOpacity: 1 }} />
+                        <stop offset="100%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+                      </linearGradient>
+                      <linearGradient id="footerGradientP" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
+                        <stop offset="100%" style={{ stopColor: '#0ea5e9', stopOpacity: 1 }} />
+                      </linearGradient>
+                      <linearGradient id="footerGradientYLeft" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 1 }} />
                         <stop offset="100%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
                       </linearGradient>
-                      <linearGradient id="footerRedOrange" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style={{ stopColor: '#ef4444', stopOpacity: 1 }} />
-                        <stop offset="100%" style={{ stopColor: '#f97316', stopOpacity: 1 }} />
+                      <linearGradient id="footerGradientYRight" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#f97316', stopOpacity: 1 }} />
+                        <stop offset="100%" style={{ stopColor: '#fb923c', stopOpacity: 1 }} />
                       </linearGradient>
                     </defs>
                     {/* T */}
                     <g>
-                      <rect x="65" y="55" width="88" height="28" rx="14" ry="14" fill="url(#footerPurpleMagenta)" />
-                      <rect x="88" y="75" width="42" height="95" rx="21" ry="21" fill="url(#footerPurpleMagenta)" />
+                      <rect x="65" y="55" width="95" height="32" rx="16" ry="16" fill="url(#footerGradientT)" />
+                      <path d="M 85 87 L 85 175 Q 85 185 95 185 L 95 185 Q 105 185 105 175 L 105 87 Z" fill="url(#footerGradientT)" />
                     </g>
                     {/* R */}
                     <g>
-                      <rect x="160" y="55" width="42" height="115" rx="21" ry="21" fill="url(#footerPurpleMagenta)" />
-                      <path d="M 202 75 Q 242 75 242 105 Q 242 135 202 135 Q 162 135 162 105 Q 162 75 202 75 Z" fill="url(#footerCyanBlue)" />
-                      <path d="M 202 130 Q 250 140 280 175 Q 285 182 275 190 Q 250 160 202 150 Z" fill="url(#footerCyanBlue)" />
+                      <path d="M 155 55 L 155 180 Q 155 190 165 190 L 165 190 Q 175 190 175 180 L 175 55 Q 175 45 165 45 L 165 45 Q 155 45 155 55 Z" fill="url(#footerGradientRBottom)" />
+                      <path d="M 175 65 Q 240 65 250 110 Q 250 150 175 150 Q 165 150 165 140 L 165 75 Q 165 65 175 65 Z" fill="url(#footerGradientRTop)" />
+                      <path d="M 215 145 Q 270 160 310 215 Q 315 222 305 230 Q 250 175 215 160 Z" fill="url(#footerGradientRTop)" />
                     </g>
                     {/* P */}
                     <g>
-                      <rect x="245" y="80" width="42" height="110" rx="21" ry="21" fill="url(#footerCyanBlue)" />
-                      <ellipse cx="287" cy="105" rx="48" ry="40" fill="url(#footerPurpleMagenta)" />
+                      <path d="M 260 85 L 260 190 Q 260 195 270 195 L 270 195 Q 280 195 280 190 L 280 85 Q 280 80 270 80 L 270 80 Q 260 80 260 85 Z" fill="url(#footerGradientP)" />
+                      <ellipse cx="315" cy="115" rx="60" ry="50" fill="url(#footerGradientP)" />
                     </g>
                     {/* Y */}
                     <g>
-                      <path d="M 315 85 Q 325 100 340 120 Q 345 128 340 135 Q 335 132 330 120 Q 320 102 310 92 Z" fill="url(#footerOrangeYellow)" />
-                      <rect x="315" y="125" width="40" height="85" rx="20" ry="20" fill="url(#footerOrangeYellow)" />
-                      <path d="M 355 85 Q 345 100 330 120 Q 325 128 330 135 Q 335 132 340 120 Q 350 102 360 92 Z" fill="url(#footerRedOrange)" />
-                      <path d="M 360 90 Q 375 110 380 140 Q 378 152 365 148 Q 358 125 355 100 Z" fill="url(#footerRedOrange)" />
+                      <path d="M 320 65 Q 325 85 335 110 Q 340 118 330 125 Q 325 118 320 100 Q 315 85 312 70 Z" fill="url(#footerGradientYLeft)" />
+                      <path d="M 370 65 Q 365 85 355 110 Q 350 118 360 125 Q 365 118 370 100 Q 375 85 378 70 Z" fill="url(#footerGradientYRight)" />
+                      <path d="M 330 115 L 330 180 Q 330 190 340 190 L 340 190 Q 350 190 350 180 L 350 115 Q 350 105 340 105 L 340 105 Q 330 105 330 115 Z" fill="url(#footerGradientYLeft)" />
+                      <path d="M 350 115 Q 370 130 380 160 Q 382 175 370 178 Q 355 150 350 125 Z" fill="url(#footerGradientYRight)" />
                     </g>
                   </svg>
                 </div>
