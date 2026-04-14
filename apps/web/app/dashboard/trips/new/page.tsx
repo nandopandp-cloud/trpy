@@ -151,25 +151,6 @@ export default function NewTripPage() {
                 </div>
                 <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </motion.button>
-
-              {/* AI suggestion */}
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                onClick={() => router.push('/dashboard/ai')}
-                className="w-full flex items-center justify-between gap-4 p-5 rounded-3xl border border-primary/20 bg-gradient-to-r from-emerald-500/6 to-teal-500/6 hover:from-emerald-500/12 hover:to-teal-500/12 transition-all group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-foreground">{t(locale, 'new_trip.ai')}</p>
-                    <p className="text-xs text-muted-foreground">{t(locale, 'new_trip.ai_sub')}</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-primary" />
-              </motion.button>
             </motion.div>
           )}
 

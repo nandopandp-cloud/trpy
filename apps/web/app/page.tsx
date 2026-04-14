@@ -247,14 +247,6 @@ export default function HomePage() {
                   </button>
                 </div>
               </Link>
-
-              <Link href="/dashboard/ai">
-                <button className="px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-sm font-medium text-white border border-white/20 bg-white/10 hover:bg-white/20 transition-all hover:shadow-lg flex items-center gap-2 group backdrop-blur-sm">
-                  <Sparkles className="w-4 h-4 text-indigo-300" />
-                  {t(locale, 'landing.cta_ai' as any)}
-                  <ArrowRight className="w-4 h-4 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-                </button>
-              </Link>
             </motion.div>
           </motion.div>
         </div>
@@ -577,21 +569,6 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="mt-10 sm:mt-14 md:mt-20 flex justify-center"
-          >
-            <Link href="/dashboard/ai">
-              <button className="group inline-flex items-center gap-2.5 sm:gap-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/30 text-white text-sm font-medium px-6 py-3.5 sm:px-8 sm:py-4 rounded-full transition-all duration-300">
-                <Sparkles className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
-                <span>{t(locale, 'landing.how_cta' as any)}</span>
-                <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-              </button>
-            </Link>
-          </motion.div>
         </div>
       </section>
 
@@ -716,13 +693,6 @@ export default function HomePage() {
                   </button>
                 </div>
               </Link>
-              <Link href="/dashboard/ai">
-                <button className="px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-sm font-medium text-zinc-400 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300 flex items-center gap-2 group">
-                  <Sparkles className="w-4 h-4 text-indigo-400" />
-                  {t(locale, 'landing.cta_demo' as any)}
-                  <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all" />
-                </button>
-              </Link>
             </div>
           </motion.div>
         </div>
@@ -751,7 +721,6 @@ export default function HomePage() {
               <ul className="space-y-3">
                 {[
                   { labelKey: 'Dashboard', href: '/dashboard', isStatic: true },
-                  { labelKey: 'landing.footer_plan_ai', href: '/dashboard/ai' },
                   { labelKey: 'landing.footer_my_trips', href: '/dashboard/trips' },
                   { labelKey: 'landing.footer_budget', href: '/dashboard/budget' },
                 ].map((l) => (
