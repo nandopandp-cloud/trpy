@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/user/user-avatar';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { Logo } from '@/components/logo';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -246,12 +247,9 @@ export function Topbar() {
     >
       {/* Left: logo on mobile, page title on desktop */}
       <div className="flex items-center gap-3">
-        <Link href="/dashboard" className="flex items-center gap-2 md:hidden">
-          <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-          </div>
-          <span className="font-semibold text-foreground tracking-tighter uppercase">TRPY</span>
-        </Link>
+        <div className="md:hidden">
+          <Logo href="/dashboard" size="sm" hideText={true} />
+        </div>
         <h2 className="hidden md:block font-medium text-foreground text-base tracking-tight">{title}</h2>
       </div>
 

@@ -127,7 +127,7 @@ export default function HomePage() {
 
       {/* ── Navbar ──────────────────────────────────────── */}
       <header className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-xl border-b border-border/50 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-auto py-4 sm:py-5 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           {/* Logo */}
           <Logo href="/" size="md" hideText={true} />
 
@@ -179,7 +179,7 @@ export default function HomePage() {
       </header>
 
       {/* ── Hero ────────────────────────────────────────── */}
-      <section className="relative min-h-[100svh] flex flex-col overflow-hidden pt-40 sm:pt-48">
+      <section className="relative min-h-[100svh] flex flex-col overflow-hidden pt-14 sm:pt-16">
         {/* Video background layer */}
         <div className="absolute inset-0 z-0">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.5 }} className="absolute inset-0">

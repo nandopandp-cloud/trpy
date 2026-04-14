@@ -36,7 +36,7 @@ export function Sidebar() {
       className="relative flex flex-col h-full bg-card border-r border-border overflow-hidden shrink-0"
     >
       {/* Logo */}
-      <div className="flex items-center justify-center h-auto py-4 border-b border-border shrink-0 p-3">
+      <div className="flex items-center justify-center h-16 border-b border-border shrink-0">
         <Logo href="/dashboard" size="sm" hideText={true} />
       </div>
 
