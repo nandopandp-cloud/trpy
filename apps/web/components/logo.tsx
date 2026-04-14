@@ -12,12 +12,19 @@ interface LogoProps {
   className?: string;
   href?: string;
   hideText?: boolean;
+  showBrand?: boolean;
 }
 
 const sizeMap: Record<LogoSize, string> = {
-  sm: 'w-6 h-6',
-  md: 'w-8 h-8',
-  lg: 'w-10 h-10',
+  sm: 'w-6 h-6 sm:w-7 sm:h-7',
+  md: 'w-8 h-8 sm:w-9 sm:h-9',
+  lg: 'w-10 h-10 sm:w-12 sm:h-12',
+};
+
+const textSizeMap: Record<LogoSize, string> = {
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg sm:text-xl',
 };
 
 export function Logo({
@@ -26,72 +33,107 @@ export function Logo({
   className,
   href = '/',
   hideText = false,
+  showBrand = false,
 }: LogoProps) {
   const content = (
-    <div className={cn('flex items-center gap-2 shrink-0', className)}>
-      {/* Icon */}
-      <div className={cn('relative', sizeMap[size])}>
+    <div className={cn(
+      'flex items-center gap-2 shrink-0 group',
+      showBrand && 'flex-col',
+      className,
+    )}>
+      {/* Icon/Logo SVG */}
+      <div className={cn('relative flex-shrink-0', sizeMap[size])}>
         <svg
-          viewBox="0 0 24 24"
+          viewBox="0 0 400 280"
           className="w-full h-full"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
+          preserveAspectRatio="xMidYMid meet"
         >
           <defs>
-            {/* Modern gradient: Purple → Cyan → Magenta */}
-            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            {/* Main gradient: Purple → Magenta (for T, R, P) */}
+            <linearGradient id="purpleMagenta" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
-              <stop offset="50%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
               <stop offset="100%" style={{ stopColor: '#d946ef', stopOpacity: 1 }} />
             </linearGradient>
 
-            {/* Accent gradient: Orange → Yellow */}
-            <linearGradient id="logoAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+            {/* Cyan gradient (for R) */}
+            <linearGradient id="cyanBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#0084d4', stopOpacity: 1 }} />
+            </linearGradient>
+
+            {/* Orange to Yellow gradient (for Y) */}
+            <linearGradient id="orangeYellow" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 1 }} />
               <stop offset="100%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
             </linearGradient>
+
+            {/* Red to Orange gradient (for Y bottom curve) */}
+            <linearGradient id="redOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#ef4444', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#f97316', stopOpacity: 1 }} />
+            </linearGradient>
           </defs>
 
-          {/* Stylized flowing TRPY shapes */}
-          {/* T-like stem with cap */}
-          <path
-            d="M 4 4 L 8 4 Q 9 4 9 5 L 9 6 Q 9 7 8 7 L 7 7 L 7 12 Q 7 13 6 13 L 5 13 Q 4 13 4 12 L 4 7 L 3 7 Q 2 7 2 6 L 2 5 Q 2 4 3 4 Z"
-            fill="url(#logoGradient)"
-          />
+          {/* T: Purple rounded cross shape */}
+          <g>
+            {/* Top bar */}
+            <rect x="65" y="55" width="88" height="28" rx="14" ry="14" fill="url(#purpleMagenta)" />
+            {/* Vertical stem */}
+            <rect x="88" y="75" width="42" height="95" rx="21" ry="21" fill="url(#purpleMagenta)" />
+          </g>
 
-          {/* R-like curved bump */}
-          <path
-            d="M 10 4 L 10 12 Q 10 13 9 13 L 8 13 Q 7 13 7 12 L 7 4 Q 7 3 8 3 L 10 3 Q 12.5 3 12.5 6 Q 12.5 8 11 8.5 L 13 12 Q 13.5 13 12.5 13 L 11.5 13 Q 10.5 13 10 11.5 L 8.5 8.5 Q 7 8.5 7 8 L 10 8 Q 12 8 12 6 Q 12 4 10 4 Z"
-            fill="url(#logoGradient)"
-            opacity="0.9"
-          />
+          {/* R: Purple stem with cyan bump and curl */}
+          <g>
+            {/* Main vertical stem (purple) */}
+            <rect x="160" y="55" width="42" height="115" rx="21" ry="21" fill="url(#purpleMagenta)" />
 
-          {/* P-like petal */}
-          <path
-            d="M 14 4 L 14 12 Q 14 13 13 13 L 12 13 Q 11 13 11 12 L 11 4 Q 11 3 12 3 L 14 3 Q 16.5 3 16.5 6 Q 16.5 8.5 14 8.5 L 12 8.5 Q 11 8.5 11 7.5 L 14 7.5 Q 16 7.5 16 6 Q 16 4 14 4 Z"
-            fill="url(#logoGradient)"
-            opacity="0.85"
-          />
+            {/* Rounded bump right (cyan gradient) */}
+            <path d="M 202 75 Q 242 75 242 105 Q 242 135 202 135 Q 162 135 162 105 Q 162 75 202 75 Z" fill="url(#cyanBlue)" />
 
-          {/* Y-like curved shape (orange accent) */}
-          <path
-            d="M 17 3 L 18.5 7 L 18.5 12 Q 18.5 13 17.5 13 L 16.5 13 Q 15.5 13 15.5 12 L 15.5 7 L 14 3 Q 13.5 2 14.5 2 L 15.5 2 Q 16 2 16.5 3 L 18 6.5 L 19.5 3 Q 20 2 20.5 2 L 21.5 2 Q 22.5 2 22 3 L 20.5 7 L 20.5 12 Q 20.5 13 19.5 13 L 18.5 13 Q 17.5 13 17.5 12 L 17.5 7 Z"
-            fill="url(#logoAccent)"
-            opacity="0.9"
-          />
+            {/* Diagonal leg down-right (cyan) */}
+            <path d="M 202 130 Q 250 140 280 175 Q 285 182 275 190 Q 250 160 202 150 Z" fill="url(#cyanBlue)" />
+          </g>
+
+          {/* P: Cyan stem with purple rounded top */}
+          <g>
+            {/* Main vertical stem (cyan) */}
+            <rect x="245" y="80" width="42" height="110" rx="21" ry="21" fill="url(#cyanBlue)" />
+
+            {/* Rounded bump at top (purple) */}
+            <ellipse cx="287" cy="105" rx="48" ry="40" fill="url(#purpleMagenta)" />
+          </g>
+
+          {/* Y: Orange/Red flowing curves connecting top */}
+          <g>
+            {/* Left upper curve (orange going down-right) */}
+            <path d="M 315 85 Q 325 100 340 120 Q 345 128 340 135 Q 335 132 330 120 Q 320 102 310 92 Z" fill="url(#orangeYellow)" />
+
+            {/* Main Y stem (yellow-orange) */}
+            <rect x="315" y="125" width="40" height="85" rx="20" ry="20" fill="url(#orangeYellow)" />
+
+            {/* Right upper curve (orange-red) */}
+            <path d="M 355 85 Q 345 100 330 120 Q 325 128 330 135 Q 335 132 340 120 Q 350 102 360 92 Z" fill="url(#redOrange)" />
+
+            {/* Right side accent (red-orange) */}
+            <path d="M 360 90 Q 375 110 380 140 Q 378 152 365 148 Q 358 125 355 100 Z" fill="url(#redOrange)" />
+          </g>
+
+          {/* Optional: Smooth connecting flow lines for premium look */}
+          <g opacity="0.3">
+            {/* Flow from P to Y */}
+            <path d="M 365 110 Q 370 115 380 120" stroke="url(#orangeYellow)" strokeWidth="3" strokeLinecap="round" />
+          </g>
         </svg>
       </div>
 
       {/* Text */}
       {!hideText && variant !== 'icon-only' && (
-        <span
-          className={cn(
-            'font-bold tracking-tight text-foreground',
-            size === 'sm' && 'text-sm',
-            size === 'md' && 'text-base',
-            size === 'lg' && 'text-lg sm:text-xl',
-          )}
-        >
+        <span className={cn(
+          'font-bold tracking-tight bg-gradient-to-r from-purple-500 via-cyan-500 to-pink-500 bg-clip-text text-transparent',
+          textSizeMap[size],
+        )}>
           TRPY
         </span>
       )}
@@ -100,7 +142,7 @@ export function Logo({
 
   if (href) {
     return (
-      <Link href={href} className="group">
+      <Link href={href} className="group transition-transform hover:scale-105">
         {content}
       </Link>
     );
