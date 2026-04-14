@@ -129,7 +129,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0 gap-2 group">
-            {/* Icon: Stylized compass */}
+            {/* Icon: Modern gradient TRPY */}
             <div className="relative w-8 h-8 sm:w-10 sm:h-10">
               <svg
                 viewBox="0 0 24 24"
@@ -137,21 +137,31 @@ export default function HomePage() {
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
               >
-                {/* Outer circle */}
-                <circle cx="12" cy="12" r="9.5" stroke="#6366f1" strokeWidth="1.5" opacity="0.6" />
+                <defs>
+                  {/* Gradient from purple → cyan → magenta */}
+                  <linearGradient id="navGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+                    <stop offset="50%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#d946ef', stopOpacity: 1 }} />
+                  </linearGradient>
+                  <linearGradient id="navAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
+                  </linearGradient>
+                </defs>
 
-                {/* Compass star - 4 points */}
-                {/* Top */}
-                <path d="M 12 3.5 L 13.2 8.5 L 12 12 Z" fill="#6366f1" />
-                {/* Right */}
-                <path d="M 20.5 12 L 15.5 13.2 L 12 12 Z" fill="#6366f1" />
-                {/* Bottom */}
-                <path d="M 12 20.5 L 10.8 15.5 L 12 12 Z" fill="#6366f1" />
-                {/* Left */}
-                <path d="M 3.5 12 L 8.5 10.8 L 12 12 Z" fill="#6366f1" />
+                {/* Stylized flowing shapes (T, R, P, Y abstraction) */}
+                {/* Vertical stem with top cap (T-like) */}
+                <path d="M 4 4 L 8 4 Q 9 4 9 5 L 9 6 Q 9 7 8 7 L 7 7 L 7 12 Q 7 13 6 13 L 5 13 Q 4 13 4 12 L 4 7 L 3 7 Q 2 7 2 6 L 2 5 Q 2 4 3 4 Z" fill="url(#navGradient)" />
 
-                {/* Center dot */}
-                <circle cx="12" cy="12" r="1.5" fill="#6366f1" />
+                {/* Curved bump right (R-like) */}
+                <path d="M 10 4 L 10 12 Q 10 13 9 13 L 8 13 Q 7 13 7 12 L 7 4 Q 7 3 8 3 L 10 3 Q 12.5 3 12.5 6 Q 12.5 8 11 8.5 L 13 12 Q 13.5 13 12.5 13 L 11.5 13 Q 10.5 13 10 11.5 L 8.5 8.5 Q 7 8.5 7 8 L 10 8 Q 12 8 12 6 Q 12 4 10 4 Z" fill="url(#navGradient)" opacity="0.9" />
+
+                {/* Petal curve (P-like) */}
+                <path d="M 14 4 L 14 12 Q 14 13 13 13 L 12 13 Q 11 13 11 12 L 11 4 Q 11 3 12 3 L 14 3 Q 16.5 3 16.5 6 Q 16.5 8.5 14 8.5 L 12 8.5 Q 11 8.5 11 7.5 L 14 7.5 Q 16 7.5 16 6 Q 16 4 14 4 Z" fill="url(#navGradient)" opacity="0.85" />
+
+                {/* Curved Y shape (orange accent) */}
+                <path d="M 17 3 L 18.5 7 L 18.5 12 Q 18.5 13 17.5 13 L 16.5 13 Q 15.5 13 15.5 12 L 15.5 7 L 14 3 Q 13.5 2 14.5 2 L 15.5 2 Q 16 2 16.5 3 L 18 6.5 L 19.5 3 Q 20 2 20.5 2 L 21.5 2 Q 22.5 2 22 3 L 20.5 7 L 20.5 12 Q 20.5 13 19.5 13 L 18.5 13 Q 17.5 13 17.5 12 L 17.5 7 Z" fill="url(#navAccent)" opacity="0.9" />
               </svg>
             </div>
 
@@ -761,12 +771,22 @@ export default function HomePage() {
               <Link href="/" className="inline-flex items-center gap-2 mb-5 group">
                 <div className="w-8 h-8">
                   <svg viewBox="0 0 24 24" className="w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none">
-                    <circle cx="12" cy="12" r="9.5" stroke="#6366f1" strokeWidth="1.5" opacity="0.6" />
-                    <path d="M 12 3.5 L 13.2 8.5 L 12 12 Z" fill="#6366f1" />
-                    <path d="M 20.5 12 L 15.5 13.2 L 12 12 Z" fill="#6366f1" />
-                    <path d="M 12 20.5 L 10.8 15.5 L 12 12 Z" fill="#6366f1" />
-                    <path d="M 3.5 12 L 8.5 10.8 L 12 12 Z" fill="#6366f1" />
-                    <circle cx="12" cy="12" r="1.5" fill="#6366f1" />
+                    <defs>
+                      <linearGradient id="footerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+                        <stop offset="50%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
+                        <stop offset="100%" style={{ stopColor: '#d946ef', stopOpacity: 1 }} />
+                      </linearGradient>
+                      <linearGradient id="footerAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 1 }} />
+                        <stop offset="100%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
+                      </linearGradient>
+                    </defs>
+                    {/* Stylized TRPY icon - flowing shape */}
+                    <path d="M 5 6 L 9 6 Q 10 6 10 7 L 10 8 Q 10 9 9 9 L 8 9 L 8 14 Q 8 15 7 15 L 6 15 Q 5 15 5 14 L 5 9 L 4 9 Q 3 9 3 8 L 3 7 Q 3 6 4 6 Z" fill="url(#footerGradient)" />
+                    <path d="M 12 6 L 12 14 Q 12 15 11 15 L 10 15 Q 9 15 9 14 L 9 6 Q 9 5 10 5 L 12 5 Q 14 5 14 8 Q 14 10 12.5 10.5 L 14.5 14 Q 15 15 14 15 L 13 15 Q 12 15 11.5 13.5 L 10.5 9 L 10 9 L 9 9 L 12 9 Q 13.5 9 13.5 8 Q 13.5 6 12 6 Z" fill="url(#footerGradient)" opacity="0.9" />
+                    <path d="M 16 6 L 19 6 Q 20 6 20 7 L 20 14 Q 20 15 19 15 L 18 15 Q 17 15 17 14 L 17 7 Q 17 7 18.5 7 L 19 7 L 19 14 Q 19 15 18 15 L 17 15 Q 16 15 16 14 Z" fill="url(#footerGradient)" opacity="0.85" />
+                    <path d="M 20 5 L 22 10 L 22 14 Q 22 15 21 15 L 20 15 Q 19 15 19 14 L 19 10 L 17 5 Q 16.5 4 17.5 4 L 18.5 4 Q 19 4 19.5 5 L 21 9 L 22.5 5 Q 23 4 23.5 4 L 24.5 4 Q 25.5 4 25 5 L 23 10 L 23 14 Q 23 15 22 15 L 21 15 Q 20 15 20 14 L 20 10 Z" fill="url(#footerAccent)" opacity="0.9" />
                   </svg>
                 </div>
                 <span className="text-lg font-bold tracking-tight text-white">TRPY</span>
