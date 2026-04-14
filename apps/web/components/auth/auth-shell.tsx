@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaImages } from '@/components/integrations/media';
 import { cn } from '@/lib/utils';
 import { useLocale, t } from '@/lib/i18n';
+import { Logo } from '@/components/logo';
 
 const DESTINATIONS = [
   { query: 'santorini greece sunset aerial travel', label: 'Santorini', country: 'Grécia' },
@@ -91,19 +92,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
         {/* Header */}
         <header className="w-full px-5 md:px-10 pt-6 md:pt-8 flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center transition-all group-hover:bg-white/15 group-hover:scale-105">
-              <svg viewBox="0 0 24 24" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none">
-                <circle cx="12" cy="12" r="9.5" stroke="white" strokeWidth="1.5" opacity="0.7" />
-                <path d="M 12 3.5 L 13.2 8.5 L 12 12 Z" fill="white" />
-                <path d="M 20.5 12 L 15.5 13.2 L 12 12 Z" fill="white" />
-                <path d="M 12 20.5 L 10.8 15.5 L 12 12 Z" fill="white" />
-                <path d="M 3.5 12 L 8.5 10.8 L 12 12 Z" fill="white" />
-                <circle cx="12" cy="12" r="1.5" fill="white" />
-              </svg>
-            </div>
-            <span className="text-base font-bold tracking-tight text-white drop-shadow-sm">TRPY</span>
-          </Link>
+          <Logo href="/" size="sm" hideText={true} />
 
           <AnimatePresence mode="wait">
             <motion.div

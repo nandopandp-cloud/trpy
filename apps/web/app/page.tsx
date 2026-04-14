@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useLocale, t, type Locale } from '@/lib/i18n';
+import { Logo } from '@/components/logo';
 
 const LOCALES: { value: Locale; label: string }[] = [
   { value: 'pt-BR', label: 'Português' },
@@ -128,19 +129,7 @@ export default function HomePage() {
       <header className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-xl border-b border-border/50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center shrink-0 gap-2 group transition-transform hover:scale-105 active:scale-95">
-            {/* Icon: TRPY Logo */}
-            <div className="relative w-8 h-8 sm:w-10 sm:h-10">
-              <img
-                src="/logos/logo.png"
-                alt="TRPY"
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            {/* Text: TRPY */}
-            <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground">TRPY</span>
-          </Link>
+          <Logo href="/" size="md" hideText={true} />
 
           {/* Right side — Language + Theme toggle + Login */}
           <div className="flex items-center gap-2 sm:gap-4">
@@ -741,16 +730,7 @@ export default function HomePage() {
             {/* Brand column */}
             <div className="col-span-2">
               {/* Logo */}
-              <Link href="/" className="inline-flex items-center gap-2 mb-5 group transition-transform hover:scale-105 active:scale-95">
-                <div className="w-8 h-8">
-                  <img
-                    src="/logos/logo.png"
-                    alt="TRPY"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <span className="text-lg font-bold tracking-tight text-white">TRPY</span>
-              </Link>
+              <Logo href="/" size="md" hideText={true} className="mb-5" />
               <p className="text-sm text-zinc-500 leading-relaxed max-w-xs font-light">
                 {t(locale, 'landing.footer_brand' as any)}
               </p>

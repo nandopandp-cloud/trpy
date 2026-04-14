@@ -11,6 +11,7 @@ import {
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useLocale, t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { Logo } from '@/components/logo';
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -35,26 +36,8 @@ export function Sidebar() {
       className="relative flex flex-col h-full bg-card border-r border-border overflow-hidden shrink-0"
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 h-16 border-b border-border shrink-0">
-        <div className="w-8 h-8 rounded-xl bg-foreground flex items-center justify-center shrink-0">
-          <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-50" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-            </span>
-        </div>
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -8 }}
-              transition={{ duration: 0.15 }}
-              className="font-semibold text-lg text-foreground tracking-tighter uppercase whitespace-nowrap"
-            >
-              TRPY
-            </motion.span>
-          )}
-        </AnimatePresence>
+      <div className="flex items-center justify-center h-16 border-b border-border shrink-0">
+        <Logo href="/dashboard" size="sm" hideText={true} />
       </div>
 
       {/* Nav */}
