@@ -114,6 +114,15 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  useEffect(() => {
+    // Force dark mode on landing page
+    document.documentElement.classList.add('dark');
+    return () => {
+      // Optional: remove dark class when leaving page
+      // document.documentElement.classList.remove('dark');
+    };
+  }, []);
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>, idx: number) => {
     const el = flashlightRef.current[idx];
     if (!el) return;
