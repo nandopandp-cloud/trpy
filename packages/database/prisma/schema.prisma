@@ -17,6 +17,7 @@ model User {
   name          String?
   email         String    @unique
   emailVerified DateTime?
+  phone         String?
   image         String?
   password      String?   // hashed — null for OAuth-only users
   createdAt     DateTime  @default(now())
@@ -69,6 +70,21 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model VerificationCode {
+  id         String   @id @default(cuid())
+  email      String
+  phone      String?
+  code       String
+  type       String   @default("signup") // "signup" | "reset"
+  expiresAt  DateTime
+  verified   Boolean  @default(false)
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([email, code])
+  @@map("verification_codes")
 }
 
 // ─── Trips ───────────────────────────────────────────────────────────────────

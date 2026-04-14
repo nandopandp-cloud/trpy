@@ -1,32 +1,74 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Loader2, Mail, Lock, User, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import {
+  ArrowRight, Loader2, Mail, Lock, User, Phone,
+  Eye, EyeOff, ChevronDown, ShieldCheck, ArrowLeft,
+} from 'lucide-react';
+import { useLocale, t } from '@/lib/i18n';
+
+type Step = 'form' | 'verify';
+
+const ERROR_MAP: Record<string, string> = {
+  name_required: 'auth.error_name_required',
+  email_required: 'auth.error_email_required',
+  email_invalid: 'auth.error_email_invalid',
+  password_min_length: 'auth.error_password_min',
+  phone_required: 'auth.error_phone_required',
+  phone_invalid: 'auth.error_phone_invalid',
+  email_taken: 'auth.error_email_taken',
+  internal_error: 'auth.error_internal',
+  invalid_or_expired: 'auth.verify_invalid',
+  invalid_code: 'auth.verify_invalid',
+  max_attempts: 'auth.verify_max_attempts',
+};
 
 export default function SignupPage() {
   const router = useRouter();
+  const [locale] = useLocale();
 
+  const [step, setStep] = useState<Step>('form');
   const [emailExpanded, setEmailExpanded] = useState(false);
+
+  // Form fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Verification
+  const [verificationCode, setVerificationCode] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // State
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingProvider, setLoadingProvider] = useState<'google' | 'apple' | 'email' | null>(null);
+  const [loadingProvider, setLoadingProvider] = useState<'google' | 'email' | 'verify' | 'resend' | null>(null);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // Cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  function getErrorMessage(errorKey: string) {
+    const translationKey = ERROR_MAP[errorKey];
+    if (translationKey) return t(locale, translationKey as any);
+    return t(locale, 'auth.error_internal' as any);
+  }
+
+  const formValid = name.trim().length >= 2 && email.trim().length > 0 && phone.trim().length >= 8 && password.length >= 8;
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) return;
-
-    if (password.length < 8) {
-      setError('A senha deve ter pelo menos 8 caracteres.');
-      return;
-    }
+    if (!formValid) return;
 
     setIsLoading(true);
     setLoadingProvider('email');
@@ -37,8 +79,9 @@ export default function SignupPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim() || undefined,
+          name: name.trim(),
           email: email.toLowerCase().trim(),
+          phone: phone.replace(/\s+/g, '').trim(),
           password,
         }),
       });
@@ -46,230 +89,461 @@ export default function SignupPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Erro ao criar conta. Tente novamente.');
+        setError(getErrorMessage(data.error));
         setIsLoading(false);
         setLoadingProvider(null);
         return;
       }
 
-      const result = await signIn('credentials', {
-        email: email.toLowerCase().trim(),
-        password,
-        redirect: false,
-        callbackUrl: '/dashboard',
-      });
-
-      if (result?.url) {
-        router.push(result.url);
-      } else {
-        router.push('/login');
+      if (data.requiresVerification) {
+        setStep('verify');
+        setResendCooldown(60);
       }
     } catch {
-      setError('Erro de conexão. Tente novamente.');
+      setError(t(locale, 'auth.error_connection' as any));
+    } finally {
       setIsLoading(false);
       setLoadingProvider(null);
     }
   }
 
-  async function handleOAuthLogin(provider: 'google' | 'apple') {
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault();
+    if (verificationCode.trim().length !== 6) return;
+
     setIsLoading(true);
-    setLoadingProvider(provider);
+    setLoadingProvider('verify');
     setError('');
-    await signIn(provider, { callbackUrl: '/dashboard' });
+
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          code: verificationCode.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(getErrorMessage(data.error));
+        setIsLoading(false);
+        setLoadingProvider(null);
+        return;
+      }
+
+      if (data.verified) {
+        setSuccessMsg(t(locale, 'auth.verify_success' as any));
+
+        // Auto-login after verification
+        const result = await signIn('credentials', {
+          email: email.toLowerCase().trim(),
+          password,
+          redirect: false,
+          callbackUrl: '/dashboard',
+        });
+
+        if (result?.url) {
+          router.push(result.url);
+        } else {
+          router.push('/dashboard');
+        }
+      }
+    } catch {
+      setError(t(locale, 'auth.error_connection' as any));
+    } finally {
+      setIsLoading(false);
+      setLoadingProvider(null);
+    }
   }
+
+  async function handleResendCode() {
+    if (resendCooldown > 0) return;
+
+    setLoadingProvider('resend');
+    setError('');
+
+    try {
+      await fetch('/api/auth/resend-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+
+      setSuccessMsg(t(locale, 'auth.verify_resent' as any));
+      setResendCooldown(60);
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch {
+      setError(t(locale, 'auth.error_connection' as any));
+    } finally {
+      setLoadingProvider(null);
+    }
+  }
+
+  async function handleOAuthLogin() {
+    setIsLoading(true);
+    setLoadingProvider('google');
+    setError('');
+    await signIn('google', { callbackUrl: '/dashboard' });
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-3">
-
-      {/* Heading — desktop only */}
-      <div className="hidden md:block space-y-1 mb-5">
-        <h2 className="text-xl font-semibold text-white tracking-tight">Comece sua jornada</h2>
-        <p className="text-[13px] text-white/60">Crie sua conta grátis em segundos.</p>
-      </div>
-
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-[13px] text-red-200 bg-red-500/15 border border-red-400/30 rounded-2xl px-4 py-2.5"
-        >
-          {error}
-        </motion.div>
-      )}
-
-      {/* OAuth */}
-      <OAuthButton
-        provider="google"
-        label="Cadastrar com Google"
-        onClick={() => handleOAuthLogin('google')}
-        loading={loadingProvider === 'google'}
-        disabled={isLoading}
-      />
-      <OAuthButton
-        provider="apple"
-        label="Cadastrar com Apple"
-        onClick={() => handleOAuthLogin('apple')}
-        loading={loadingProvider === 'apple'}
-        disabled={isLoading}
-      />
-
-      {/* Mobile: collapsed email form */}
-      <div className="md:hidden">
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={() => setEmailExpanded((v) => !v)}
-          disabled={isLoading}
-          className="w-full flex items-center justify-between h-12 px-4 rounded-2xl bg-white/[0.06] border border-white/12 text-[13px] text-white/65 hover:bg-white/[0.1] hover:text-white/80 transition-all"
-        >
-          <span>Cadastrar com email e senha</span>
-          <motion.span
-            animate={{ rotate: emailExpanded ? 180 : 0 }}
-            transition={{ duration: 0.25 }}
+      <AnimatePresence mode="wait">
+        {step === 'form' ? (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
           >
-            <ChevronDown className="w-4 h-4" />
-          </motion.span>
-        </motion.button>
+            {/* Heading — desktop only */}
+            <div className="hidden md:block space-y-1 mb-5">
+              <h2 className="text-xl font-semibold text-white tracking-tight">
+                {t(locale, 'auth.signup_title' as any)}
+              </h2>
+              <p className="text-[13px] text-white/60">
+                {t(locale, 'auth.signup_desc' as any)}
+              </p>
+            </div>
 
-        <AnimatePresence initial={false}>
-          {emailExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              className="overflow-hidden"
-            >
-              <form onSubmit={handleSignup} className="pt-2 space-y-2.5">
-                <GlassInput
-                  icon={User}
-                  type="text"
-                  value={name}
-                  onChange={setName}
-                  placeholder="Seu nome (opcional)"
-                  autoComplete="name"
-                />
-                <GlassInput
-                  icon={Mail}
-                  type="email"
-                  value={email}
-                  onChange={setEmail}
-                  placeholder="seu@email.com"
-                  autoComplete="email"
-                  required
-                />
-                <GlassInput
-                  icon={Lock}
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={setPassword}
-                  placeholder="Crie uma senha (mín. 8 chars)"
-                  autoComplete="new-password"
-                  required
-                  minLength={8}
-                  rightSlot={
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-white/50 hover:text-white/90 transition-colors"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  }
-                />
-                <motion.button
-                  type="submit"
-                  whileTap={{ scale: 0.98 }}
-                  disabled={isLoading || !email.trim() || !password.trim() || password.length < 8}
-                  className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30"
-                >
-                  {loadingProvider === 'email'
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <><span>Criar conta</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
-                  }
-                </motion.button>
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-[13px] text-red-200 bg-red-500/15 border border-red-400/30 rounded-2xl px-4 py-2.5"
+              >
+                {error}
+              </motion.div>
+            )}
 
-      {/* Desktop: email form always visible */}
-      <div className="hidden md:block">
-        <div className="relative flex items-center gap-3 py-2">
-          <div className="flex-1 h-px bg-white/15" />
-          <span className="text-[11px] font-medium tracking-wider uppercase text-white/50">ou com email</span>
-          <div className="flex-1 h-px bg-white/15" />
-        </div>
-
-        <form onSubmit={handleSignup} className="space-y-3">
-          <GlassInput
-            icon={User}
-            type="text"
-            value={name}
-            onChange={setName}
-            placeholder="Seu nome (opcional)"
-            autoComplete="name"
-          />
-          <GlassInput
-            icon={Mail}
-            type="email"
-            value={email}
-            onChange={setEmail}
-            placeholder="seu@email.com"
-            autoComplete="email"
-            required
-          />
-          <div className="space-y-1.5">
-            <GlassInput
-              icon={Lock}
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={setPassword}
-              placeholder="Crie uma senha"
-              autoComplete="new-password"
-              required
-              minLength={8}
-              rightSlot={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-white/50 hover:text-white/90 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              }
+            {/* Google OAuth */}
+            <OAuthButton
+              label={t(locale, 'auth.google' as any)}
+              onClick={handleOAuthLogin}
+              loading={loadingProvider === 'google'}
+              disabled={isLoading}
             />
-            <p className="text-[11px] text-white/40 pl-2">Mínimo de 8 caracteres</p>
-          </div>
 
-          <motion.button
-            type="submit"
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            disabled={isLoading || !email.trim() || !password.trim() || password.length < 8}
-            className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold hover:bg-white/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30"
+            {/* Mobile: collapsed email form */}
+            <div className="md:hidden">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setEmailExpanded((v) => !v)}
+                disabled={isLoading}
+                className="w-full flex items-center justify-between h-12 px-4 rounded-2xl bg-white/[0.06] border border-white/12 text-[13px] text-white/65 hover:bg-white/[0.1] hover:text-white/80 transition-all"
+              >
+                <span>{t(locale, 'auth.signup_email' as any)}</span>
+                <motion.span
+                  animate={{ rotate: emailExpanded ? 180 : 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </motion.span>
+              </motion.button>
+
+              <AnimatePresence initial={false}>
+                {emailExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <SignupForm
+                      locale={locale}
+                      name={name} setName={setName}
+                      email={email} setEmail={setEmail}
+                      phone={phone} setPhone={setPhone}
+                      password={password} setPassword={setPassword}
+                      showPassword={showPassword} setShowPassword={setShowPassword}
+                      isLoading={isLoading}
+                      loadingProvider={loadingProvider}
+                      formValid={formValid}
+                      onSubmit={handleSignup}
+                      className="pt-2"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Desktop: email form always visible */}
+            <div className="hidden md:block">
+              <div className="relative flex items-center gap-3 py-2">
+                <div className="flex-1 h-px bg-white/15" />
+                <span className="text-[11px] font-medium tracking-wider uppercase text-white/50">
+                  {t(locale, 'auth.or_email' as any)}
+                </span>
+                <div className="flex-1 h-px bg-white/15" />
+              </div>
+
+              <SignupForm
+                locale={locale}
+                name={name} setName={setName}
+                email={email} setEmail={setEmail}
+                phone={phone} setPhone={setPhone}
+                password={password} setPassword={setPassword}
+                showPassword={showPassword} setShowPassword={setShowPassword}
+                isLoading={isLoading}
+                loadingProvider={loadingProvider}
+                formValid={formValid}
+                onSubmit={handleSignup}
+              />
+            </div>
+
+            <p className="text-center text-[13px] text-white/60 pt-1">
+              {t(locale, 'auth.has_account' as any)}{' '}
+              <Link href="/login" className="text-white font-semibold hover:underline underline-offset-4">
+                {t(locale, 'auth.login' as any)}
+              </Link>
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="verify"
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 12 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-4"
           >
-            {loadingProvider === 'email'
-              ? <Loader2 className="w-4 h-4 animate-spin" />
-              : <><span>Criar conta</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
-            }
-          </motion.button>
-        </form>
-      </div>
+            {/* Back button */}
+            <button
+              onClick={() => { setStep('form'); setError(''); setSuccessMsg(''); setVerificationCode(''); }}
+              className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{t(locale, 'common.back' as any)}</span>
+            </button>
 
-      <p className="text-center text-[13px] text-white/60 pt-1">
-        Já tem uma conta?{' '}
-        <Link href="/login" className="text-white font-semibold hover:underline underline-offset-4">
-          Entrar
-        </Link>
-      </p>
+            {/* Verification header */}
+            <div className="space-y-2 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 flex items-center justify-center mx-auto mb-3">
+                <ShieldCheck className="w-7 h-7 text-emerald-400" />
+              </div>
+              <h2 className="text-xl font-semibold text-white tracking-tight">
+                {t(locale, 'auth.verify_title' as any)}
+              </h2>
+              <p className="text-[13px] text-white/60">
+                {t(locale, 'auth.verify_desc' as any).replace('{digits}', '6')}
+              </p>
+              <p className="text-[12px] text-white/40">
+                {email}
+              </p>
+            </div>
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-[13px] text-red-200 bg-red-500/15 border border-red-400/30 rounded-2xl px-4 py-2.5"
+              >
+                {error}
+              </motion.div>
+            )}
+
+            {successMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-[13px] text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 rounded-2xl px-4 py-2.5"
+              >
+                {successMsg}
+              </motion.div>
+            )}
+
+            {/* Code input */}
+            <form onSubmit={handleVerify} className="space-y-3">
+              <CodeInput
+                value={verificationCode}
+                onChange={setVerificationCode}
+              />
+
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={isLoading || verificationCode.trim().length !== 6}
+                className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold hover:bg-white/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30"
+              >
+                {loadingProvider === 'verify'
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <><span>{t(locale, 'auth.verify_button' as any)}</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
+                }
+              </motion.button>
+            </form>
+
+            {/* Resend */}
+            <div className="text-center">
+              <button
+                onClick={handleResendCode}
+                disabled={resendCooldown > 0 || loadingProvider === 'resend'}
+                className="text-[13px] text-white/60 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {loadingProvider === 'resend'
+                  ? t(locale, 'auth.verify_resending' as any)
+                  : resendCooldown > 0
+                    ? `${t(locale, 'auth.verify_resend' as any)} (${resendCooldown}s)`
+                    : t(locale, 'auth.verify_resend' as any)
+                }
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// ─── Primitives ──────────────────────────────────────────────────────────────
+// ─── Signup Form Component ──────────────────────────────────────────────────
+
+function SignupForm({
+  locale, name, setName, email, setEmail, phone, setPhone,
+  password, setPassword, showPassword, setShowPassword,
+  isLoading, loadingProvider, formValid, onSubmit, className,
+}: {
+  locale: string;
+  name: string; setName: (v: string) => void;
+  email: string; setEmail: (v: string) => void;
+  phone: string; setPhone: (v: string) => void;
+  password: string; setPassword: (v: string) => void;
+  showPassword: boolean; setShowPassword: (v: boolean) => void;
+  isLoading: boolean;
+  loadingProvider: string | null;
+  formValid: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  className?: string;
+}) {
+  return (
+    <form onSubmit={onSubmit} className={`space-y-2.5 ${className ?? ''}`}>
+      <GlassInput
+        icon={User}
+        type="text"
+        value={name}
+        onChange={setName}
+        placeholder={t(locale as any, 'auth.name_placeholder' as any)}
+        autoComplete="name"
+        required
+      />
+      <GlassInput
+        icon={Mail}
+        type="email"
+        value={email}
+        onChange={setEmail}
+        placeholder={t(locale as any, 'auth.email_placeholder' as any)}
+        autoComplete="email"
+        required
+      />
+      <GlassInput
+        icon={Phone}
+        type="tel"
+        value={phone}
+        onChange={setPhone}
+        placeholder={t(locale as any, 'auth.phone_placeholder' as any)}
+        autoComplete="tel"
+        required
+      />
+      <div className="space-y-1.5">
+        <GlassInput
+          icon={Lock}
+          type={showPassword ? 'text' : 'password'}
+          value={password}
+          onChange={setPassword}
+          placeholder={t(locale as any, 'auth.password_create' as any)}
+          autoComplete="new-password"
+          required
+          minLength={8}
+          rightSlot={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-white/50 hover:text-white/90 transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          }
+        />
+        <p className="text-[11px] text-white/40 pl-2">{t(locale as any, 'auth.password_min' as any)}</p>
+      </div>
+
+      <motion.button
+        type="submit"
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.98 }}
+        disabled={isLoading || !formValid}
+        className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold hover:bg-white/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30"
+      >
+        {loadingProvider === 'email'
+          ? <Loader2 className="w-4 h-4 animate-spin" />
+          : <><span>{t(locale as any, 'auth.create_account' as any)}</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
+        }
+      </motion.button>
+    </form>
+  );
+}
+
+// ─── Code Input ─────────────────────────────────────────────────────────────
+
+function CodeInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const digits = value.padEnd(6, '').split('').slice(0, 6);
+
+  function handleChange(index: number, char: string) {
+    if (!/^\d?$/.test(char)) return;
+
+    const arr = digits.slice();
+    arr[index] = char;
+    const newVal = arr.join('').replace(/ /g, '');
+    onChange(newVal);
+
+    if (char && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleKeyDown(index: number, e: React.KeyboardEvent) {
+    if (e.key === 'Backspace' && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    onChange(pasted);
+    inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-2">
+      {digits.map((digit, i) => (
+        <input
+          key={i}
+          ref={(el) => { inputRefs.current[i] = el; }}
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={digit === ' ' ? '' : digit}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onPaste={i === 0 ? handlePaste : undefined}
+          className="w-11 h-13 rounded-xl bg-white/[0.08] border border-white/15 text-center text-xl font-bold text-white focus:outline-none focus:bg-white/[0.12] focus:border-white/30 transition-all"
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Primitives ─────────────────────────────────────────────────────────────
 
 function GlassInput({
   icon: Icon,
@@ -313,13 +587,11 @@ function GlassInput({
 }
 
 function OAuthButton({
-  provider,
   label,
   onClick,
   loading,
   disabled,
 }: {
-  provider: 'google' | 'apple';
   label?: string;
   onClick: () => void;
   loading: boolean;
@@ -335,7 +607,7 @@ function OAuthButton({
     >
       {loading ? (
         <Loader2 className="w-4 h-4 animate-spin" />
-      ) : provider === 'google' ? (
+      ) : (
         <>
           <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0" fill="none">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -343,14 +615,7 @@ function OAuthButton({
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
           </svg>
-          {label ?? 'Continuar com Google'}
-        </>
-      ) : (
-        <>
-          <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 fill-white">
-            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-          </svg>
-          {label ?? 'Continuar com Apple'}
+          {label}
         </>
       )}
     </motion.button>

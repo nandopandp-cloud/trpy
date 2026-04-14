@@ -36,6 +36,9 @@ export const authOptions: NextAuthOptions = {
 
           if (!user?.password) return null;
 
+          // Block unverified users
+          if (!user.emailVerified) return null;
+
           const isValid = await bcrypt.compare(credentials.password, user.password);
           if (!isValid) return null;
 
