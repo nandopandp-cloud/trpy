@@ -16,9 +16,9 @@ interface LogoProps {
 }
 
 const sizeMap: Record<LogoSize, { icon: number; text: string }> = {
-  sm: { icon: 100, text: 'text-sm' },
-  md: { icon: 100, text: 'text-base' },
-  lg: { icon: 100, text: 'text-lg sm:text-xl' },
+  sm: { icon: 150, text: 'text-sm' },
+  md: { icon: 150, text: 'text-base' },
+  lg: { icon: 150, text: 'text-lg sm:text-xl' },
 };
 
 export function Logo({
