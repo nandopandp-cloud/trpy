@@ -14,7 +14,6 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
-      allowDangerousEmailAccountLinking: true,
     }),
 
     // ── Email / Password ──────────────────────────────────
@@ -67,30 +66,24 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (user) {
+    async jwt({ token, user, account, profile }) {
+      // On sign-in, user and account are always present — trust them directly
+      if (user && account) {
         token.id = user.id;
+        token.email = user.email;
+        return token;
       }
 
-      if (account && account.type !== 'credentials') {
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: token.email! },
-          });
-          if (dbUser) {
-            token.id = dbUser.id;
-          }
-        } catch (error) {
-          console.error('[auth] jwt callback error:', error);
-        }
-      }
-
+      // On subsequent requests, token is already set — do not re-derive from email
       return token;
     },
 
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id as string;
+      }
+      if (token.email) {
+        session.user.email = token.email as string;
       }
       return session;
     },
