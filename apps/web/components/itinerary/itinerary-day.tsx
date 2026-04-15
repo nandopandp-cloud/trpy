@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import type { ItineraryDay as IDay, ItineraryItem } from '@trpy/database';
 import { cn } from '@/lib/utils';
-import { useLocale, t } from '@/lib/i18n';
+import { useLocale, t, getCurrencySymbolByCode } from '@/lib/i18n';
 
 const TYPE_CONFIG: Record<
   string,
@@ -209,7 +209,7 @@ function ItineraryItemRow({
               {item.cost != null && Number(item.cost) > 0 && (
                 <span className="flex items-center gap-0.5 text-xs font-semibold text-emerald-500">
                   <DollarSign className="w-3 h-3" />
-                  {Number(item.cost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  {getCurrencySymbolByCode((item as any).currency ?? 'BRL')} {Number(item.cost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               )}
             </div>

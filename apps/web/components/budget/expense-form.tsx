@@ -15,7 +15,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { useLocale, t } from '@/lib/i18n';
+import { useLocale, t, CURRENCIES, getCurrencySymbolByCode } from '@/lib/i18n';
 
 const CATEGORIES = [
   { value: 'ACCOMMODATION', labelKey: 'category.accommodation', icon: Home,         bg: 'bg-blue-500/15 border-blue-500/30',    active: 'bg-blue-500 border-blue-500' },
@@ -30,6 +30,7 @@ const CATEGORIES = [
 const schema = z.object({
   title: z.string().min(1, 'Título obrigatório').max(200),
   amount: z.coerce.number().positive('Valor deve ser maior que 0'),
+  currency: z.string().length(3).default('BRL'),
   category: z.enum(['ACCOMMODATION','FOOD','TRANSPORT','ACTIVITIES','SHOPPING','HEALTH','OTHER']),
   date: z.string().min(1, 'Data obrigatória'),
   notes: z.string().max(500).optional(),
@@ -48,12 +49,15 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
   const [locale] = useLocale();
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, setValue, setError, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, setError, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
       category: 'OTHER',
+      currency: 'BRL',
       date: format(new Date(), 'yyyy-MM-dd'),
     },
   });
+
+  const selectedCurrency = watch('currency');
 
   const selectCategory = useCallback((value: string) => {
     setSelectedCategory(value);
@@ -95,7 +99,7 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
       if (!json.success) throw new Error(json.error);
 
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
-      toast.success(t(locale, 'expense.success'), { description: `${validated.title} — R$ ${validated.amount}` });
+      toast.success(t(locale, 'expense.success'), { description: `${validated.title} — ${getCurrencySymbolByCode(validated.currency)} ${validated.amount}` });
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -175,12 +179,14 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
             {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
           </div>
 
-          {/* Amount + Date */}
+          {/* Amount + Currency */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">{t(locale, 'expense.amount')}</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
+                  {getCurrencySymbolByCode(selectedCurrency)}
+                </span>
                 <Input
                   type="number"
                   step="0.01"
@@ -193,10 +199,24 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
               {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">{t(locale, 'expense.date')}</label>
-              <Input type="date" {...register('date')} />
-              {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
+              <label className="text-sm font-medium">{t(locale, 'expense.currency')}</label>
+              <select
+                {...register('currency')}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.code} {c.symbol}</option>
+                ))}
+              </select>
+              {errors.currency && <p className="text-xs text-destructive">{errors.currency.message}</p>}
             </div>
+          </div>
+
+          {/* Date */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">{t(locale, 'expense.date')}</label>
+            <Input type="date" {...register('date')} />
+            {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
           </div>
 
           {/* Notes */}

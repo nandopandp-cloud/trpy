@@ -12,6 +12,7 @@ const updateSchema = z.object({
   startTime: z.string().regex(/^\d{2}:\d{2}$/).optional().nullable(),
   durationMins: z.number().int().positive().optional().nullable(),
   cost: z.number().nonnegative().optional().nullable(),
+  currency: z.string().length(3).optional(),
   order: z.number().int().optional(),
 });
 

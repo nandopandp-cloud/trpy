@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useLocale, t } from '@/lib/i18n';
+import { useLocale, t, CURRENCIES, getCurrencySymbolByCode } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type { ItineraryItem } from '@trpy/database';
 
@@ -72,6 +72,7 @@ const schema = z.object({
   startTime: z.string().optional(),
   durationMins: z.string().optional(),
   cost: z.string().optional(),
+  currency: z.string().length(3).default('BRL'),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -122,10 +123,12 @@ export function ItineraryItemForm({
       startTime: item?.startTime ?? '',
       durationMins: item?.durationMins ? String(item.durationMins) : '',
       cost: item?.cost ? String(Number(item.cost)) : '',
+      currency: 'BRL',
     },
   });
 
   const selectedType = watch('type');
+  const selectedCurrency = watch('currency');
 
   async function onSubmit(values: FormValues) {
     const durationMins = values.durationMins ? parseInt(values.durationMins, 10) : undefined;
@@ -315,27 +318,40 @@ export function ItineraryItemForm({
               />
             </div>
 
-            {/* Cost */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-muted-foreground" /> {t(locale, 'item_form.cost')}
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
-                  R$
-                </span>
-                <Input
-                  {...register('cost')}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  className="pl-9 h-10"
-                />
+            {/* Cost + Currency */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5 text-muted-foreground" /> {t(locale, 'item_form.cost')}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
+                    {getCurrencySymbolByCode(selectedCurrency)}
+                  </span>
+                  <Input
+                    {...register('cost')}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0,00"
+                    className="pl-9 h-10"
+                  />
+                </div>
+                {errors.cost && (
+                  <p className="text-xs text-destructive">{errors.cost.message}</p>
+                )}
               </div>
-              {errors.cost && (
-                <p className="text-xs text-destructive">{errors.cost.message}</p>
-              )}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">{t(locale, 'expense.currency')}</label>
+                <select
+                  {...register('currency')}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>{c.code} {c.symbol}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Description */}

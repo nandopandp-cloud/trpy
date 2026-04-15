@@ -162,6 +162,7 @@ model ItineraryItem {
   startTime    String?
   durationMins Int?
   cost         Decimal?  @db.Decimal(10, 2)
+  currency     String    @default("BRL")
   bookingUrl   String?
   order        Int       @default(0)
   createdAt    DateTime  @default(now())

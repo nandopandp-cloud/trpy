@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useLocale, t } from '@/lib/i18n';
+import { useLocale, t, CURRENCIES } from '@/lib/i18n';
 
 const schema = z
   .object({
@@ -85,10 +85,9 @@ export function TripForm({ defaultValues, onSubmit, submitLabel }: TripFormProps
             {...register('currency')}
             className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="BRL">{t(locale, 'form.trip.currency_brl')}</option>
-            <option value="USD">{t(locale, 'form.trip.currency_usd')}</option>
-            <option value="EUR">{t(locale, 'form.trip.currency_eur')}</option>
-            <option value="GBP">{t(locale, 'form.trip.currency_gbp')}</option>
+            {CURRENCIES.map((c) => (
+              <option key={c.code} value={c.code}>{c.label}</option>
+            ))}
           </select>
         </Field>
       </div>

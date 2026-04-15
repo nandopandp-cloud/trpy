@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/ui/skeletons';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useLocale, t, formatNumber } from '@/lib/i18n';
+import { useLocale, t, formatNumber, getCurrencySymbolByCode } from '@/lib/i18n';
 
 const stagger = {
   container: { hidden: {}, show: { transition: { staggerChildren: 0.07 } } },
@@ -71,20 +71,20 @@ export default function BudgetPage() {
   const stats = [
     {
       label: t(locale, 'budget_page.total_budget' as any),
-      value: `R$ ${formatNumber(locale, totalBudget)}`,
+      value: formatNumber(locale, totalBudget),
       icon: Wallet,
       color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
     },
     {
       label: t(locale, 'budget_page.total_spent' as any),
-      value: `R$ ${formatNumber(locale, totalSpent)}`,
+      value: formatNumber(locale, totalSpent),
       icon: TrendingUp,
       color: totalProgress >= 90 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400',
       bgColor: totalProgress >= 90 ? 'bg-red-50 dark:bg-red-500/10' : 'bg-amber-50 dark:bg-amber-500/10',
     },
     {
       label: t(locale, 'budget_page.balance' as any),
-      value: `R$ ${formatNumber(locale, Math.max(totalRemaining, 0))}`,
+      value: formatNumber(locale, Math.max(totalRemaining, 0)),
       icon: TrendingDown,
       color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
     },
@@ -171,8 +171,8 @@ export default function BudgetPage() {
               />
             </div>
             <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-              <span>R$ {formatNumber(locale, totalSpent)} {t(locale, 'budget_page.spent_label' as any)}</span>
-              <span>R$ {formatNumber(locale, totalBudget)} {t(locale, 'budget_page.total_label' as any)}</span>
+              <span>{formatNumber(locale, totalSpent)} {t(locale, 'budget_page.spent_label' as any)}</span>
+              <span>{formatNumber(locale, totalBudget)} {t(locale, 'budget_page.total_label' as any)}</span>
             </div>
           </motion.div>
 
@@ -209,7 +209,7 @@ export default function BudgetPage() {
                           borderRadius: '12px',
                           fontSize: '12px',
                         }}
-                        formatter={(value) => `R$ ${formatNumber(locale, Number(value) || 0)}`}
+                        formatter={(value) => `${formatNumber(locale, Number(value) || 0)}`}
                       />
                       <Bar dataKey="budget" fill="#6366f130" radius={[6, 6, 0, 0]} />
                       <Bar dataKey="spent" fill="#6366f1" radius={[6, 6, 0, 0]} />
@@ -254,7 +254,7 @@ export default function BudgetPage() {
                             borderRadius: '12px',
                             fontSize: '12px',
                           }}
-                          formatter={(value) => `R$ ${formatNumber(locale, Number(value) || 0)}`}
+                          formatter={(value) => `${formatNumber(locale, Number(value) || 0)}`}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -266,7 +266,7 @@ export default function BudgetPage() {
                             <span className="text-xs text-muted-foreground truncate">{entry.name}</span>
                           </div>
                           <span className="text-xs font-medium text-foreground shrink-0">
-                            R$ {entry.value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                            {entry.value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                           </span>
                         </div>
                       ))}
@@ -313,7 +313,7 @@ export default function BudgetPage() {
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           <span className={cn('text-xs font-medium', over ? 'text-red-400' : 'text-foreground')}>
-                            R$ {formatNumber(locale, spent)}
+                            {getCurrencySymbolByCode(trip.currency)} {formatNumber(locale, spent)}
                             <span className="text-muted-foreground font-normal"> / {formatNumber(locale, budget)}</span>
                           </span>
                           <Button

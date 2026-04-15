@@ -15,6 +15,7 @@ const addItemSchema = z.object({
   startTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   durationMins: z.number().int().positive().optional(),
   cost: z.number().nonnegative().optional(),
+  currency: z.string().length(3).default('BRL'),
   order: z.number().int().default(0),
 });
 
@@ -90,6 +91,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           startTime: data.startTime,
           durationMins: data.durationMins,
           cost: data.cost,
+          currency: data.currency,
           order: data.order,
           latitude,
           longitude,
