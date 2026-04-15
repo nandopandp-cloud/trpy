@@ -72,7 +72,7 @@ const schema = z.object({
   startTime: z.string().optional(),
   durationMins: z.string().optional(),
   cost: z.string().optional(),
-  currency: z.string().length(3).default('BRL'),
+  currency: z.string().length(3).optional().default('BRL'),
 });
 
 type FormValues = z.infer<typeof schema>;
