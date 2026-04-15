@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, differenceInDays } from 'date-fns';
@@ -71,21 +71,52 @@ function gradientFromId(id: string) {
 
 // ─── CoverPicker modal ────────────────────────────────────────────────────────
 
+interface PexelsPhoto {
+  id: string;
+  url: string;
+  thumb: string;
+  alt: string;
+  photographer: string;
+}
+
 interface CoverPickerProps {
   tripId: string;
+  destination: string;
   current: string | null | undefined;
   gradientFallback: string;
   onClose: () => void;
   onSaved: (url: string | null) => void;
 }
 
-function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: CoverPickerProps) {
+function CoverPicker({ tripId, destination, current, gradientFallback, onClose, onSaved }: CoverPickerProps) {
   const [locale] = useLocale();
-  const [tab, setTab] = useState<'upload' | 'url' | 'gradient'>('gradient');
+  const [tab, setTab] = useState<'photos' | 'gradient' | 'url' | 'upload'>('photos');
   const [urlInput, setUrlInput] = useState(current ?? '');
   const [selectedGradient, setSelectedGradient] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [photos, setPhotos] = useState<PexelsPhoto[]>([]);
+  const [photosLoading, setPhotosLoading] = useState(false);
+  const [photosError, setPhotosError] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const fetchPhotos = useCallback(async () => {
+    setPhotosLoading(true);
+    setPhotosError(false);
+    try {
+      const res = await fetch(`/api/pexels-photos?q=${encodeURIComponent(destination)}&per_page=10`);
+      const json = await res.json();
+      if (!json.success) throw new Error();
+      setPhotos(json.data.photos);
+    } catch {
+      setPhotosError(true);
+    } finally {
+      setPhotosLoading(false);
+    }
+  }, [destination]);
+
+  useEffect(() => {
+    fetchPhotos();
+  }, [fetchPhotos]);
 
   async function save(coverImage: string | null) {
     setSaving(true);
@@ -150,8 +181,9 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
         {/* Tab strip */}
         <div className="flex border-b border-border">
           {[
+            { id: 'photos' as const, icon: ImageIcon, labelKey: 'cover.photos' },
             { id: 'gradient' as const, icon: Palette, labelKey: 'cover.gradient' },
-            { id: 'url' as const, icon: ImageIcon, labelKey: 'cover.url' },
+            { id: 'url' as const, icon: Camera, labelKey: 'cover.url' },
             { id: 'upload' as const, icon: Upload, labelKey: 'cover.upload' },
           ].map((ct) => {
             const Icon = ct.icon;
@@ -174,6 +206,62 @@ function CoverPicker({ tripId, current, gradientFallback, onClose, onSaved }: Co
         </div>
 
         <div className="p-5 space-y-4">
+          {/* Photos tab */}
+          {tab === 'photos' && (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">{t(locale, 'cover.photos_desc' as any)}</p>
+              {photosLoading && (
+                <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t(locale, 'cover.photos_loading' as any)}
+                </div>
+              )}
+              {photosError && !photosLoading && (
+                <div className="flex flex-col items-center justify-center py-8 gap-3 text-sm text-muted-foreground">
+                  <p>{t(locale, 'cover.photos_error' as any)}</p>
+                  <button
+                    onClick={fetchPhotos}
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    {t(locale, 'cover.photos_retry' as any)}
+                  </button>
+                </div>
+              )}
+              {!photosLoading && !photosError && photos.length > 0 && (
+                <div className="grid grid-cols-2 gap-2 max-h-[340px] overflow-y-auto pr-0.5">
+                  {photos.map((photo) => (
+                    <button
+                      key={photo.id}
+                      onClick={() => save(photo.url)}
+                      disabled={saving}
+                      className="relative group h-28 rounded-2xl overflow-hidden bg-muted ring-2 ring-transparent hover:ring-primary transition-all"
+                      title={photo.alt}
+                    >
+                      <img
+                        src={photo.thumb}
+                        alt={photo.alt}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-semibold text-white bg-black/50 rounded-full px-2 py-0.5">
+                          {t(locale, 'cover.use_photo' as any)}
+                        </span>
+                      </div>
+                      <span className="absolute bottom-1 right-1 text-[9px] text-white/60 bg-black/30 rounded px-1 truncate max-w-[80px]">
+                        {photo.photographer}
+                      </span>
+                      {saving && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Gradient picker */}
           {tab === 'gradient' && (
             <div className="space-y-3">
@@ -869,6 +957,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
         {showCoverPicker && (
           <CoverPicker
             tripId={params.id}
+            destination={trip?.destination ?? ''}
             current={coverImage}
             gradientFallback={gradientFallback}
             onClose={() => setShowCoverPicker(false)}
