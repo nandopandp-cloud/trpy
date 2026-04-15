@@ -75,7 +75,7 @@ const schema = z.object({
   currency: z.string().length(3).optional().default('BRL'),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.input<typeof schema>;
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
