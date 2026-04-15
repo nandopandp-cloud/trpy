@@ -128,7 +128,7 @@ export function ItineraryItemForm({
   });
 
   const selectedType = watch('type');
-  const selectedCurrency = watch('currency');
+  const selectedCurrency = watch('currency') ?? 'BRL';
 
   async function onSubmit(values: FormValues) {
     const durationMins = values.durationMins ? parseInt(values.durationMins, 10) : undefined;
