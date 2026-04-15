@@ -296,7 +296,7 @@ export function ItineraryItemForm({
                 <Input
                   {...register('durationMins')}
                   type="number"
-                  min="1"
+                  min="0"
                   placeholder="120"
                   className="h-10"
                 />
