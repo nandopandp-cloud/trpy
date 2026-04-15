@@ -15,6 +15,7 @@ import { useTrips } from '@/hooks/useTrips';
 import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
 import { TripStories } from '@/components/dashboard/trip-stories';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { useLocale, formatNumber } from '@/lib/i18n';
 
@@ -217,6 +218,8 @@ const stagger = {
 export default function DashboardPage() {
   const [locale] = useLocale();
   const router = useRouter();
+  const { data: session } = useSession();
+  const firstName = session?.user?.name?.split(' ')[0] ?? 'viajante';
   const { data, isLoading } = useTrips({ limit: 5 });
   const trips = data?.trips ?? [];
 
@@ -277,7 +280,7 @@ export default function DashboardPage() {
               transition={{ delay: 0.15, duration: 0.5 }}
               className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-[1.1] tracking-tight"
             >
-              Olá, viajante<span className="text-gradient-accent">.</span>
+              Olá, {firstName}<span className="text-gradient-accent">.</span>
             </motion.h1>
 
             <motion.p

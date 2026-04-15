@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   MapPin, Clock, DollarSign, Plus, Edit2, Trash2,
-  Utensils, Hotel, Bus, Zap, MoreHorizontal, ChevronDown,
+  Utensils, Hotel, Bus, Zap, MoreHorizontal, ChevronDown, CalendarMinus,
 } from 'lucide-react';
 import type { ItineraryDay as IDay, ItineraryItem } from '@trpy/database';
 import { cn } from '@/lib/utils';
@@ -28,9 +28,10 @@ interface ItineraryDayProps {
   onAddItem: (dayId: string) => void;
   onEditItem: (item: ItineraryItem) => void;
   onDeleteItem: (itemId: string) => void;
+  onDeleteDay: (dayId: string) => void;
 }
 
-export function ItineraryDay({ day, onAddItem, onEditItem, onDeleteItem }: ItineraryDayProps) {
+export function ItineraryDay({ day, onAddItem, onEditItem, onDeleteItem, onDeleteDay }: ItineraryDayProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [locale] = useLocale();
 
@@ -74,6 +75,15 @@ export function ItineraryDay({ day, onAddItem, onEditItem, onDeleteItem }: Itine
             title="Adicionar atividade"
           >
             <Plus className="w-3.5 h-3.5" />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => { e.stopPropagation(); onDeleteDay(day.id); }}
+            className="w-7 h-7 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-colors"
+            title="Excluir dia"
+          >
+            <CalendarMinus className="w-3.5 h-3.5" />
           </motion.button>
           <motion.div
             animate={{ rotate: collapsed ? -90 : 0 }}

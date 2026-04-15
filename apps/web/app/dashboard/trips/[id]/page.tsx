@@ -542,6 +542,19 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
     onError: () => toast.error('Erro ao excluir atividade'),
   });
 
+  const deleteDayMutation = useMutation({
+    mutationFn: async (dayId: string) => {
+      const res = await fetch(`/api/itinerary-days/${dayId}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trip', params.id] });
+      toast.success('Dia removido do itinerário');
+    },
+    onError: () => toast.error('Erro ao excluir dia'),
+  });
+
   // Resolve cover: override from picker > db value > gradient fallback
   const coverImage = coverOverride !== undefined ? coverOverride : trip?.coverImage;
   const gradientFallback = trip ? gradientFromId(trip.id) : PRESET_GRADIENTS[0].class;
@@ -793,6 +806,11 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
                           }
                           onDeleteItem={(itemId) => {
                             if (confirm('Excluir atividade?')) deleteItemMutation.mutate(itemId);
+                          }}
+                          onDeleteDay={(dayId) => {
+                            if (confirm('Excluir este dia do itinerário? Todas as atividades serão removidas.')) {
+                              deleteDayMutation.mutate(dayId);
+                            }
                           }}
                         />
                       );

@@ -1013,21 +1013,21 @@ function StoryBubble({ story, viewed }: { story: StoryItem; viewed: boolean }) {
     <motion.div
       whileHover={{ scale: 1.07, y: -3 }}
       whileTap={{ scale: 0.93 }}
-      className="relative w-[80px] h-[80px]"
+      className="relative w-[72px] h-[72px]"
     >
-      {/* Gradient ring */}
+      {/* Gradient ring — fully circular */}
       <div
         className={cn(
-          'absolute inset-0 rounded-[26px] bg-gradient-to-br transition-opacity duration-300',
+          'absolute inset-0 rounded-full bg-gradient-to-br transition-opacity duration-300',
           ring,
           viewed ? 'opacity-25' : 'opacity-100'
         )}
         style={{ padding: '2.5px' }}
       >
         {/* Gap (bg color) */}
-        <div className="w-full h-full rounded-[24px] bg-background" style={{ padding: '2px' }}>
+        <div className="w-full h-full rounded-full bg-background" style={{ padding: '2px' }}>
           {/* Cover image or gradient */}
-          <div className="w-full h-full rounded-[22px] overflow-hidden relative">
+          <div className="w-full h-full rounded-full overflow-hidden relative">
             {photo ? (
               <img
                 src={photo}
@@ -1047,15 +1047,13 @@ function StoryBubble({ story, viewed }: { story: StoryItem; viewed: boolean }) {
 
             {/* Status dot */}
             {story.status === 'ONGOING' && (
-              <div className="absolute bottom-1.5 right-1.5">
+              <div className="absolute bottom-1 right-1">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 ring-2 ring-background" />
                 </span>
               </div>
             )}
-
-            {/* AI badge */}
           </div>
         </div>
       </div>
@@ -1063,7 +1061,7 @@ function StoryBubble({ story, viewed }: { story: StoryItem; viewed: boolean }) {
       {/* Glow on hover */}
       <div
         className={cn(
-          'absolute inset-0 rounded-[26px] opacity-0 group-hover:opacity-60 transition-opacity duration-500 -z-10',
+          'absolute inset-0 rounded-full opacity-0 group-hover:opacity-60 transition-opacity duration-500 -z-10',
           `bg-gradient-to-br ${ring}`
         )}
         style={{ filter: 'blur(12px)', transform: 'scale(0.85)' }}
@@ -1123,17 +1121,7 @@ export function TripStories({ trips = [] }: TripStoriesProps) {
   const aiStories = suggestions;
   const viewableStories = [...userStories, ...aiStories];
 
-  // All bubbles (create + stories)
-  const allBubbles: StoryItem[] = [
-    { id: 'create', type: 'create', title: 'Nova viagem', destination: '' },
-    ...viewableStories,
-  ];
-
   function openStory(story: StoryItem) {
-    if (story.type === 'create') {
-      router.push('/dashboard/trips/new');
-      return;
-    }
     setViewedIds(prev => new Set(prev).add(story.id));
     const idx = viewableStories.findIndex(s => s.id === story.id);
     setActiveIdx(idx >= 0 ? idx : 0);
@@ -1142,6 +1130,15 @@ export function TripStories({ trips = [] }: TripStoriesProps) {
 
   return (
     <>
+      {/* ── Section header ── */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-4 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
+          <p className="text-sm font-semibold text-foreground">Descubra novos destinos</p>
+        </div>
+        <span className="text-[11px] text-muted-foreground font-medium">{viewableStories.length} lugares</span>
+      </div>
+
       {/* ── Bubble strip ── */}
       <div className="relative -mx-4 md:-mx-6">
         {/* Fade masks */}
@@ -1149,7 +1146,7 @@ export function TripStories({ trips = [] }: TripStoriesProps) {
         <div className="absolute right-0 top-0 bottom-0 w-8 z-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
 
         <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2 pt-1 px-4 md:px-6 snap-x snap-mandatory scroll-smooth">
-          {allBubbles.map((story, i) => (
+          {viewableStories.map((story, i) => (
             <motion.button
               key={story.id}
               initial={{ opacity: 0, scale: 0.8, y: 10 }}
@@ -1158,11 +1155,8 @@ export function TripStories({ trips = [] }: TripStoriesProps) {
               className="snap-start shrink-0 flex flex-col items-center gap-2 group"
               onClick={() => openStory(story)}
             >
-              {story.type === 'create'
-                ? <CreateBubble />
-                : <StoryBubble story={story} viewed={viewedIds.has(story.id)} />
-              }
-              <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[80px] text-center leading-tight">
+              <StoryBubble story={story} viewed={viewedIds.has(story.id)} />
+              <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[72px] text-center leading-tight">
                 {story.title}
               </span>
             </motion.button>
