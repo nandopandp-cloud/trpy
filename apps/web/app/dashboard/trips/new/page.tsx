@@ -1,30 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, MapPin, Calendar, Wallet, Sparkles } from 'lucide-react';
+import { addDays, format } from 'date-fns';
 import { toast } from 'sonner';
 import { useCreateTrip } from '@/hooks/useTrips';
 import { TripForm, type TripFormValues } from '@/components/trips/trip-form';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLocale, t } from '@/lib/i18n';
-
-const INSPIRATIONS = [
-  { emoji: '🗼', label: 'Paris', desc: '7 dias' },
-  { emoji: '🌊', label: 'Bali', desc: '10 dias' },
-  { emoji: '🏔️', label: 'Patagônia', desc: '14 dias' },
-  { emoji: '🎌', label: 'Tóquio', desc: '10 dias' },
-  { emoji: '🏝️', label: 'Maldivas', desc: '7 dias' },
-  { emoji: '🌆', label: 'Nova York', desc: '5 dias' },
-];
+import { getRandomDestinations, type DestinationTemplate } from '@/lib/destination-templates';
 
 export default function NewTripPage() {
   const router = useRouter();
   const [locale] = useLocale();
   const createTrip = useCreateTrip();
   const [step, setStep] = useState<'inspire' | 'form'>('inspire');
+  const [selectedTemplate, setSelectedTemplate] = useState<DestinationTemplate | null>(null);
+
+  // Get random 6 destinations on mount
+  const inspirations = useMemo(() => getRandomDestinations(6), []);
 
   async function handleSubmit(values: TripFormValues) {
     try {
@@ -38,6 +35,16 @@ export default function NewTripPage() {
     } catch (e) {
       toast.error((e as Error).message ?? t(locale, 'new_trip.error'));
     }
+  }
+
+  function handleSelectDestination(template: DestinationTemplate) {
+    const tomorrow = addDays(new Date(), 1);
+    const endDate = addDays(tomorrow, template.durationDays);
+
+    setSelectedTemplate({
+      ...template,
+    });
+    setStep('form');
   }
 
   return (
@@ -105,21 +112,21 @@ export default function NewTripPage() {
                   {t(locale, 'new_trip.popular')}
                 </p>
                 <div className="grid grid-cols-3 gap-3">
-                  {INSPIRATIONS.map((ins, i) => (
+                  {inspirations.map((template, i) => (
                     <motion.button
-                      key={ins.label}
+                      key={template.id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.05 }}
                       whileHover={{ y: -3 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setStep('form')}
+                      onClick={() => handleSelectDestination(template)}
                       className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all group"
                     >
-                      <span className="text-3xl group-hover:scale-110 transition-transform">{ins.emoji}</span>
+                      <span className="text-3xl group-hover:scale-110 transition-transform">{template.emoji}</span>
                       <div className="text-center">
-                        <p className="text-xs font-bold text-foreground">{ins.label}</p>
-                        <p className="text-[10px] text-muted-foreground">{ins.desc}</p>
+                        <p className="text-xs font-bold text-foreground">{template.label}</p>
+                        <p className="text-[10px] text-muted-foreground">{template.durationDays} dias</p>
                       </div>
                     </motion.button>
                   ))}
@@ -163,7 +170,30 @@ export default function NewTripPage() {
               transition={{ duration: 0.25 }}
             >
               <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
-                <TripForm onSubmit={handleSubmit} submitLabel={t(locale, 'trips.create')} />
+                {selectedTemplate && (
+                  <div className="mb-6 p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-start gap-3">
+                    <span className="text-3xl">{selectedTemplate.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground text-sm">{selectedTemplate.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{selectedTemplate.description}</p>
+                    </div>
+                  </div>
+                )}
+                <TripForm
+                  defaultValues={selectedTemplate ? {
+                    destination: selectedTemplate.label,
+                    title: selectedTemplate.suggestedTitle,
+                    description: selectedTemplate.description,
+                    budget: selectedTemplate.suggestedBudget,
+                    currency: selectedTemplate.currency,
+                    startDate: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
+                    endDate: format(addDays(new Date(), 1 + selectedTemplate.durationDays), 'yyyy-MM-dd'),
+                  } : {
+                    currency: 'BRL',
+                  }}
+                  onSubmit={handleSubmit}
+                  submitLabel={t(locale, 'trips.create')}
+                />
               </div>
             </motion.div>
           )}
