@@ -45,15 +45,15 @@ async function searchVideos(q: string, maxResults = 6): Promise<YouTubeVideo[]> 
 }
 
 export async function searchVideosByDestination(destination: string): Promise<YouTubeVideo[]> {
-  return searchVideos(`viagem ${destination} guia turístico`);
+  return searchVideos(`viagem ${destination} guia turístico`, 16);
 }
 
 export async function searchActivityVideos(activity: string, location: string): Promise<YouTubeVideo[]> {
-  return searchVideos(`${activity} ${location}`);
+  return searchVideos(`${activity} ${location}`, 16);
 }
 
 export async function searchRestaurantVideos(restaurant: string, location: string): Promise<YouTubeVideo[]> {
-  return searchVideos(`restaurante ${restaurant} ${location} review`);
+  return searchVideos(`restaurante ${restaurant} ${location} review`, 16);
 }
 
 export async function getTrendingTravelVideos(): Promise<YouTubeVideo[]> {
