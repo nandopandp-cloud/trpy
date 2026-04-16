@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -45,10 +46,13 @@ export function HeroCard({ trip, onClick, className }: HeroCardProps) {
       {/* Background */}
       <div className="relative h-64 md:h-80">
         {trip.coverImage ? (
-          <img
+          <Image
             src={trip.coverImage}
             alt={trip.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 66vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
           <div className={cn('w-full h-full bg-gradient-to-br', gradient)} />

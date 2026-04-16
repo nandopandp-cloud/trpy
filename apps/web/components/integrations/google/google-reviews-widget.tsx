@@ -38,6 +38,8 @@ function ReviewCard({ review, index }: { review: PlaceReview; index: number }) {
           <img
             src={review.profile_photo_url}
             alt={review.author_name}
+            loading="lazy"
+            decoding="async"
             className="w-8 h-8 rounded-full object-cover shrink-0"
           />
         ) : (

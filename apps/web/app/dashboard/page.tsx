@@ -13,7 +13,12 @@ import {
 } from 'lucide-react';
 import { useTrips } from '@/hooks/useTrips';
 import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
-import { TripStories } from '@/components/dashboard/trip-stories';
+import dynamic from 'next/dynamic';
+
+const TripStories = dynamic(() => import('@/components/dashboard/trip-stories').then(m => m.TripStories), {
+  loading: () => <div className="h-20 rounded-2xl bg-muted animate-pulse" />,
+  ssr: false,
+});
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';

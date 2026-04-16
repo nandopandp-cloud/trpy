@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface UserAvatarProps {
@@ -11,10 +12,10 @@ interface UserAvatarProps {
 }
 
 const SIZE_MAP = {
-  sm: 'w-7 h-7 text-xs',
-  md: 'w-8 h-8 text-xs',
-  lg: 'w-10 h-10 text-sm',
-  xl: 'w-14 h-14 text-xl',
+  sm: { class: 'w-7 h-7 text-xs', px: 28 },
+  md: { class: 'w-8 h-8 text-xs', px: 32 },
+  lg: { class: 'w-10 h-10 text-sm', px: 40 },
+  xl: { class: 'w-14 h-14 text-xl', px: 56 },
 };
 
 export function UserAvatar({ name, email, image, size = 'md', className }: UserAvatarProps) {
@@ -26,14 +27,15 @@ export function UserAvatar({ name, email, image, size = 'md', className }: UserA
         .join('')
     : email?.[0]?.toUpperCase() ?? '?';
 
-  const sizeClass = SIZE_MAP[size];
+  const { class: sizeClass, px } = SIZE_MAP[size];
 
   if (image) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={image}
         alt={name ?? email ?? 'Avatar'}
+        width={px}
+        height={px}
         referrerPolicy="no-referrer"
         className={cn('rounded-full object-cover ring-2 ring-primary/15', sizeClass, className)}
       />

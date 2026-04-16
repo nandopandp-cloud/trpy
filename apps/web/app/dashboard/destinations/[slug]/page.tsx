@@ -14,10 +14,20 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
-import { GoogleMapView } from '@/components/integrations/google/google-map-view';
-import { YouTubeVideoPlayer } from '@/components/integrations/youtube/youtube-video-player';
-import { YouTubeGallery } from '@/components/integrations/youtube/youtube-gallery';
+import dynamic from 'next/dynamic';
 import { PlaceDetailModal } from '@/components/integrations/google/place-detail-modal';
+
+const GoogleMapView = dynamic(() => import('@/components/integrations/google/google-map-view').then(m => m.GoogleMapView), {
+  loading: () => <div className="h-96 rounded-2xl bg-muted animate-pulse" />,
+  ssr: false,
+});
+const YouTubeVideoPlayer = dynamic(() => import('@/components/integrations/youtube/youtube-video-player').then(m => m.YouTubeVideoPlayer), {
+  ssr: false,
+});
+const YouTubeGallery = dynamic(() => import('@/components/integrations/youtube/youtube-gallery').then(m => m.YouTubeGallery), {
+  loading: () => <div className="h-64 rounded-2xl bg-muted animate-pulse" />,
+  ssr: false,
+});
 import type { YouTubeVideo } from '@/lib/integrations/youtube/youtube-service';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
 import { cn } from '@/lib/utils';

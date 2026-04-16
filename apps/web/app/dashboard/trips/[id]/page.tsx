@@ -17,16 +17,34 @@ import { useDeleteTrip } from '@/hooks/useTrips';
 import { ItineraryDay } from '@/components/itinerary/itinerary-day';
 import { ItineraryItemForm } from '@/components/itinerary/itinerary-item-form';
 import { AddDayForm } from '@/components/itinerary/add-day-form';
-import { BudgetDashboard } from '@/components/budget/budget-dashboard';
+import dynamic from 'next/dynamic';
+const BudgetDashboard = dynamic(() => import('@/components/budget/budget-dashboard').then(m => m.BudgetDashboard), {
+  loading: () => <div className="h-64 rounded-2xl bg-muted animate-pulse" />,
+  ssr: false,
+});
 import { ExpenseForm } from '@/components/budget/expense-form';
 import { TripShareModal } from '@/components/trips/trip-share-modal';
 import { Button } from '@/components/ui/button';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
-import { YouTubeGallery } from '@/components/integrations/youtube/youtube-gallery';
-import { InspirationGallery } from '@/components/trips/inspiration-gallery';
-import { GoogleMapView, type MapMarker } from '@/components/integrations/google/google-map-view';
-import { PlacesRecommendations } from '@/components/integrations/google/places-recommendations';
+import type { MapMarker } from '@/components/integrations/google/google-map-view';
+
+const YouTubeGallery = dynamic(() => import('@/components/integrations/youtube/youtube-gallery').then(m => m.YouTubeGallery), {
+  loading: () => <div className="h-64 rounded-2xl bg-muted animate-pulse" />,
+  ssr: false,
+});
+const InspirationGallery = dynamic(() => import('@/components/trips/inspiration-gallery').then(m => m.InspirationGallery), {
+  loading: () => <div className="h-64 rounded-2xl bg-muted animate-pulse" />,
+  ssr: false,
+});
+const GoogleMapView = dynamic(() => import('@/components/integrations/google/google-map-view').then(m => m.GoogleMapView), {
+  loading: () => <div className="h-96 rounded-2xl bg-muted animate-pulse" />,
+  ssr: false,
+});
+const PlacesRecommendations = dynamic(() => import('@/components/integrations/google/places-recommendations').then(m => m.PlacesRecommendations), {
+  loading: () => <div className="h-64 rounded-2xl bg-muted animate-pulse" />,
+  ssr: false,
+});
 import { cn } from '@/lib/utils';
 import { useLocale, t } from '@/lib/i18n';
 import { useConfirm } from '@/components/ui/confirm-dialog';
