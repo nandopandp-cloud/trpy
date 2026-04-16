@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Youtube, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -30,6 +30,11 @@ export function YouTubeGallery({ destination, activity }: YouTubeGalleryProps) {
     },
     staleTime: 24 * 60 * 60 * 1000,
   });
+
+  // Reset to page 0 when videos or destination change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [destination, activity]);
 
   const totalPages = Math.ceil(videos.length / VIDEOS_PER_PAGE);
   const paginatedVideos = videos.slice(
@@ -75,7 +80,7 @@ export function YouTubeGallery({ destination, activity }: YouTubeGalleryProps) {
       </div>
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
+      {videos.length > VIDEOS_PER_PAGE && (
         <div className="flex items-center justify-center gap-3 mt-6">
           <motion.button
             whileHover={{ scale: 1.05 }}

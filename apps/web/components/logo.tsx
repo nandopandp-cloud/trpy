@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 export type LogoVariant = 'navbar' | 'footer' | 'icon-only';
-export type LogoSize = 'sm' | 'md' | 'lg';
+export type LogoSize = 'xs' | 'sm' | 'md' | 'lg';
 
 interface LogoProps {
   variant?: LogoVariant;
@@ -16,6 +16,7 @@ interface LogoProps {
 }
 
 const sizeMap: Record<LogoSize, { icon: number; text: string }> = {
+  xs: { icon: 40, text: 'text-xs' },
   sm: { icon: 100, text: 'text-sm' },
   md: { icon: 100, text: 'text-base' },
   lg: { icon: 100, text: 'text-lg sm:text-xl' },

@@ -37,7 +37,9 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center justify-center h-16 border-b border-border shrink-0">
-        <Logo href="/dashboard" size="sm" hideText={true} />
+        <motion.div animate={{ scale: collapsed ? 0.4 : 1 }} transition={{ duration: 0.25 }}>
+          <Logo href="/dashboard" size="sm" hideText={true} />
+        </motion.div>
       </div>
 
       {/* Nav */}
