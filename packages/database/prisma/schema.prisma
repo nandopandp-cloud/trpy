@@ -110,6 +110,7 @@ model Trip {
   currency    String     @default("BRL")
   status      TripStatus @default(PLANNING)
   isDeleted   Boolean    @default(false)
+  shareToken  String?    @unique  // public share token — null means sharing disabled
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
@@ -119,6 +120,7 @@ model Trip {
 
   @@index([userId])
   @@index([status])
+  @@index([shareToken])
   @@map("trips")
 }
 

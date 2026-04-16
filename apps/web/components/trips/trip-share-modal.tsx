@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Share2, Download, FileText, Table2, Link2, Check,
   Loader2, Copy, MapPin, Calendar, Wallet, List, Mail, MessageCircle,
+  Globe, ToggleLeft, ToggleRight, ExternalLink,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -321,6 +322,10 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>((trip as any).shareToken ?? null);
+  const [sharingEnabled, setSharingEnabled] = useState<boolean>(!!(trip as any).shareToken);
+  const [togglingShare, setTogglingShare] = useState(false);
+  const [copiedPublicLink, setCopiedPublicLink] = useState(false);
 
   useEffect(() => {
     setPortalRoot(document.body);
@@ -331,6 +336,61 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
   const totalItems = trip.itineraryDays.reduce((s, d) => s + d.items.length, 0);
   const totalExpenses = trip.expenses.length;
   const totalSpent = Number(trip.totalSpent);
+
+  const publicUrl = shareToken ? `${typeof window !== 'undefined' ? window.location.origin : ''}/share/${shareToken}` : null;
+
+  async function enableSharing(): Promise<string | null> {
+    try {
+      const res = await fetch(`/api/trips/${trip.id}/share`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Erro ao ativar compartilhamento');
+      setShareToken(data.data.token);
+      setSharingEnabled(true);
+      return data.data.token;
+    } catch (err: any) {
+      toast.error('Erro ao ativar compartilhamento', { description: err.message });
+      return null;
+    }
+  }
+
+  async function handleToggleSharing() {
+    setTogglingShare(true);
+    try {
+      if (sharingEnabled) {
+        const res = await fetch(`/api/trips/${trip.id}/share`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Erro ao revogar compartilhamento');
+        setShareToken(null);
+        setSharingEnabled(false);
+        toast.success('Compartilhamento desativado', { description: 'O link público foi revogado.' });
+      } else {
+        const token = await enableSharing();
+        if (token) {
+          toast.success('Compartilhamento ativado!', { description: 'Qualquer pessoa com o link pode visualizar.' });
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setTogglingShare(false);
+    }
+  }
+
+  async function handleCopyPublicLink() {
+    let token = shareToken;
+    if (!token) {
+      token = await enableSharing();
+      if (!token) return;
+    }
+    const url = `${window.location.origin}/share/${token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedPublicLink(true);
+      toast.success('Link público copiado!', { description: 'Qualquer pessoa com esse link pode visualizar.' });
+      setTimeout(() => setCopiedPublicLink(false), 3000);
+    } catch {
+      toast.error('Não foi possível copiar o link.');
+    }
+  }
 
   async function handleCopyLink() {
     try {
@@ -366,22 +426,32 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
     toast.success('CSV exportado!', { description: `${totalDays} dia${totalDays !== 1 ? 's' : ''} exportado${totalDays !== 1 ? 's' : ''}.` });
   }
 
-  function handleShareWhatsApp() {
-    const url = `${window.location.origin}/dashboard/trips/${trip.id}`;
-    const text = buildTextSummary(trip);
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${text}\n\n🔗 ${url}`)}`;
+  async function handleShareWhatsApp() {
+    let token = shareToken;
+    if (!token) {
+      token = await enableSharing();
+      if (!token) return;
+    }
+    const url = `${window.location.origin}/share/${token}`;
+    const text = `✈️ *${trip.title}*\n📍 ${trip.destination}${trip.startDate ? `\n📅 ${format(new Date(trip.startDate), "d 'de' MMMM", { locale: ptBR })}${trip.endDate ? ` → ${format(new Date(trip.endDate), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}` : ''}` : ''}\n\n🔗 Veja o planejamento completo:`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-    toast.success('WhatsApp aberto!');
+    toast.success('WhatsApp aberto!', { description: 'O link público foi enviado.' });
   }
 
-  function handleShareEmail() {
-    const url = `${window.location.origin}/dashboard/trips/${trip.id}`;
+  async function handleShareEmail() {
+    let token = shareToken;
+    if (!token) {
+      token = await enableSharing();
+      if (!token) return;
+    }
+    const url = `${window.location.origin}/share/${token}`;
     const subject = encodeURIComponent(`Planejamento de viagem: ${trip.title}`);
     const dateRange = trip.startDate
       ? `\n📅 ${format(new Date(trip.startDate), "d 'de' MMMM", { locale: ptBR })}${trip.endDate ? ` a ${format(new Date(trip.endDate), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}` : ''}`
       : '';
     const body = encodeURIComponent(
-      `Olá! Estou planejando uma viagem para ${trip.destination} e quero compartilhar o roteiro com você.${dateRange}\n\n🔗 Acesse o planejamento completo:\n${url}\n\n---\n${buildTextSummary(trip)}`
+      `Olá! Estou planejando uma viagem para ${trip.destination} e quero compartilhar o roteiro com você.${dateRange}\n\n🔗 Acesse o planejamento completo (sem precisar fazer cadastro):\n${url}\n\n---\nGerado pelo TRPY · trpy.app`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
     toast.success('E-mail preparado!');
@@ -472,14 +542,91 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
         {/* Options */}
         <div className="overflow-y-auto flex-1 p-5 space-y-2.5">
 
+          {/* ── Link público ── */}
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pb-0.5">Link público</p>
+
+          {/* Toggle public sharing */}
+          <motion.div
+            className={cn(
+              'rounded-2xl border p-4 transition-colors',
+              sharingEnabled
+                ? 'border-emerald-500/30 bg-emerald-500/5'
+                : 'border-border bg-card'
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
+                sharingEnabled ? 'bg-emerald-500/15 text-emerald-500' : 'bg-muted text-muted-foreground'
+              )}>
+                {togglingShare ? <Loader2 className="w-5 h-5 animate-spin" /> : <Globe className="w-5 h-5" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">Compartilhamento público</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {sharingEnabled ? 'Qualquer pessoa com o link pode visualizar' : 'Ative para gerar um link público'}
+                </p>
+              </div>
+              <button
+                onClick={handleToggleSharing}
+                disabled={togglingShare}
+                className="shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sharingEnabled
+                  ? <ToggleRight className="w-8 h-8 text-emerald-500" />
+                  : <ToggleLeft className="w-8 h-8 text-muted-foreground" />
+                }
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {sharingEnabled && publicUrl && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 bg-background/70 border border-border rounded-xl px-3 py-2">
+                    <p className="text-xs text-muted-foreground truncate flex-1 font-mono">{publicUrl}</p>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={handleCopyPublicLink}
+                        title="Copiar link"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+                      >
+                        {copiedPublicLink
+                          ? <Check className="w-3.5 h-3.5 text-emerald-500" />
+                          : <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                        }
+                      </button>
+                      <a
+                        href={publicUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Abrir em nova aba"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
           {/* ── Compartilhar diretamente ── */}
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pb-0.5">Compartilhar</p>
+          <div className="pt-1">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pb-2">Compartilhar</p>
+          </div>
 
           {/* WhatsApp */}
           <OptionCard
             icon={MessageCircle}
             title="WhatsApp"
-            description="Envie o roteiro para um contato ou grupo"
+            description={sharingEnabled ? 'Envie o link público para um contato ou grupo' : 'Ativa o link público e envia via WhatsApp'}
             onClick={handleShareWhatsApp}
             color="text-[#25D366] bg-[#25D366]/10"
           />
@@ -488,26 +635,26 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
           <OptionCard
             icon={Mail}
             title="E-mail"
-            description="Abra seu cliente de e-mail com o conteúdo pronto"
+            description={sharingEnabled ? 'Envie o link público por e-mail' : 'Ativa o link público e abre seu e-mail'}
             onClick={handleShareEmail}
             color="text-blue-500 bg-blue-500/10"
           />
 
-          {/* Copy link */}
+          {/* Copy public link */}
           <OptionCard
-            icon={copiedLink ? Check : Link2}
-            title="Copiar link"
-            description="Cole e compartilhe onde preferir"
-            onClick={handleCopyLink}
-            done={copiedLink}
-            color={copiedLink ? 'text-emerald-500 bg-emerald-500/10' : 'text-slate-500 bg-slate-500/10'}
+            icon={copiedPublicLink ? Check : Link2}
+            title="Copiar link público"
+            description={sharingEnabled ? 'Qualquer pessoa com o link pode visualizar' : 'Ativa o compartilhamento e copia o link'}
+            onClick={handleCopyPublicLink}
+            done={copiedPublicLink}
+            color={copiedPublicLink ? 'text-emerald-500 bg-emerald-500/10' : 'text-slate-500 bg-slate-500/10'}
           />
 
           {/* Copy as text */}
           <OptionCard
             icon={copiedText ? Check : Copy}
             title="Copiar resumo em texto"
-            description="Ideal para colar no WhatsApp Web, Notion, etc."
+            description="Ideal para colar no Notion, Google Docs, etc."
             done={copiedText}
             onClick={() => {
               const text = buildTextSummary(trip);
