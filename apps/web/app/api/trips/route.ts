@@ -40,6 +40,11 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset,
+        select: {
+          id: true, title: true, destination: true, description: true,
+          coverImage: true, startDate: true, endDate: true, budget: true,
+          totalSpent: true, currency: true, status: true, createdAt: true,
+        },
       }),
       prisma.trip.count({ where }),
     ]);

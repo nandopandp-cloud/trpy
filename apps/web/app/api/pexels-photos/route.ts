@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { ok, err, handleError } from '@/lib/api';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 // GET /api/pexels-photos?q=Paris&per_page=10
 export async function GET(req: NextRequest) {

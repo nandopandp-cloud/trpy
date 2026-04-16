@@ -28,10 +28,23 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         itineraryDays: {
           orderBy: { dayNumber: 'asc' },
           include: {
-            items: { orderBy: { order: 'asc' } },
+            items: {
+              orderBy: { order: 'asc' },
+              select: {
+                id: true, dayId: true, type: true, title: true, description: true,
+                location: true, latitude: true, longitude: true, startTime: true,
+                durationMins: true, cost: true, currency: true, bookingUrl: true, order: true,
+              },
+            },
           },
         },
-        expenses: { orderBy: { date: 'desc' } },
+        expenses: {
+          orderBy: { date: 'desc' },
+          select: {
+            id: true, tripId: true, category: true, title: true, amount: true,
+            currency: true, date: true, notes: true,
+          },
+        },
       },
     });
 

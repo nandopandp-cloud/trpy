@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 import { ok, err, handleError } from '@/lib/api';
 import {
   searchVideosByDestination,

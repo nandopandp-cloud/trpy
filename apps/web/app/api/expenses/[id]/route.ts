@@ -14,14 +14,10 @@ const updateExpenseSchema = z.object({
 });
 
 async function recalcTotalSpent(tripId: string) {
-  const agg = await prisma.expense.aggregate({
-    where: { tripId },
-    _sum: { amount: true },
-  });
-  await prisma.trip.update({
-    where: { id: tripId },
-    data: { totalSpent: agg._sum.amount ?? 0 },
-  });
+  await prisma.$queryRawUnsafe(
+    `UPDATE trips SET "totalSpent" = COALESCE((SELECT SUM(amount) FROM expenses WHERE "tripId" = $1), 0), "updatedAt" = NOW() WHERE id = $1`,
+    tripId
+  );
 }
 
 // PUT /api/expenses/[id]

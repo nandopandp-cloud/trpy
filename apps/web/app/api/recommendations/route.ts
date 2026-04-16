@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-export const dynamic = 'force-dynamic';
+export const revalidate = 1800;
 import { ok, err, handleError } from '@/lib/api';
 import { searchPlacesByType } from '@/lib/integrations/google/places-service';
 

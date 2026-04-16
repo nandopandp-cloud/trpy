@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Star, MapPin } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 
 interface DestinationCardProps {
@@ -37,17 +37,20 @@ export function DestinationCard({
   index = 0,
 }: DestinationCardProps) {
   const bg = gradient ?? DEFAULT_GRADIENTS[index % DEFAULT_GRADIENTS.length];
-  const [image, setImage] = useState<string | undefined>(imageProp);
 
-  useEffect(() => {
-    if (imageProp) return;
-    fetch(`/api/destination-photo?q=${encodeURIComponent(name)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.data.photoUrl) setImage(data.data.photoUrl);
-      })
-      .catch(() => {});
-  }, [name, imageProp]);
+  const { data: fetchedImage } = useQuery({
+    queryKey: ['destination-photo', name],
+    queryFn: async () => {
+      const res = await fetch(`/api/destination-photo?q=${encodeURIComponent(name)}`);
+      const data = await res.json();
+      return data.success && data.data.photoUrl ? (data.data.photoUrl as string) : null;
+    },
+    enabled: !imageProp,
+    staleTime: 60 * 60 * 1000,
+    gcTime: 2 * 60 * 60 * 1000,
+  });
+
+  const image = imageProp ?? fetchedImage ?? undefined;
 
   return (
     <motion.div
@@ -65,6 +68,8 @@ export function DestinationCard({
           <img
             src={image}
             alt={name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (

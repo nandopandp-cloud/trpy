@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { ok, err, handleError } from '@/lib/api';
 import { searchImages } from '@/lib/integrations/media';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 // GET /api/media/images?query=paris&perPage=12&orientation=landscape
 export async function GET(req: NextRequest) {

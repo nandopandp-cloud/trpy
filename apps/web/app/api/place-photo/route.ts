@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 86400;
 
 // GET /api/place-photo?ref=PHOTO_REFERENCE&maxwidth=400
 // Proxy que resolve a foto do Google Places no servidor,

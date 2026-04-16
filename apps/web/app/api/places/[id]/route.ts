@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { ok, err, handleError } from '@/lib/api';
 import { getPlaceDetails } from '@/lib/integrations/google/places-service';
 
+export const revalidate = 3600;
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } },

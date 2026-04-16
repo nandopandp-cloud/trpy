@@ -65,27 +65,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const body = await req.json();
     const data = createExpenseSchema.parse(body);
 
-    const expense = await prisma.expense.create({
-      data: {
-        tripId: params.id,
-        title: data.title,
-        amount: data.amount,
-        category: data.category,
-        date: new Date(data.date),
-        currency: data.currency,
-        notes: data.notes,
-      },
-    });
-
-    // Recalcular totalSpent
-    const agg = await prisma.expense.aggregate({
-      where: { tripId: params.id },
-      _sum: { amount: true },
-    });
-    await prisma.trip.update({
-      where: { id: params.id },
-      data: { totalSpent: agg._sum.amount ?? 0 },
-    });
+    const [expense] = await prisma.$transaction([
+      prisma.expense.create({
+        data: {
+          tripId: params.id,
+          title: data.title,
+          amount: data.amount,
+          category: data.category,
+          date: new Date(data.date),
+          currency: data.currency,
+          notes: data.notes,
+        },
+      }),
+      prisma.$queryRawUnsafe(
+        `UPDATE trips SET "totalSpent" = COALESCE((SELECT SUM(amount) FROM expenses WHERE "tripId" = $1), 0), "updatedAt" = NOW() WHERE id = $1`,
+        params.id
+      ),
+    ]);
 
     return ok(expense, 201);
   } catch (error) {

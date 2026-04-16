@@ -1,8 +1,8 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ok, err, handleError } from '@/lib/api';
 import { searchPlaces } from '@/lib/integrations/google/places-service';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 86400;
 
 // GET /api/destination-photo?q=Bali
 export async function GET(req: NextRequest) {

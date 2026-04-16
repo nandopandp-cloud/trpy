@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 
 type FavoriteType = 'PLACE' | 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' | 'VIDEO' | 'PIN';
@@ -30,27 +30,22 @@ export function FavoriteButton({
   variant = 'icon',
   className,
 }: FavoriteButtonProps) {
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const params = new URLSearchParams({ type, externalId });
-    fetch(`/api/favorites/check?${params}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success) setIsFavorited(data.data.favorited);
-      })
-      .catch(() => {});
-  }, [type, externalId]);
+  const { data: isFavorited = false } = useQuery({
+    queryKey: ['favorite-check', type, externalId],
+    queryFn: async () => {
+      const params = new URLSearchParams({ type, externalId });
+      const res = await fetch(`/api/favorites/check?${params}`);
+      const data = await res.json();
+      return data.success ? data.data.favorited : false;
+    },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
 
-  async function toggle() {
-    if (isLoading) return;
-    setIsLoading(true);
-
-    const nextState = !isFavorited;
-    setIsFavorited(nextState);
-
-    try {
+  const { mutate: toggle, isPending: isLoading } = useMutation({
+    mutationFn: async (nextState: boolean) => {
       if (nextState) {
         await fetch('/api/favorites', {
           method: 'POST',
@@ -64,11 +59,25 @@ export function FavoriteButton({
           body: JSON.stringify({ type, externalId }),
         });
       }
-    } catch {
-      setIsFavorited(!nextState);
-    } finally {
-      setIsLoading(false);
-    }
+    },
+    onMutate: async (nextState) => {
+      await queryClient.cancelQueries({ queryKey: ['favorite-check', type, externalId] });
+      const previous = queryClient.getQueryData(['favorite-check', type, externalId]);
+      queryClient.setQueryData(['favorite-check', type, externalId], nextState);
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(['favorite-check', type, externalId], context?.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
+      queryClient.invalidateQueries({ queryKey: ['favorites-stats'] });
+    },
+  });
+
+  function handleToggle() {
+    if (isLoading) return;
+    toggle(!isFavorited);
   }
 
   const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-6 h-6' : 'w-4 h-4';
@@ -78,7 +87,7 @@ export function FavoriteButton({
     return (
       <motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={toggle}
+        onClick={handleToggle}
         disabled={isLoading}
         className={cn(
           'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all',
@@ -98,7 +107,7 @@ export function FavoriteButton({
     <motion.button
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.85 }}
-      onClick={toggle}
+      onClick={handleToggle}
       disabled={isLoading}
       className={cn(
         'rounded-full flex items-center justify-center transition-all',
