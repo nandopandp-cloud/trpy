@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Share2, Download, FileText, Table2, Link2, Check,
-  Loader2, Copy, MapPin, Calendar, Wallet, List,
+  Loader2, Copy, MapPin, Calendar, Wallet, List, Mail, MessageCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -320,6 +320,7 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [loadingPdf, setLoadingPdf] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
 
   useEffect(() => {
     setPortalRoot(document.body);
@@ -363,6 +364,27 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
     const filename = `${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}_itinerario.csv`;
     downloadCsv(csv, filename);
     toast.success('CSV exportado!', { description: `${totalDays} dia${totalDays !== 1 ? 's' : ''} exportado${totalDays !== 1 ? 's' : ''}.` });
+  }
+
+  function handleShareWhatsApp() {
+    const url = `${window.location.origin}/dashboard/trips/${trip.id}`;
+    const text = buildTextSummary(trip);
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${text}\n\n🔗 ${url}`)}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    toast.success('WhatsApp aberto!');
+  }
+
+  function handleShareEmail() {
+    const url = `${window.location.origin}/dashboard/trips/${trip.id}`;
+    const subject = encodeURIComponent(`Planejamento de viagem: ${trip.title}`);
+    const dateRange = trip.startDate
+      ? `\n📅 ${format(new Date(trip.startDate), "d 'de' MMMM", { locale: ptBR })}${trip.endDate ? ` a ${format(new Date(trip.endDate), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}` : ''}`
+      : '';
+    const body = encodeURIComponent(
+      `Olá! Estou planejando uma viagem para ${trip.destination} e quero compartilhar o roteiro com você.${dateRange}\n\n🔗 Acesse o planejamento completo:\n${url}\n\n---\n${buildTextSummary(trip)}`
+    );
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    toast.success('E-mail preparado!');
   }
 
   function handleExportPdf() {
@@ -448,22 +470,61 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
         </div>
 
         {/* Options */}
-        <div className="overflow-y-auto flex-1 p-5 space-y-3">
+        <div className="overflow-y-auto flex-1 p-5 space-y-2.5">
+
+          {/* ── Compartilhar diretamente ── */}
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pb-0.5">Compartilhar</p>
+
+          {/* WhatsApp */}
+          <OptionCard
+            icon={MessageCircle}
+            title="WhatsApp"
+            description="Envie o roteiro para um contato ou grupo"
+            onClick={handleShareWhatsApp}
+            color="text-[#25D366] bg-[#25D366]/10"
+          />
+
+          {/* Email */}
+          <OptionCard
+            icon={Mail}
+            title="E-mail"
+            description="Abra seu cliente de e-mail com o conteúdo pronto"
+            onClick={handleShareEmail}
+            color="text-blue-500 bg-blue-500/10"
+          />
+
           {/* Copy link */}
           <OptionCard
             icon={copiedLink ? Check : Link2}
             title="Copiar link"
-            description="Compartilhe o link desta viagem com amigos"
+            description="Cole e compartilhe onde preferir"
             onClick={handleCopyLink}
             done={copiedLink}
-            color={copiedLink ? 'text-emerald-500 bg-emerald-500/10' : 'text-blue-500 bg-blue-500/10'}
+            color={copiedLink ? 'text-emerald-500 bg-emerald-500/10' : 'text-slate-500 bg-slate-500/10'}
+          />
+
+          {/* Copy as text */}
+          <OptionCard
+            icon={copiedText ? Check : Copy}
+            title="Copiar resumo em texto"
+            description="Ideal para colar no WhatsApp Web, Notion, etc."
+            done={copiedText}
+            onClick={() => {
+              const text = buildTextSummary(trip);
+              navigator.clipboard.writeText(text).then(() => {
+                setCopiedText(true);
+                toast.success('Resumo copiado!');
+                setTimeout(() => setCopiedText(false), 3000);
+              }).catch(() => {
+                toast.error('Não foi possível copiar.');
+              });
+            }}
+            color={copiedText ? 'text-emerald-500 bg-emerald-500/10' : 'text-amber-500 bg-amber-500/10'}
           />
 
           {/* Divider */}
-          <div className="flex items-center gap-3 py-1">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Exportar</span>
-            <div className="flex-1 h-px bg-border" />
+          <div className="pt-1">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 pb-2">Exportar</p>
           </div>
 
           {/* PDF */}
@@ -479,7 +540,7 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
           {/* CSV Expenses */}
           <OptionCard
             icon={Table2}
-            title="Exportar despesas (CSV)"
+            title="Planilha de despesas (CSV)"
             description={totalExpenses > 0
               ? `${totalExpenses} despesa${totalExpenses !== 1 ? 's' : ''} · Total ${trip.currency} ${totalSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
               : 'Nenhuma despesa registrada'
@@ -491,29 +552,13 @@ export function TripShareModal({ trip, onClose }: TripShareModalProps) {
           {/* CSV Itinerary */}
           <OptionCard
             icon={Download}
-            title="Exportar itinerário (CSV)"
+            title="Itinerário completo (CSV)"
             description={totalDays > 0
               ? `${totalDays} dia${totalDays !== 1 ? 's' : ''} · ${totalItems} atividade${totalItems !== 1 ? 's' : ''}`
               : 'Nenhum itinerário planejado'
             }
             onClick={handleExportItineraryCsv}
             color="text-violet-500 bg-violet-500/10"
-          />
-
-          {/* Copy as text */}
-          <OptionCard
-            icon={Copy}
-            title="Copiar resumo"
-            description="Resumo em texto para colar onde quiser"
-            onClick={() => {
-              const text = buildTextSummary(trip);
-              navigator.clipboard.writeText(text).then(() => {
-                toast.success('Resumo copiado!');
-              }).catch(() => {
-                toast.error('Não foi possível copiar.');
-              });
-            }}
-            color="text-amber-500 bg-amber-500/10"
           />
         </div>
       </motion.div>

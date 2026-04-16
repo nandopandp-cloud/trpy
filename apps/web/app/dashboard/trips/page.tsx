@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useLocale, t, type Locale } from '@/lib/i18n';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 const GRADIENT_FALLBACKS = [
   'from-indigo-600 via-violet-600 to-purple-700',
@@ -27,6 +28,7 @@ const GRADIENT_FALLBACKS = [
 export default function TripsPage() {
   const router = useRouter();
   const [locale] = useLocale();
+  const confirm = useConfirm();
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -229,10 +231,15 @@ export default function TripsPage() {
                         index={i}
                         onClick={() => router.push(`/dashboard/trips/${trip.id}`)}
                         onEdit={() => router.push(`/dashboard/trips/${trip.id}/edit`)}
-                        onDelete={() => {
-                          if (confirm(t(locale, 'trips.delete_confirm').replace('{title}', trip.title))) {
-                            deleteTrip.mutate(trip.id);
-                          }
+                        onDelete={async () => {
+                          const ok = await confirm({
+                            title: 'Excluir viagem?',
+                            description: 'Todo o itinerário, despesas e dados serão removidos permanentemente.',
+                            detail: trip.title,
+                            confirmLabel: 'Excluir viagem',
+                            variant: 'danger',
+                          });
+                          if (ok) deleteTrip.mutate(trip.id);
                         }}
                       />
                     ))}

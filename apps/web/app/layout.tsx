@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/providers/query-provider';
 import { SessionProvider } from '@/providers/session-provider';
 import { LocaleProvider, DEFAULT_LOCALE } from '@/lib/i18n';
+import { ConfirmDialogProvider } from '@/components/ui/confirm-dialog';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -28,8 +29,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <LocaleProvider>
               <QueryProvider>
-                {children}
-                <Toaster />
+                <ConfirmDialogProvider>
+                  {children}
+                  <Toaster />
+                </ConfirmDialogProvider>
               </QueryProvider>
             </LocaleProvider>
           </ThemeProvider>

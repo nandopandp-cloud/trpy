@@ -29,6 +29,7 @@ import { GoogleMapView, type MapMarker } from '@/components/integrations/google/
 import { PlacesRecommendations } from '@/components/integrations/google/places-recommendations';
 import { cn } from '@/lib/utils';
 import { useLocale, t } from '@/lib/i18n';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import type { ItineraryItem } from '@trpy/database';
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -516,6 +517,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [locale] = useLocale();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<TabId>('itinerary');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -579,7 +581,15 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
 
   async function handleDeleteTrip() {
     setShowActions(false);
-    if (!confirm(`Excluir "${trip?.title}"?`)) return;
+    const ok = await confirm({
+      title: 'Excluir viagem?',
+      description: 'Esta ação não pode ser desfeita. Todo o itinerário, despesas e dados serão removidos permanentemente.',
+      detail: trip?.title,
+      confirmLabel: 'Excluir viagem',
+      cancelLabel: 'Cancelar',
+      variant: 'danger',
+    });
+    if (!ok) return;
     await deleteTrip.mutateAsync(params.id);
     toast.success('Viagem excluída');
     router.push('/dashboard/trips');
@@ -806,13 +816,23 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
                               item,
                             })
                           }
-                          onDeleteItem={(itemId) => {
-                            if (confirm('Excluir atividade?')) deleteItemMutation.mutate(itemId);
+                          onDeleteItem={async (itemId) => {
+                            const ok = await confirm({
+                              title: 'Excluir atividade?',
+                              description: 'A atividade será removida do itinerário permanentemente.',
+                              confirmLabel: 'Excluir',
+                              variant: 'danger',
+                            });
+                            if (ok) deleteItemMutation.mutate(itemId);
                           }}
-                          onDeleteDay={(dayId) => {
-                            if (confirm('Excluir este dia do itinerário? Todas as atividades serão removidas.')) {
-                              deleteDayMutation.mutate(dayId);
-                            }
+                          onDeleteDay={async (dayId) => {
+                            const ok = await confirm({
+                              title: 'Excluir este dia?',
+                              description: 'Todas as atividades planejadas para este dia serão removidas permanentemente.',
+                              confirmLabel: 'Excluir dia',
+                              variant: 'danger',
+                            });
+                            if (ok) deleteDayMutation.mutate(dayId);
                           }}
                         />
                       );
