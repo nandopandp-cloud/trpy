@@ -16,6 +16,7 @@ import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
 import { GoogleMapView } from '@/components/integrations/google/google-map-view';
 import { YouTubeVideoPlayer } from '@/components/integrations/youtube/youtube-video-player';
+import { YouTubeGallery } from '@/components/integrations/youtube/youtube-gallery';
 import { PlaceDetailModal } from '@/components/integrations/google/place-detail-modal';
 import type { YouTubeVideo } from '@/lib/integrations/youtube/youtube-service';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
@@ -317,8 +318,8 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
     enabled: activeTab === 'places' || activeTab === 'overview',
   });
 
-  /* Videos data */
-  const { data: videos = [], isLoading: videosLoading } = useQuery<YouTubeVideo[]>({
+  /* Videos data — for overview preview only */
+  const { data: videos = [] } = useQuery<YouTubeVideo[]>({
     queryKey: ['youtube-videos', destination],
     queryFn: async () => {
       const res = await fetch(`/api/videos/search?destination=${encodeURIComponent(destination)}`);
@@ -327,7 +328,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
       return data.data;
     },
     staleTime: 24 * 60 * 60 * 1000,
-    enabled: activeTab === 'videos' || activeTab === 'overview',
+    enabled: activeTab === 'overview',
   });
 
   const currentPlaces: PlaceSearchResult[] = placesData?.[placeTab] ?? [];
@@ -703,32 +704,15 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
+              className="space-y-4"
             >
-              <p className="text-sm text-muted-foreground mb-4">
-                Vídeos sobre <span className="font-semibold text-foreground capitalize">{destination}</span>
-              </p>
-              {videosLoading ? (
-                <VideoSkeleton />
-              ) : videos.length === 0 ? (
-                <EmptyState
-                  icon={Youtube}
-                  title="Nenhum vídeo encontrado"
-                  subtitle={`Não encontramos vídeos para ${destination} no momento.`}
-                />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {videos.map((video, i) => (
-                    <motion.div
-                      key={video.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                    >
-                      <YouTubeVideoPlayer video={video} />
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <Youtube className="w-4 h-4 text-red-500" />
+                <p className="text-sm font-semibold text-foreground">
+                  Vídeos sobre <span className="text-primary">{destination}</span>
+                </p>
+              </div>
+              <YouTubeGallery destination={destination} />
             </motion.div>
           )}
 
