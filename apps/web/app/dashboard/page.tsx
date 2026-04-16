@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import Link from 'next/link';
 import { format, differenceInDays } from 'date-fns';
@@ -169,13 +169,26 @@ function TiltCard({ children, className, onClick }: { children: React.ReactNode;
 
 /* ── Data ─────────────────────────────────────────────── */
 
-const TRENDING = [
+const TRENDING_POOL = [
   { name: 'Bali', country: 'Indonésia', emoji: '🌊', gradient: 'from-emerald-500 to-teal-600', tag: 'Natureza', rating: 4.9, query: 'Bali travel landscape' },
   { name: 'Paris', country: 'França', emoji: '🗼', gradient: 'from-sky-500 to-indigo-600', tag: 'Cultura', rating: 4.8, query: 'Paris city skyline' },
   { name: 'Patagônia', country: 'Argentina', emoji: '🏔️', gradient: 'from-slate-500 to-slate-700', tag: 'Aventura', rating: 4.9, query: 'Patagonia mountains landscape' },
   { name: 'Tóquio', country: 'Japão', emoji: '🎌', gradient: 'from-rose-500 to-pink-600', tag: 'Urbano', rating: 4.8, query: 'Tokyo city night' },
   { name: 'Santorini', country: 'Grécia', emoji: '🏝️', gradient: 'from-blue-500 to-cyan-600', tag: 'Romance', rating: 4.7, query: 'Santorini Greece blue domes' },
+  { name: 'Maldivas', country: 'Maldivas', emoji: '🏝️', gradient: 'from-cyan-500 to-blue-600', tag: 'Praia', rating: 4.9, query: 'Maldives resort tropical' },
+  { name: 'Barcelona', country: 'Espanha', emoji: '🎨', gradient: 'from-red-500 to-yellow-500', tag: 'Arquitetura', rating: 4.8, query: 'Barcelona Gaudi city' },
+  { name: 'Marrocos', country: 'Marrocos', emoji: '🕌', gradient: 'from-amber-600 to-orange-700', tag: 'Cultura', rating: 4.7, query: 'Morocco medina desert' },
+  { name: 'Islândia', country: 'Islândia', emoji: '🌋', gradient: 'from-indigo-600 to-violet-700', tag: 'Natureza', rating: 4.9, query: 'Iceland waterfall glacier' },
+  { name: 'Dubai', country: 'Emirados', emoji: '🏙️', gradient: 'from-amber-400 to-yellow-600', tag: 'Luxo', rating: 4.6, query: 'Dubai skyline desert' },
+  { name: 'Nova York', country: 'EUA', emoji: '🗽', gradient: 'from-sky-600 to-blue-700', tag: 'Urbano', rating: 4.8, query: 'New York City lights' },
+  { name: 'Tailândia', country: 'Tailândia', emoji: '🛕', gradient: 'from-orange-500 to-red-600', tag: 'Aventura', rating: 4.7, query: 'Thailand temple beach' },
+  { name: 'Praga', country: 'República Tcheca', emoji: '🏰', gradient: 'from-red-600 to-rose-700', tag: 'História', rating: 4.8, query: 'Prague castle old town' },
 ];
+
+function getRandomTrending(): typeof TRENDING_POOL {
+  const shuffled = [...TRENDING_POOL].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 12);
+}
 
 const CATEGORIES = [
   { label: 'Praias', emoji: '🏖️', gradient: 'from-sky-400 to-cyan-500', desc: 'Mar, sol e areia', query: 'tropical beach ocean' },
@@ -222,6 +235,7 @@ export default function DashboardPage() {
   const firstName = session?.user?.name?.split(' ')[0] ?? 'viajante';
   const { data, isLoading } = useTrips({ limit: 5 });
   const trips = data?.trips ?? [];
+  const TRENDING = useMemo(() => getRandomTrending(), []);
 
   const totalBudget = trips.reduce((s, t) => s + Number(t.budget), 0);
   const totalSpent  = trips.reduce((s, t) => s + Number(t.totalSpent), 0);
