@@ -3,12 +3,13 @@
 import { useState, useCallback, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import {
   Home, Utensils, Bus, Zap, ShoppingBag, Heart, MoreHorizontal,
-  X, Loader2, Check,
+  X, Loader2, Check, Edit2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useLocale, t, CURRENCIES, getCurrencySymbolByCode } from '@/lib/i18n';
+import type { Expense } from '@trpy/database';
 
 const CATEGORIES = [
   { value: 'ACCOMMODATION', labelKey: 'category.accommodation', icon: Home,         bg: 'bg-blue-500/15 border-blue-500/30',    active: 'bg-blue-500 border-blue-500' },
@@ -36,24 +38,33 @@ const schema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.input<typeof schema>;
 
 interface ExpenseFormProps {
   tripId: string;
+  /** When provided, form enters edit mode */
+  expense?: Expense;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSuccess }: ExpenseFormProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('OTHER');
+export const ExpenseForm = memo(function ExpenseForm({ tripId, expense, onClose, onSuccess }: ExpenseFormProps) {
+  const isEditMode = !!expense;
+  const [selectedCategory, setSelectedCategory] = useState<string>(expense?.category ?? 'OTHER');
   const [locale] = useLocale();
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, setValue, setError, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
     defaultValues: {
-      category: 'OTHER',
-      currency: 'BRL',
-      date: format(new Date(), 'yyyy-MM-dd'),
+      category: (expense?.category as any) ?? 'OTHER',
+      currency: expense?.currency ?? 'BRL',
+      date: expense?.date
+        ? format(new Date(expense.date), 'yyyy-MM-dd')
+        : format(new Date(), 'yyyy-MM-dd'),
+      title: expense?.title ?? '',
+      amount: expense?.amount ? Number(expense.amount) : undefined,
+      notes: expense?.notes ?? '',
     },
   });
 
@@ -68,7 +79,6 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
   useEffect(() => {
     setPortalRoot(document.body);
-    // Lock scroll on the page behind
     const scrollable = document.querySelector('main');
     if (scrollable) (scrollable as HTMLElement).style.overflow = 'hidden';
     return () => {
@@ -78,28 +88,41 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
 
   async function onSubmit(values: FormValues) {
     try {
-      const result = schema.safeParse(values);
-      if (!result.success) {
-        for (const issue of result.error.issues) {
-          const field = issue.path[0] as keyof FormValues;
-          if (field) setError(field, { message: issue.message });
-        }
-        return;
+      const payload = {
+        ...values,
+        date: new Date(values.date).toISOString(),
+      };
+
+      let res: Response;
+      if (isEditMode && expense) {
+        res = await fetch(`/api/expenses/${expense.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch(`/api/trips/${tripId}/expenses`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
       }
-      const validated = result.data;
-      const res = await fetch(`/api/trips/${tripId}/expenses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...validated,
-          date: new Date(validated.date).toISOString(),
-        }),
-      });
+
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
 
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
-      toast.success(t(locale, 'expense.success'), { description: `${validated.title} — ${getCurrencySymbolByCode(validated.currency)} ${validated.amount}` });
+
+      if (isEditMode) {
+        toast.success('Despesa atualizada!', {
+          description: `${values.title} — ${getCurrencySymbolByCode(values.currency ?? 'BRL')} ${values.amount}`,
+        });
+      } else {
+        toast.success(t(locale, 'expense.success'), {
+          description: `${values.title} — ${getCurrencySymbolByCode(values.currency ?? 'BRL')} ${values.amount}`,
+        });
+      }
+
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -116,7 +139,6 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
       transition={{ duration: 0.15 }}
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50"
       onClick={(e) => e.target === e.currentTarget && onClose()}
-      /* Block ALL touch propagation to the page behind */
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
       onTouchEnd={(e) => e.stopPropagation()}
@@ -130,7 +152,16 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border shrink-0">
-          <h3 className="font-bold text-lg">{t(locale, 'expense.new')}</h3>
+          <div className="flex items-center gap-2.5">
+            {isEditMode && (
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Edit2 className="w-4 h-4 text-primary" />
+              </div>
+            )}
+            <h3 className="font-bold text-lg">
+              {isEditMode ? 'Editar despesa' : t(locale, 'expense.new')}
+            </h3>
+          </div>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all"
@@ -140,7 +171,7 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1 p-6 space-y-5">
-          {/* Category picker — simple CSS, no layoutId */}
+          {/* Category picker */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">{t(locale, 'expense.category')}</label>
             <div className="grid grid-cols-4 gap-2">
@@ -185,7 +216,7 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
               <label className="text-sm font-medium">{t(locale, 'expense.amount')}</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
-                  {getCurrencySymbolByCode(selectedCurrency)}
+                  {getCurrencySymbolByCode(selectedCurrency ?? 'BRL')}
                 </span>
                 <Input
                   type="number"
@@ -236,10 +267,12 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full gap-2 h-11 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 border-0 shadow-md shadow-primary/20"
+            className="w-full gap-2 h-11 text-base font-semibold"
           >
             {isSubmitting ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> {t(locale, 'common.saving')}</>
+            ) : isEditMode ? (
+              <><Check className="w-4 h-4" /> Salvar alterações</>
             ) : (
               <><Check className="w-4 h-4" /> {t(locale, 'expense.submit')}</>
             )}
@@ -249,7 +282,6 @@ export const ExpenseForm = memo(function ExpenseForm({ tripId, onClose, onSucces
     </motion.div>
   );
 
-  // Render via portal so the modal lives outside the scrollable <main>
   if (!portalRoot) return null;
   return createPortal(modal, portalRoot);
 });

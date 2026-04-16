@@ -11,6 +11,7 @@ import type { Expense, Trip } from '@trpy/database';
 import { GradientProgress } from '@/components/ui/gradient-progress';
 import { cn } from '@/lib/utils';
 import { useLocale, t, formatNumber } from '@/lib/i18n';
+import { ExpenseList } from './expense-list';
 
 const CATEGORY_LABEL_KEYS: Record<string, string> = {
   ACCOMMODATION: 'category.accommodation',
@@ -35,9 +36,11 @@ const CATEGORY_COLORS: Record<string, string> = {
 interface BudgetDashboardProps {
   trip: Trip;
   expenses: Expense[];
+  /** Needed to wire edit/delete actions */
+  tripId?: string;
 }
 
-export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
+export function BudgetDashboard({ trip, expenses, tripId }: BudgetDashboardProps) {
   const [locale] = useLocale();
   const budget = Number(trip.budget);
   const spent = Number(trip.totalSpent);
@@ -245,6 +248,11 @@ export function BudgetDashboard({ trip, expenses }: BudgetDashboardProps) {
             {t(locale, 'budget.empty_desc')}
           </p>
         </div>
+      )}
+
+      {/* Full expense list with edit/delete */}
+      {tripId && expenses.length > 0 && (
+        <ExpenseList expenses={expenses} tripId={tripId} />
       )}
     </div>
   );

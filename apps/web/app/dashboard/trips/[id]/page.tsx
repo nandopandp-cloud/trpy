@@ -19,6 +19,7 @@ import { ItineraryItemForm } from '@/components/itinerary/itinerary-item-form';
 import { AddDayForm } from '@/components/itinerary/add-day-form';
 import { BudgetDashboard } from '@/components/budget/budget-dashboard';
 import { ExpenseForm } from '@/components/budget/expense-form';
+import { TripShareModal } from '@/components/trips/trip-share-modal';
 import { Button } from '@/components/ui/button';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
@@ -517,6 +518,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
   const [locale] = useLocale();
   const [activeTab, setActiveTab] = useState<TabId>('itinerary');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
   const [showAddDay, setShowAddDay] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -694,7 +696,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
                     className="absolute right-0 top-11 w-48 rounded-2xl bg-card border border-border shadow-card-lg overflow-hidden z-50"
                   >
                     <button
-                      onClick={() => { setShowActions(false); toast.info('Compartilhamento em breve'); }}
+                      onClick={() => { setShowActions(false); setShowShareModal(true); }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted transition-colors text-left"
                     >
                       <Share2 className="w-4 h-4 text-muted-foreground" /> Compartilhar
@@ -832,7 +834,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
             {/* ── Despesas ──────────────────────────────────────────── */}
             {activeTab === 'budget' && (
               <div className="space-y-4">
-                <BudgetDashboard trip={trip} expenses={trip.expenses} />
+                <BudgetDashboard trip={trip} expenses={trip.expenses} tripId={params.id} />
                 {trip.expenses.length === 0 && (
                   <EmptyTab
                     icon="💸"
@@ -943,6 +945,13 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
       <AnimatePresence>
         {showExpenseForm && (
           <ExpenseForm tripId={params.id} onClose={() => setShowExpenseForm(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* ── SHARE MODAL ──────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showShareModal && trip && (
+          <TripShareModal trip={trip as any} onClose={() => setShowShareModal(false)} />
         )}
       </AnimatePresence>
 
