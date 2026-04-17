@@ -90,11 +90,30 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
           <tr>
             <td style="padding:0 32px;">
               <h1 style="margin:0; font-size:28px; color:#FFFFFF;">
-                Sua jornada começa agora, ${displayName} ✈️
+                Sua jornada continua,<br>
+                ${displayName} ✈️
               </h1>
               <p style="margin:12px 0 24px; color:#A1A1AA; font-size:16px;">
-                Estamos prontos para te levar mais longe. Use o código abaixo para verificar sua conta e começar a planejar sua próxima aventura.
+                Estamos prontos para te levar mais longe. Continue de onde parou e transforme seu próximo destino em realidade.
               </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:0 32px 24px;">
+              <a href="{{MAGIC_LINK}}" style="
+                display:inline-block;
+                padding:16px 28px;
+                border-radius:999px;
+                background: linear-gradient(90deg, #7C5CFF, #4DAFFF);
+                color:#ffffff;
+                font-weight:600;
+                text-decoration:none;
+                font-size:16px;
+                box-shadow: 0 10px 30px rgba(124,92,255,0.35);
+              ">
+                Continuar viagem
+              </a>
             </td>
           </tr>
 
@@ -107,24 +126,41 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
           <tr>
             <td align="center" style="padding:24px 32px;">
               <p style="margin:0; color:#6B7280; font-size:14px;">
-                Ou use este código de acesso:
+                Use este código de acesso:
               </p>
-              <div style="margin-top:14px; padding:22px; border-radius:14px; background:linear-gradient(135deg,#141422,#0F0F18); border:1px solid rgba(124,92,255,0.2);">
-                <span style="font-size:34px; letter-spacing:8px; font-weight:700; color:#FFFFFF;">
+              <div style="
+                margin-top:14px;
+                padding:22px;
+                border-radius:14px;
+                background: linear-gradient(135deg,#141422,#0F0F18);
+                border:1px solid rgba(124,92,255,0.2);
+              ">
+                <span style="
+                  font-size:34px;
+                  letter-spacing:8px;
+                  font-weight:700;
+                  color:#FFFFFF;
+                ">
                   ${code}
                 </span>
               </div>
-              <p style="margin:14px 0 0; color:#6B7280; font-size:13px;">
-                Este código expira em ${CODE_EXPIRY_MINUTES} minutos.
-              </p>
             </td>
           </tr>
 
           <tr>
             <td style="padding:0 32px 32px;">
-              <div style="border-radius:16px; padding:20px; background:linear-gradient(135deg,rgba(124,92,255,0.08),rgba(77,175,255,0.08)); border:1px solid rgba(255,255,255,0.05);">
-                <p style="margin:0; color:#FFFFFF; font-weight:500;">✨ Planeje. Explore. Viva.</p>
-                <p style="margin:6px 0 0; color:#9CA3AF; font-size:14px;">Seu próximo destino está a poucos cliques de distância.</p>
+              <div style="
+                border-radius:16px;
+                padding:20px;
+                background: linear-gradient(135deg, rgba(124,92,255,0.08), rgba(77,175,255,0.08));
+                border:1px solid rgba(255,255,255,0.05);
+              ">
+                <p style="margin:0; color:#FFFFFF; font-weight:500;">
+                  ✨ Planeje. Explore. Viva.
+                </p>
+                <p style="margin:6px 0 0; color:#9CA3AF; font-size:14px;">
+                  Seu próximo destino está a poucos cliques de distância.
+                </p>
               </div>
             </td>
           </tr>
