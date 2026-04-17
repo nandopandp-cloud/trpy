@@ -150,7 +150,7 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
 
     return { success: true };
   } catch (error) {
-    console.error('[verification] Email exception:', error);
+    console.error('[verification] Email exception:', String(error));
     return { success: false, error: 'Failed to send email' };
   }
 }
