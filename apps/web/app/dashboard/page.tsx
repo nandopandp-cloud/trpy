@@ -364,17 +364,15 @@ export default function DashboardPage() {
       </motion.section>
 
       {/* ═══════════════════════════════════════════════════ */}
-      {/* STORIES (only show if there are trips)             */}
+      {/* STORIES — always visible                           */}
       {/* ═══════════════════════════════════════════════════ */}
-      {trips.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <TripStories trips={trips} />
-        </motion.div>
-      )}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <TripStories trips={trips} />
+      </motion.div>
 
       {/* ═══════════════════════════════════════════════════ */}
       {/* BENTO GRID — The Core Visual                       */}
