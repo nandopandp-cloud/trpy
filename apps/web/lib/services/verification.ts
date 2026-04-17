@@ -70,7 +70,7 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
   }
 
   try {
-    await resend.emails.send({
+    const response = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: `${code} — Código de verificação TRPY`,
@@ -96,6 +96,12 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
         </div>
       `,
     });
+
+    if (response.error) {
+      console.error('[verification] Email send error:', response.error);
+      return { success: false, error: response.error.message };
+    }
+
     return { success: true };
   } catch (error) {
     console.error('[verification] Email send error:', error);
@@ -174,13 +180,6 @@ export async function sendVerificationCodes(
   name?: string,
   phone?: string,
 ) {
-  const results = await Promise.allSettled([
-    sendVerificationEmail(email, code, name),
-    phone ? sendVerificationSMS(phone, code) : Promise.resolve({ success: false, error: 'no_phone' }),
-  ]);
-
-  const emailResult = results[0].status === 'fulfilled' ? results[0].value : { success: false };
-  const smsResult = results[1].status === 'fulfilled' ? results[1].value : { success: false };
-
-  return { email: emailResult.success, sms: smsResult.success };
+  const emailResult = await sendVerificationEmail(email, code, name);
+  return { email: emailResult.success, sms: false };
 }

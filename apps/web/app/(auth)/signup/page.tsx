@@ -333,7 +333,7 @@ export default function SignupPage() {
                 {t(locale, 'auth.verify_title' as any)}
               </h2>
               <p className="text-[13px] text-white/60">
-                {t(locale, 'auth.verify_desc' as any).replace('{digits}', '6')}
+                Enviamos um código de verificação de 6 dígitos para seu email.
               </p>
               <p className="text-[12px] text-white/40">
                 {email}
