@@ -489,30 +489,32 @@ export default function DashboardPage() {
           </TiltCard>
         </motion.div>
 
-        {/* ── Card 2: Budget Gauge ── */}
-        <motion.div variants={stagger.item} className="col-span-1 row-span-1">
-          <TiltCard className="h-full p-4 flex flex-col">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <Wallet className="w-3 h-3 text-emerald-500" />
+        {/* ── Card 2: Budget Gauge (hidden if no trips) ── */}
+        {trips.length > 0 && (
+          <motion.div variants={stagger.item} className="col-span-1 row-span-1">
+            <TiltCard className="h-full p-4 flex flex-col">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <Wallet className="w-3 h-3 text-emerald-500" />
+                </div>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Orçamento</span>
               </div>
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Orçamento</span>
-            </div>
 
-            <div className="flex-1 flex items-center justify-center py-1">
-              {totalBudget > 0 ? (
-                <BudgetGauge spent={totalSpent} budget={totalBudget} />
-              ) : (
-                <p className="text-xs text-muted-foreground text-center">Sem dados</p>
-              )}
-            </div>
+              <div className="flex-1 flex items-center justify-center py-1">
+                {totalBudget > 0 ? (
+                  <BudgetGauge spent={totalSpent} budget={totalBudget} />
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center">Sem dados</p>
+                )}
+              </div>
 
-            <div className="pt-1 flex justify-between text-[9px] text-muted-foreground">
-              <span>R$ {formatNumber(locale, totalSpent)}</span>
-              <span>R$ {formatNumber(locale, totalBudget)}</span>
-            </div>
-          </TiltCard>
-        </motion.div>
+              <div className="pt-1 flex justify-between text-[9px] text-muted-foreground">
+                <span>R$ {formatNumber(locale, totalSpent)}</span>
+                <span>R$ {formatNumber(locale, totalBudget)}</span>
+              </div>
+            </TiltCard>
+          </motion.div>
+        )}
 
         {/* ── Card 3: Total Trips ── */}
         <motion.div variants={stagger.item} className="col-span-1 row-span-1">
@@ -543,67 +545,69 @@ export default function DashboardPage() {
           </TiltCard>
         </motion.div>
 
-        {/* ── Card 4: Gastos — span 1 col on mobile, 2 on desktop ── */}
-        <motion.div variants={stagger.item} className="col-span-2 lg:col-span-2 row-span-1">
-          <TiltCard className="h-full p-5">
-            {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
-              </div>
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Gastos &amp; Orçamento</span>
-            </div>
-
-            {/* Two-column layout: big number left, breakdown right */}
-            <div className="flex items-end gap-6">
-              {/* Left: spending amount */}
-              <div className="shrink-0">
-                <p className="text-3xl font-bold text-foreground leading-none tracking-tight whitespace-nowrap">
-                  R$ <AnimatedNumber value={totalSpent} />
-                </p>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  {totalBudget > 0
-                    ? `${Math.round((totalSpent / totalBudget) * 100)}% do orçamento`
-                    : 'total gasto'}
-                </p>
-              </div>
-
-              {/* Right: full progress breakdown */}
-              {totalBudget > 0 && (
-                <div className="flex-1 space-y-1.5">
-                  {/* Bar */}
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
-                    <span>Gasto</span>
-                    <span className="whitespace-nowrap">R$ {formatNumber(locale, totalBudget)}</span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
-                    <motion.div
-                      className={cn(
-                        'h-full rounded-full relative overflow-hidden',
-                        totalSpent > totalBudget * 0.9 ? 'bg-amber-500' : 'bg-indigo-500'
-                      )}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min((totalSpent / totalBudget) * 100, 100)}%` }}
-                      transition={{ duration: 1.2, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                    >
-                      {/* Shimmer */}
-                      <span className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]" />
-                    </motion.div>
-                  </div>
-                  {/* Labels */}
-                  <div className="flex items-center justify-between text-[10px] gap-2">
-                    <span className={cn('font-semibold whitespace-nowrap', totalSpent > totalBudget * 0.9 ? 'text-amber-500' : 'text-indigo-500')}>
-                      R$ {formatNumber(locale, totalSpent)} gasto
-                    </span>
-                    <span className="text-muted-foreground whitespace-nowrap">
-                      R$ {formatNumber(locale, Math.max(0, totalBudget - totalSpent))} restante
-                    </span>
-                  </div>
+        {/* ── Card 4: Gastos (hidden if no trips) — span 1 col on mobile, 2 on desktop ── */}
+        {trips.length > 0 && (
+          <motion.div variants={stagger.item} className="col-span-2 lg:col-span-2 row-span-1">
+            <TiltCard className="h-full p-5">
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
                 </div>
-              )}
-            </div>
-          </TiltCard>
-        </motion.div>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Gastos &amp; Orçamento</span>
+              </div>
+
+              {/* Two-column layout: big number left, breakdown right */}
+              <div className="flex items-end gap-6">
+                {/* Left: spending amount */}
+                <div className="shrink-0">
+                  <p className="text-3xl font-bold text-foreground leading-none tracking-tight whitespace-nowrap">
+                    R$ <AnimatedNumber value={totalSpent} />
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {totalBudget > 0
+                      ? `${Math.round((totalSpent / totalBudget) * 100)}% do orçamento`
+                      : 'total gasto'}
+                  </p>
+                </div>
+
+                {/* Right: full progress breakdown */}
+                {totalBudget > 0 && (
+                  <div className="flex-1 space-y-1.5">
+                    {/* Bar */}
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                      <span>Gasto</span>
+                      <span className="whitespace-nowrap">R$ {formatNumber(locale, totalBudget)}</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+                      <motion.div
+                        className={cn(
+                          'h-full rounded-full relative overflow-hidden',
+                          totalSpent > totalBudget * 0.9 ? 'bg-amber-500' : 'bg-indigo-500'
+                        )}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min((totalSpent / totalBudget) * 100, 100)}%` }}
+                        transition={{ duration: 1.2, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                      >
+                        {/* Shimmer */}
+                        <span className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]" />
+                      </motion.div>
+                    </div>
+                    {/* Labels */}
+                    <div className="flex items-center justify-between text-[10px] gap-2">
+                      <span className={cn('font-semibold whitespace-nowrap', totalSpent > totalBudget * 0.9 ? 'text-amber-500' : 'text-indigo-500')}>
+                        R$ {formatNumber(locale, totalSpent)} gasto
+                      </span>
+                      <span className="text-muted-foreground whitespace-nowrap">
+                        R$ {formatNumber(locale, Math.max(0, totalBudget - totalSpent))} restante
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TiltCard>
+          </motion.div>
+        )}
 
       </motion.div>
 
