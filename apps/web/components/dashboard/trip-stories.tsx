@@ -1152,12 +1152,12 @@ export function TripStories({ trips = [] }: TripStoriesProps) {
       </div>
 
       {/* ── Bubble strip ── */}
-      <div className="relative -mx-4 md:-mx-6">
+      <div className="relative -mx-4 md:mx-0">
         {/* Fade masks */}
         <div className="absolute left-0 top-0 bottom-0 w-8 z-10 bg-gradient-to-r from-background to-transparent pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-8 z-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
 
-        <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2 pt-1 px-4 md:px-6 snap-x snap-mandatory scroll-smooth">
+        <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2 pt-1 px-4 md:px-0 snap-x snap-mandatory scroll-smooth">
           {viewableStories.map((story, i) => (
             <motion.button
               key={story.id}
