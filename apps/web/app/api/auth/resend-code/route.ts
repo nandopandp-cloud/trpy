@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@trpy/database';
 import {
   createVerificationCode,
-  sendVerificationCodes,
+  sendVerificationEmail,
 } from '@/lib/services/verification';
 
 export async function POST(req: NextRequest) {
@@ -26,12 +26,13 @@ export async function POST(req: NextRequest) {
     }
 
     const { code } = await createVerificationCode(normalizedEmail, user.phone ?? undefined);
-    sendVerificationCodes(
+
+    const emailResult = await sendVerificationEmail(
       normalizedEmail,
       code,
       user.name ?? undefined,
-      user.phone ?? undefined,
-    ).catch((e) => console.error('[resend-code] sendVerificationCodes error:', e));
+    );
+    console.log('[resend-code] sent verification email:', emailResult);
 
     return NextResponse.json({ sent: true }, { status: 200 });
   } catch (error) {

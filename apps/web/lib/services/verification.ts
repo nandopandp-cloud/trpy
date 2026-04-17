@@ -61,6 +61,8 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
   const displayName = name ?? 'viajante';
   const fromEmail = getFromEmail();
 
+  console.log(`[verification] sending email to=${email} from=${fromEmail}`);
+
   try {
     const response = await resend.emails.send({
       from: fromEmail,
@@ -144,11 +146,12 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
     });
 
     if (response.error) {
-      console.error('[verification] Resend error:', response.error);
+      console.error('[verification] Resend error:', JSON.stringify(response.error));
       return { success: false, error: response.error.message };
     }
 
-    return { success: true };
+    console.log(`[verification] email queued id=${response.data?.id}`);
+    return { success: true, id: response.data?.id };
   } catch (error) {
     console.error('[verification] Email exception:', String(error));
     return { success: false, error: 'Failed to send email' };
