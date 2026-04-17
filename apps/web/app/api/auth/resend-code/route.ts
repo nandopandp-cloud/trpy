@@ -26,12 +26,12 @@ export async function POST(req: NextRequest) {
     }
 
     const { code } = await createVerificationCode(normalizedEmail, user.phone ?? undefined);
-    await sendVerificationCodes(
+    sendVerificationCodes(
       normalizedEmail,
       code,
       user.name ?? undefined,
       user.phone ?? undefined,
-    );
+    ).catch((e) => console.error('[resend-code] sendVerificationCodes error:', e));
 
     return NextResponse.json({ sent: true }, { status: 200 });
   } catch (error) {

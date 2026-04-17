@@ -6,7 +6,7 @@ import {
   sendVerificationCodes,
 } from '@/lib/services/verification';
 
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = 10;
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,7 +70,9 @@ export async function POST(req: NextRequest) {
       // we can resend the code
       if (!existingUser.emailVerified && existingUser.password) {
         const { code } = await createVerificationCode(normalizedEmail, normalizedPhone);
-        await sendVerificationCodes(normalizedEmail, code, existingUser.name ?? undefined, normalizedPhone);
+        sendVerificationCodes(normalizedEmail, code, existingUser.name ?? undefined, normalizedPhone).catch(
+          (e) => console.error('[signup] sendVerificationCodes error:', e),
+        );
 
         // Update phone if changed
         if (existingUser.phone !== normalizedPhone) {
@@ -117,7 +119,9 @@ export async function POST(req: NextRequest) {
 
     // ── Generate and send verification codes ──────────
     const { code } = await createVerificationCode(normalizedEmail, normalizedPhone);
-    await sendVerificationCodes(normalizedEmail, code, user.name ?? undefined, normalizedPhone);
+    sendVerificationCodes(normalizedEmail, code, user.name ?? undefined, normalizedPhone).catch(
+      (e) => console.error('[signup] sendVerificationCodes error:', e),
+    );
 
     return NextResponse.json(
       {
