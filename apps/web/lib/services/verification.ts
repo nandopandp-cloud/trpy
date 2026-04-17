@@ -1,8 +1,9 @@
 import { Resend } from 'resend';
-import twilio from 'twilio';
 import { prisma } from '@trpy/database';
 
-// ── Config (lazy init to avoid build-time errors) ───────────────────────────
+const CODE_LENGTH = 6;
+const CODE_EXPIRY_MINUTES = 10;
+const MAX_ATTEMPTS = 5;
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
@@ -10,27 +11,16 @@ function getResend() {
   return new Resend(key);
 }
 
-function getTwilioClient() {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  if (!sid || !token) return null;
-  return twilio(sid, token);
+function getFromEmail() {
+  return process.env.RESEND_FROM_EMAIL ?? 'TRPY <noreply@trpy.app>';
 }
-
-const CODE_LENGTH = 6;
-const CODE_EXPIRY_MINUTES = 10;
-const MAX_ATTEMPTS = 5;
-
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'TRPY <noreply@trpy.app>';
-const TWILIO_PHONE = process.env.TWILIO_PHONE_NUMBER ?? '';
 
 // ── Generate OTP ────────────────────────────────────────────────────────────
 
 function generateCode(): string {
-  const digits = '0123456789';
   let code = '';
   for (let i = 0; i < CODE_LENGTH; i++) {
-    code += digits[Math.floor(Math.random() * digits.length)];
+    code += Math.floor(Math.random() * 10).toString();
   }
   return code;
 }
@@ -38,7 +28,6 @@ function generateCode(): string {
 // ── Create & Store Code ─────────────────────────────────────────────────────
 
 export async function createVerificationCode(email: string, phone?: string) {
-  // Invalidate old codes for this email
   await prisma.verificationCode.updateMany({
     where: { email, verified: false },
     data: { expiresAt: new Date(0) },
@@ -65,15 +54,16 @@ export async function createVerificationCode(email: string, phone?: string) {
 export async function sendVerificationEmail(email: string, code: string, name?: string) {
   const resend = getResend();
   if (!resend) {
-    console.warn('[verification] Resend not configured, skipping email');
+    console.error('[verification] RESEND_API_KEY not set');
     return { success: false, error: 'Email not configured' };
   }
 
   const displayName = name ?? 'viajante';
+  const fromEmail = getFromEmail();
 
   try {
     const response = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: fromEmail,
       to: email,
       subject: `${code} — Código de verificação TRPY`,
       html: `<!DOCTYPE html>
@@ -117,20 +107,8 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
               <p style="margin:0 0 14px; color:#6B7280; font-size:14px;">
                 Seu código de acesso:
               </p>
-              <div style="
-                padding:22px 32px;
-                border-radius:14px;
-                background: linear-gradient(135deg,#141422,#0F0F18);
-                border:1px solid rgba(124,92,255,0.2);
-                display:inline-block;
-              ">
-                <span style="
-                  font-size:36px;
-                  letter-spacing:10px;
-                  font-weight:700;
-                  color:#FFFFFF;
-                  font-family: 'Courier New', monospace;
-                ">
+              <div style="padding:22px 32px; border-radius:14px; background:linear-gradient(135deg,#141422,#0F0F18); border:1px solid rgba(124,92,255,0.2); display:inline-block;">
+                <span style="font-size:36px; letter-spacing:10px; font-weight:700; color:#FFFFFF; font-family:'Courier New',monospace;">
                   ${code}
                 </span>
               </div>
@@ -142,18 +120,9 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
 
           <tr>
             <td style="padding:0 32px 32px;">
-              <div style="
-                border-radius:16px;
-                padding:20px;
-                background: linear-gradient(135deg, rgba(124,92,255,0.08), rgba(77,175,255,0.08));
-                border:1px solid rgba(255,255,255,0.05);
-              ">
-                <p style="margin:0; color:#FFFFFF; font-weight:500; font-size:15px;">
-                  ✨ Planeje. Explore. Viva.
-                </p>
-                <p style="margin:6px 0 0; color:#9CA3AF; font-size:14px;">
-                  Seu próximo destino está a poucos cliques de distância.
-                </p>
+              <div style="border-radius:16px; padding:20px; background:linear-gradient(135deg,rgba(124,92,255,0.08),rgba(77,175,255,0.08)); border:1px solid rgba(255,255,255,0.05);">
+                <p style="margin:0; color:#FFFFFF; font-weight:500; font-size:15px;">✨ Planeje. Explore. Viva.</p>
+                <p style="margin:6px 0 0; color:#9CA3AF; font-size:14px;">Seu próximo destino está a poucos cliques de distância.</p>
               </div>
             </td>
           </tr>
@@ -175,36 +144,14 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
     });
 
     if (response.error) {
-      console.error('[verification] Email send error:', response.error);
+      console.error('[verification] Resend error:', response.error);
       return { success: false, error: response.error.message };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('[verification] Email send error:', error);
+    console.error('[verification] Email exception:', error);
     return { success: false, error: 'Failed to send email' };
-  }
-}
-
-// ── Send SMS ────────────────────────────────────────────────────────────────
-
-export async function sendVerificationSMS(phone: string, code: string) {
-  const twilioClient = getTwilioClient();
-  if (!twilioClient || !TWILIO_PHONE) {
-    console.warn('[verification] Twilio not configured, skipping SMS');
-    return { success: false, error: 'SMS not configured' };
-  }
-
-  try {
-    await twilioClient.messages.create({
-      body: `TRPY - Seu código de verificação: ${code}. Válido por ${CODE_EXPIRY_MINUTES} minutos.`,
-      from: TWILIO_PHONE,
-      to: phone,
-    });
-    return { success: true };
-  } catch (error) {
-    console.error('[verification] SMS send error:', error);
-    return { success: false, error: 'Failed to send SMS' };
   }
 }
 
@@ -230,7 +177,6 @@ export async function verifyCode(email: string, code: string) {
     return { valid: false, error: 'max_attempts' };
   }
 
-  // Increment attempts
   await prisma.verificationCode.update({
     where: { id: record.id },
     data: { attempts: { increment: 1 } },
@@ -240,7 +186,6 @@ export async function verifyCode(email: string, code: string) {
     return { valid: false, error: 'invalid_code' };
   }
 
-  // Mark as verified
   await prisma.verificationCode.update({
     where: { id: record.id },
     data: { verified: true },
@@ -249,7 +194,7 @@ export async function verifyCode(email: string, code: string) {
   return { valid: true };
 }
 
-// ── Send Both ───────────────────────────────────────────────────────────────
+// ── Send Verification ────────────────────────────────────────────────────────
 
 export async function sendVerificationCodes(
   email: string,
@@ -257,6 +202,6 @@ export async function sendVerificationCodes(
   name?: string,
   phone?: string,
 ) {
-  const emailResult = await sendVerificationEmail(email, code, name);
-  return { email: emailResult.success, sms: false };
+  const result = await sendVerificationEmail(email, code, name);
+  return { email: result.success, sms: false };
 }
