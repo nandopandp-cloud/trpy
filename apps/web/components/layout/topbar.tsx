@@ -182,39 +182,34 @@ function MobileUserMenu({ user }: { user: { name?: string | null; email?: string
         <UserAvatar name={user.name} email={user.email} image={user.image} size="md" />
       </SheetTrigger>
 
-      <SheetContent side="bottom" showCloseButton={false} className="rounded-t-3xl border-t border-border gap-0 p-0">
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-border" />
-        </div>
-
-        {/* User header */}
-        <div className="flex items-center gap-4 px-5 py-4 border-b border-border">
+      <SheetContent side="bottom" showCloseButton={false} className="h-[100dvh] rounded-none border-0 gap-0 p-0 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center gap-4 px-5 py-5 border-b border-border shrink-0">
           <UserAvatar name={user.name} email={user.email} image={user.image} size="lg" />
           <div className="min-w-0 flex-1">
             <p className="font-bold text-foreground truncate">{user.name ?? 'Usuário'}</p>
             <p className="text-sm text-muted-foreground truncate">{user.email ?? ''}</p>
           </div>
           <SheetClose
-            render={<button className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0" />}
+            render={<button className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0" />}
           >
             ✕
           </SheetClose>
         </div>
 
         {/* Menu items */}
-        <div className="px-3 py-2 space-y-0.5">
+        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
           <MenuActions onClose={() => setOpen(false)} />
         </div>
 
         {/* Theme row */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-border mx-3 rounded-2xl bg-muted/30 mb-2">
+        <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-border mx-3 rounded-2xl bg-muted/30 mb-3">
           <span className="text-sm font-semibold text-foreground">{t(locale, 'common.theme')}</span>
           <ThemeToggle showLabel />
         </div>
 
         {/* Sign out */}
-        <div className="px-3 pb-safe pb-6">
+        <div className="shrink-0 px-3 pb-8">
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
             className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-destructive/10 hover:bg-destructive/15 text-destructive transition-colors"
