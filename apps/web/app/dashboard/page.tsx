@@ -257,6 +257,17 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
 
       {/* ═══════════════════════════════════════════════════ */}
+      {/* STORIES — always visible                           */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <TripStories trips={trips} />
+      </motion.div>
+
+      {/* ═══════════════════════════════════════════════════ */}
       {/* HERO — Immersive Greeting with Mesh Gradient       */}
       {/* ═══════════════════════════════════════════════════ */}
       <motion.section
@@ -362,17 +373,6 @@ export default function DashboardPage() {
           </motion.div>
         </div>
       </motion.section>
-
-      {/* ═══════════════════════════════════════════════════ */}
-      {/* STORIES — always visible                           */}
-      {/* ═══════════════════════════════════════════════════ */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <TripStories trips={trips} />
-      </motion.div>
 
       {/* ═══════════════════════════════════════════════════ */}
       {/* BENTO GRID — The Core Visual                       */}
