@@ -34,24 +34,22 @@ export default function SignupPage() {
   const [step, setStep] = useState<Step>('form');
   const [emailExpanded, setEmailExpanded] = useState(false);
 
-  // Form fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Verification
-  const [verificationCode, setVerificationCode] = useState('');
+  const [digits, setDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  // State
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProvider, setLoadingProvider] = useState<'google' | 'email' | 'verify' | 'resend' | null>(null);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Cooldown timer
+  const verificationCode = digits.join('');
+
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
@@ -64,16 +62,18 @@ export default function SignupPage() {
     return t(locale, 'auth.error_internal' as any);
   }
 
-  const formValid = name.trim().length >= 2 && email.trim().length > 0 && phone.trim().length >= 8 && password.length >= 8;
+  const formValid =
+    name.trim().length >= 2 &&
+    email.trim().length > 0 &&
+    phone.trim().length >= 8 &&
+    password.length >= 8;
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     if (!formValid) return;
-
     setIsLoading(true);
     setLoadingProvider('email');
     setError('');
-
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -85,17 +85,10 @@ export default function SignupPage() {
           password,
         }),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(getErrorMessage(data.error));
-        setIsLoading(false);
-        setLoadingProvider(null);
-        return;
-      }
-
+      if (!res.ok) { setError(getErrorMessage(data.error)); return; }
       if (data.requiresVerification) {
+        setDigits(['', '', '', '', '', '']);
         setStep('verify');
         setResendCooldown(60);
       }
@@ -109,47 +102,27 @@ export default function SignupPage() {
 
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault();
-    if (verificationCode.trim().length !== 6) return;
-
+    if (verificationCode.length !== 6) return;
     setIsLoading(true);
     setLoadingProvider('verify');
     setError('');
-
     try {
       const res = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email.toLowerCase().trim(),
-          code: verificationCode.trim(),
-        }),
+        body: JSON.stringify({ email: email.toLowerCase().trim(), code: verificationCode }),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(getErrorMessage(data.error));
-        setIsLoading(false);
-        setLoadingProvider(null);
-        return;
-      }
-
+      if (!res.ok) { setError(getErrorMessage(data.error)); return; }
       if (data.verified) {
         setSuccessMsg(t(locale, 'auth.verify_success' as any));
-
-        // Auto-login after verification
         const result = await signIn('credentials', {
           email: email.toLowerCase().trim(),
           password,
           redirect: false,
           callbackUrl: '/dashboard',
         });
-
-        if (result?.url) {
-          router.push(result.url);
-        } else {
-          router.push('/dashboard');
-        }
+        router.push(result?.url ?? '/dashboard');
       }
     } catch {
       setError(t(locale, 'auth.error_connection' as any));
@@ -161,17 +134,14 @@ export default function SignupPage() {
 
   async function handleResendCode() {
     if (resendCooldown > 0) return;
-
     setLoadingProvider('resend');
     setError('');
-
     try {
       await fetch('/api/auth/resend-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.toLowerCase().trim() }),
       });
-
       setSuccessMsg(t(locale, 'auth.verify_resent' as any));
       setResendCooldown(60);
       setTimeout(() => setSuccessMsg(''), 3000);
@@ -189,11 +159,10 @@ export default function SignupPage() {
     await signIn('google', { callbackUrl: '/dashboard' });
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-
   return (
     <div className="space-y-3">
       <AnimatePresence mode="wait">
+
         {step === 'form' ? (
           <motion.div
             key="form"
@@ -203,7 +172,6 @@ export default function SignupPage() {
             transition={{ duration: 0.2 }}
             className="space-y-3"
           >
-            {/* Heading — desktop only */}
             <div className="hidden md:block space-y-1 mb-5">
               <h2 className="text-xl font-semibold text-white tracking-tight">
                 {t(locale, 'auth.signup_title' as any)}
@@ -214,16 +182,12 @@ export default function SignupPage() {
             </div>
 
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-[13px] text-red-200 bg-red-500/15 border border-red-400/30 rounded-2xl px-4 py-2.5"
-              >
+              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                className="text-[13px] text-red-200 bg-red-500/15 border border-red-400/30 rounded-2xl px-4 py-2.5">
                 {error}
               </motion.div>
             )}
 
-            {/* Google OAuth */}
             <OAuthButton
               label={t(locale, 'auth.google' as any)}
               onClick={handleOAuthLogin}
@@ -231,7 +195,6 @@ export default function SignupPage() {
               disabled={isLoading}
             />
 
-            {/* Mobile: collapsed email form */}
             <div className="md:hidden">
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -240,42 +203,29 @@ export default function SignupPage() {
                 className="w-full flex items-center justify-between h-12 px-4 rounded-2xl bg-white/[0.06] border border-white/12 text-[13px] text-white/65 hover:bg-white/[0.1] hover:text-white/80 transition-all"
               >
                 <span>{t(locale, 'auth.signup_email' as any)}</span>
-                <motion.span
-                  animate={{ rotate: emailExpanded ? 180 : 0 }}
-                  transition={{ duration: 0.25 }}
-                >
+                <motion.span animate={{ rotate: emailExpanded ? 180 : 0 }} transition={{ duration: 0.25 }}>
                   <ChevronDown className="w-4 h-4" />
                 </motion.span>
               </motion.button>
-
               <AnimatePresence initial={false}>
                 {emailExpanded && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                    initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                     className="overflow-hidden"
                   >
                     <SignupForm
-                      locale={locale}
-                      name={name} setName={setName}
-                      email={email} setEmail={setEmail}
-                      phone={phone} setPhone={setPhone}
-                      password={password} setPassword={setPassword}
+                      locale={locale} name={name} setName={setName} email={email} setEmail={setEmail}
+                      phone={phone} setPhone={setPhone} password={password} setPassword={setPassword}
                       showPassword={showPassword} setShowPassword={setShowPassword}
-                      isLoading={isLoading}
-                      loadingProvider={loadingProvider}
-                      formValid={formValid}
-                      onSubmit={handleSignup}
-                      className="pt-2"
+                      isLoading={isLoading} loadingProvider={loadingProvider} formValid={formValid}
+                      onSubmit={handleSignup} className="pt-2"
                     />
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* Desktop: email form always visible */}
             <div className="hidden md:block">
               <div className="relative flex items-center gap-3 py-2">
                 <div className="flex-1 h-px bg-white/15" />
@@ -284,17 +234,11 @@ export default function SignupPage() {
                 </span>
                 <div className="flex-1 h-px bg-white/15" />
               </div>
-
               <SignupForm
-                locale={locale}
-                name={name} setName={setName}
-                email={email} setEmail={setEmail}
-                phone={phone} setPhone={setPhone}
-                password={password} setPassword={setPassword}
+                locale={locale} name={name} setName={setName} email={email} setEmail={setEmail}
+                phone={phone} setPhone={setPhone} password={password} setPassword={setPassword}
                 showPassword={showPassword} setShowPassword={setShowPassword}
-                isLoading={isLoading}
-                loadingProvider={loadingProvider}
-                formValid={formValid}
+                isLoading={isLoading} loadingProvider={loadingProvider} formValid={formValid}
                 onSubmit={handleSignup}
               />
             </div>
@@ -306,72 +250,63 @@ export default function SignupPage() {
               </Link>
             </p>
           </motion.div>
+
         ) : (
+
           <motion.div
             key="verify"
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 12 }}
             transition={{ duration: 0.2 }}
-            className="space-y-4"
+            className="w-full"
           >
-            {/* Back button */}
             <button
-              onClick={() => { setStep('form'); setError(''); setSuccessMsg(''); setVerificationCode(''); }}
-              className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors"
+              onClick={() => { setStep('form'); setError(''); setSuccessMsg(''); setDigits(['', '', '', '', '', '']); }}
+              className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors mb-5"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{t(locale, 'common.back' as any)}</span>
             </button>
 
-            {/* Verification header */}
-            <div className="space-y-2 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 flex items-center justify-center mx-auto mb-3">
+            <div className="text-center mb-5">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
                 <ShieldCheck className="w-7 h-7 text-emerald-400" />
               </div>
-              <h2 className="text-xl font-semibold text-white tracking-tight">
+              <h2 className="text-xl font-semibold text-white tracking-tight mb-1">
                 {t(locale, 'auth.verify_title' as any)}
               </h2>
               <p className="text-[13px] text-white/60">
-                Enviamos um código de verificação de 6 dígitos para seu email.
+                Enviamos um código de 6 dígitos para
               </p>
-              <p className="text-[12px] text-white/40">
+              <p className="text-[13px] font-semibold text-white/80 mt-0.5">
                 {email}
               </p>
             </div>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-[13px] text-red-200 bg-red-500/15 border border-red-400/30 rounded-2xl px-4 py-2.5"
-              >
-                {error}
-              </motion.div>
-            )}
+            <AnimatePresence>
+              {error && (
+                <motion.div key="err" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="text-[13px] text-red-200 bg-red-500/15 border border-red-400/30 rounded-2xl px-4 py-2.5 mb-3">
+                  {error}
+                </motion.div>
+              )}
+              {successMsg && (
+                <motion.div key="ok" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="text-[13px] text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 rounded-2xl px-4 py-2.5 mb-3">
+                  {successMsg}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            {successMsg && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-[13px] text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 rounded-2xl px-4 py-2.5"
-              >
-                {successMsg}
-              </motion.div>
-            )}
-
-            {/* Code input */}
-            <form onSubmit={handleVerify} className="space-y-3">
-              <CodeInput
-                value={verificationCode}
-                onChange={setVerificationCode}
-              />
+            <form onSubmit={handleVerify} className="space-y-4">
+              <CodeInput digits={digits} setDigits={setDigits} />
 
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={isLoading || verificationCode.trim().length !== 6}
+                disabled={isLoading || verificationCode.length !== 6}
                 className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold hover:bg-white/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30"
               >
                 {loadingProvider === 'verify'
@@ -381,8 +316,7 @@ export default function SignupPage() {
               </motion.button>
             </form>
 
-            {/* Resend */}
-            <div className="text-center">
+            <div className="text-center mt-4">
               <button
                 onClick={handleResendCode}
                 disabled={resendCooldown > 0 || loadingProvider === 'resend'}
@@ -403,7 +337,7 @@ export default function SignupPage() {
   );
 }
 
-// ─── Signup Form Component ──────────────────────────────────────────────────
+// ─── Signup Form ─────────────────────────────────────────────────────────────
 
 function SignupForm({
   locale, name, setName, email, setEmail, phone, setPhone,
@@ -416,72 +350,34 @@ function SignupForm({
   phone: string; setPhone: (v: string) => void;
   password: string; setPassword: (v: string) => void;
   showPassword: boolean; setShowPassword: (v: boolean) => void;
-  isLoading: boolean;
-  loadingProvider: string | null;
-  formValid: boolean;
-  onSubmit: (e: React.FormEvent) => void;
+  isLoading: boolean; loadingProvider: string | null;
+  formValid: boolean; onSubmit: (e: React.FormEvent) => void;
   className?: string;
 }) {
   return (
     <form onSubmit={onSubmit} className={`space-y-2.5 ${className ?? ''}`}>
-      <GlassInput
-        icon={User}
-        type="text"
-        value={name}
-        onChange={setName}
-        placeholder={t(locale as any, 'auth.name_placeholder' as any)}
-        autoComplete="name"
-        required
-      />
-      <GlassInput
-        icon={Mail}
-        type="email"
-        value={email}
-        onChange={setEmail}
-        placeholder={t(locale as any, 'auth.email_placeholder' as any)}
-        autoComplete="email"
-        required
-      />
-      <GlassInput
-        icon={Phone}
-        type="tel"
-        value={phone}
-        onChange={setPhone}
-        placeholder={t(locale as any, 'auth.phone_placeholder' as any)}
-        autoComplete="tel"
-        required
-      />
+      <GlassInput icon={User} type="text" value={name} onChange={setName}
+        placeholder={t(locale as any, 'auth.name_placeholder' as any)} autoComplete="name" required />
+      <GlassInput icon={Mail} type="email" value={email} onChange={setEmail}
+        placeholder={t(locale as any, 'auth.email_placeholder' as any)} autoComplete="email" required />
+      <GlassInput icon={Phone} type="tel" value={phone} onChange={setPhone}
+        placeholder={t(locale as any, 'auth.phone_placeholder' as any)} autoComplete="tel" required />
       <div className="space-y-1.5">
         <GlassInput
-          icon={Lock}
-          type={showPassword ? 'text' : 'password'}
-          value={password}
-          onChange={setPassword}
-          placeholder={t(locale as any, 'auth.password_create' as any)}
-          autoComplete="new-password"
-          required
-          minLength={8}
+          icon={Lock} type={showPassword ? 'text' : 'password'} value={password} onChange={setPassword}
+          placeholder={t(locale as any, 'auth.password_create' as any)} autoComplete="new-password" required minLength={8}
           rightSlot={
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="text-white/50 hover:text-white/90 transition-colors"
-              tabIndex={-1}
-            >
+            <button type="button" onClick={() => setShowPassword(!showPassword)}
+              className="text-white/50 hover:text-white/90 transition-colors" tabIndex={-1}>
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           }
         />
         <p className="text-[11px] text-white/40 pl-2">{t(locale as any, 'auth.password_min' as any)}</p>
       </div>
-
-      <motion.button
-        type="submit"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.98 }}
+      <motion.button type="submit" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
         disabled={isLoading || !formValid}
-        className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold hover:bg-white/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30"
-      >
+        className="w-full h-12 bg-white text-zinc-900 rounded-2xl text-sm font-semibold hover:bg-white/95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-lg shadow-black/30">
         {loadingProvider === 'email'
           ? <Loader2 className="w-4 h-4 animate-spin" />
           : <><span>{t(locale as any, 'auth.create_account' as any)}</span><ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>
@@ -493,52 +389,89 @@ function SignupForm({
 
 // ─── Code Input ─────────────────────────────────────────────────────────────
 
-function CodeInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const digits = value.padEnd(6, '').split('').slice(0, 6);
+function CodeInput({ digits, setDigits }: { digits: string[]; setDigits: (d: string[]) => void }) {
+  const refs = useRef<(HTMLInputElement | null)[]>([]);
 
-  function handleChange(index: number, char: string) {
-    if (!/^\d?$/.test(char)) return;
+  useEffect(() => {
+    setTimeout(() => refs.current[0]?.focus(), 100);
+  }, []);
 
-    const arr = digits.slice();
-    arr[index] = char;
-    const newVal = arr.join('').replace(/ /g, '');
-    onChange(newVal);
-
-    if (char && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+  function handleChange(index: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value.replace(/\D/g, '');
+    if (!raw) {
+      const next = [...digits];
+      next[index] = '';
+      setDigits(next);
+      return;
+    }
+    if (raw.length > 1) {
+      // paste via onChange (mobile)
+      const next = ['', '', '', '', '', ''];
+      for (let i = 0; i < raw.length && i < 6; i++) next[i] = raw[i];
+      setDigits(next);
+      refs.current[Math.min(raw.length, 5)]?.focus();
+    } else {
+      const next = [...digits];
+      next[index] = raw;
+      setDigits(next);
+      if (index < 5) refs.current[index + 1]?.focus();
     }
   }
 
-  function handleKeyDown(index: number, e: React.KeyboardEvent) {
-    if (e.key === 'Backspace' && !digits[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+  function handleKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace') {
+      if (digits[index]) {
+        const next = [...digits]; next[index] = ''; setDigits(next);
+      } else if (index > 0) {
+        const next = [...digits]; next[index - 1] = ''; setDigits(next);
+        refs.current[index - 1]?.focus();
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      refs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      refs.current[index + 1]?.focus();
     }
   }
 
   function handlePaste(e: React.ClipboardEvent) {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    onChange(pasted);
-    inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+    if (!pasted) return;
+    const next = ['', '', '', '', '', ''];
+    for (let i = 0; i < pasted.length; i++) next[i] = pasted[i];
+    setDigits(next);
+    refs.current[Math.min(pasted.length, 5)]?.focus();
   }
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      {digits.map((digit, i) => (
-        <input
-          key={i}
-          ref={(el) => { inputRefs.current[i] = el; }}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          value={digit === ' ' ? '' : digit}
-          onChange={(e) => handleChange(i, e.target.value)}
-          onKeyDown={(e) => handleKeyDown(i, e)}
-          onPaste={i === 0 ? handlePaste : undefined}
-          className="w-12 h-12 rounded-lg bg-white/10 border border-white/20 text-center text-lg font-bold text-white placeholder:text-white/30 focus:outline-none focus:bg-white/15 focus:border-white/40 transition-all"
-        />
-      ))}
+    <div className="space-y-2">
+      <div className="flex items-center justify-center gap-2">
+        {digits.map((digit, i) => (
+          <input
+            key={i}
+            ref={(el) => { refs.current[i] = el; }}
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            value={digit}
+            autoComplete={i === 0 ? 'one-time-code' : 'off'}
+            onChange={(e) => handleChange(i, e)}
+            onKeyDown={(e) => handleKeyDown(i, e)}
+            onPaste={handlePaste}
+            onFocus={(e) => e.target.select()}
+            style={{ width: '44px', height: '52px' }}
+            className={[
+              'rounded-xl border-2 text-center text-xl font-bold transition-all duration-150 outline-none',
+              digit
+                ? 'bg-indigo-500/20 border-indigo-400 text-white shadow-[0_0_0_3px_rgba(99,102,241,0.2)]'
+                : 'bg-white/10 border-white/30 text-white hover:border-white/50 focus:bg-indigo-500/15 focus:border-indigo-400 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]',
+            ].join(' ')}
+          />
+        ))}
+      </div>
+      <p className="text-center text-[11px] text-white/40">
+        Digite ou cole o código de 6 dígitos
+      </p>
     </div>
   );
 }
@@ -546,68 +479,36 @@ function CodeInput({ value, onChange }: { value: string; onChange: (v: string) =
 // ─── Primitives ─────────────────────────────────────────────────────────────
 
 function GlassInput({
-  icon: Icon,
-  type,
-  value,
-  onChange,
-  placeholder,
-  autoComplete,
-  required,
-  rightSlot,
-  minLength,
+  icon: Icon, type, value, onChange, placeholder, autoComplete, required, rightSlot, minLength,
 }: {
   icon: React.ComponentType<{ className?: string }>;
-  type: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  autoComplete?: string;
-  required?: boolean;
-  rightSlot?: React.ReactNode;
-  minLength?: number;
+  type: string; value: string; onChange: (v: string) => void;
+  placeholder: string; autoComplete?: string; required?: boolean;
+  rightSlot?: React.ReactNode; minLength?: number;
 }) {
   return (
     <div className="relative group">
       <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 group-focus-within:text-white/80 transition-colors" />
       <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        required={required}
-        autoComplete={autoComplete}
-        minLength={minLength}
+        type={type} value={value} onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder} required={required} autoComplete={autoComplete} minLength={minLength}
         className="w-full h-12 pl-11 pr-11 rounded-2xl bg-white/[0.08] border border-white/15 text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:bg-white/[0.12] focus:border-white/30 transition-all backdrop-blur-sm"
       />
-      {rightSlot && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2">{rightSlot}</div>
-      )}
+      {rightSlot && <div className="absolute right-4 top-1/2 -translate-y-1/2">{rightSlot}</div>}
     </div>
   );
 }
 
-function OAuthButton({
-  label,
-  onClick,
-  loading,
-  disabled,
-}: {
-  label?: string;
-  onClick: () => void;
-  loading: boolean;
-  disabled: boolean;
+function OAuthButton({ label, onClick, loading, disabled }: {
+  label?: string; onClick: () => void; loading: boolean; disabled: boolean;
 }) {
   return (
     <motion.button
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      disabled={disabled}
+      whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+      onClick={onClick} disabled={disabled}
       className="w-full flex items-center justify-center gap-3 h-12 px-4 rounded-2xl bg-white/[0.08] backdrop-blur-sm border border-white/15 text-[14px] font-medium text-white hover:bg-white/[0.14] hover:border-white/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {loading ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : (
+      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
         <>
           <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0" fill="none">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
