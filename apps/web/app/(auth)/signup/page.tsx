@@ -111,13 +111,14 @@ export default function SignupPage() {
     setLoadingProvider('email');
     setError('');
     try {
+      const fullPhone = `+${COUNTRY_CODES[countryCode].code}${phone}`;
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
           email: email.toLowerCase().trim(),
-          phone: phone.replace(/\s+/g, '').trim(),
+          phone: fullPhone,
           password,
         }),
       });
@@ -550,30 +551,24 @@ function PhoneInput({
   const [showDropdown, setShowDropdown] = useState(false);
   const currentCountry = COUNTRY_CODES[countryCode];
 
-  const handlePhoneChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    setPhone(cleaned);
+  // Split phone into area code and number
+  const areaCode = phone.slice(0, 2);
+  const number = phone.slice(2);
+
+  const handleAreaCodeChange = (value: string) => {
+    const cleaned = value.replace(/\D/g, '').slice(0, 2);
+    setPhone(cleaned + number);
+  };
+
+  const handleNumberChange = (value: string) => {
+    const cleaned = value.replace(/\D/g, '').slice(0, 8);
+    setPhone(areaCode + cleaned);
   };
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2">
-        <div className="relative group flex-1">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 group-focus-within:text-white/80 transition-colors">
-            <Phone className="w-4 h-4" />
-          </div>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => handlePhoneChange(e.target.value)}
-            placeholder="(11) 99999-9999"
-            maxLength={15}
-            required
-            autoComplete="tel"
-            className="w-full h-12 pl-11 pr-11 rounded-2xl bg-white/[0.08] border border-white/15 text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:bg-white/[0.12] focus:border-white/30 transition-all backdrop-blur-sm"
-          />
-        </div>
-
+        {/* Country selector */}
         <div className="relative">
           <motion.button
             type="button"
@@ -618,8 +613,44 @@ function PhoneInput({
             )}
           </AnimatePresence>
         </div>
+
+        {/* Area code input */}
+        <div className="relative group w-20">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-white/50 font-medium">
+            DDD
+          </div>
+          <input
+            type="tel"
+            value={areaCode}
+            onChange={(e) => handleAreaCodeChange(e.target.value)}
+            placeholder="11"
+            maxLength={2}
+            required
+            inputMode="numeric"
+            className="w-full h-12 pl-10 pr-3 rounded-2xl bg-white/[0.08] border border-white/15 text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:bg-white/[0.12] focus:border-white/30 transition-all backdrop-blur-sm text-center"
+          />
+        </div>
+
+        {/* Phone number input */}
+        <div className="relative group flex-1">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 group-focus-within:text-white/80 transition-colors">
+            <Phone className="w-4 h-4" />
+          </div>
+          <input
+            type="tel"
+            value={number}
+            onChange={(e) => handleNumberChange(e.target.value)}
+            placeholder="99999-9999"
+            maxLength={8}
+            required
+            inputMode="numeric"
+            className="w-full h-12 pl-11 pr-4 rounded-2xl bg-white/[0.08] border border-white/15 text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:bg-white/[0.12] focus:border-white/30 transition-all backdrop-blur-sm"
+          />
+        </div>
       </div>
-      <p className="text-[11px] text-white/40 pl-2">Incluir código de área (ex: 11 para São Paulo)</p>
+      <p className="text-[11px] text-white/40 pl-2">
+        Exemplo: DDD 11 + número 99999-9999 = +55 11 99999-9999
+      </p>
     </div>
   );
 }
