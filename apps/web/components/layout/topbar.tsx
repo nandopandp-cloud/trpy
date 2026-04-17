@@ -1,11 +1,11 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Settings, User, LogOut, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Settings, User, LogOut, ChevronRight, X } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { createPortal } from 'react-dom';
 import { UserAvatar } from '@/components/user/user-avatar';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Logo } from '@/components/logo';
@@ -15,15 +15,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetClose,
-} from '@/components/ui/sheet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocale, t } from '@/lib/i18n';
 
 const TITLES: Record<string, string> = {
@@ -44,48 +37,6 @@ function getTitle(pathname: string): string {
 }
 
 // ─── Reusable menu actions ────────────────────────────────────────────────────
-
-function MenuActions({ onClose }: { onClose?: () => void }) {
-  const router = useRouter();
-  const [locale] = useLocale();
-
-  function navigate(href: string) {
-    onClose?.();
-    router.push(href);
-  }
-
-  return (
-    <>
-      <button
-        onClick={() => navigate('/dashboard/settings')}
-        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted rounded-xl transition-colors text-left"
-      >
-        <div className="w-9 h-9 rounded-2xl bg-muted flex items-center justify-center shrink-0">
-          <User className="w-4 h-4 text-muted-foreground" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">{t(locale, 'common.profile')}</p>
-          <p className="text-xs text-muted-foreground">{t(locale, 'common.account')}</p>
-        </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-      </button>
-
-      <button
-        onClick={() => navigate('/dashboard/settings')}
-        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted rounded-xl transition-colors text-left"
-      >
-        <div className="w-9 h-9 rounded-2xl bg-muted flex items-center justify-center shrink-0">
-          <Settings className="w-4 h-4 text-muted-foreground" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">{t(locale, 'page.settings')}</p>
-          <p className="text-xs text-muted-foreground">{t(locale, 'topbar.settings_hint')}</p>
-        </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-      </button>
-    </>
-  );
-}
 
 // ─── Desktop dropdown ─────────────────────────────────────────────────────────
 
@@ -162,64 +113,118 @@ function DesktopUserMenu({ user }: { user: { name?: string | null; email?: strin
   );
 }
 
-// ─── Mobile bottom sheet ──────────────────────────────────────────────────────
+// ─── Mobile full-screen menu ──────────────────────────────────────────────────
 
 function MobileUserMenu({ user }: { user: { name?: string | null; email?: string | null; image?: string | null } }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [locale] = useLocale();
+  const router = useRouter();
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  function navigate(href: string) {
+    setOpen(false);
+    router.push(href);
+  }
+
+  const menu = (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="mobile-menu"
+          initial={{ opacity: 0, y: '100%' }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: '100%' }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed inset-0 z-[9999] bg-background flex flex-col"
+        >
+          {/* Header */}
+          <div className="flex items-center gap-4 px-5 py-5 border-b border-border shrink-0">
+            <UserAvatar name={user.name} email={user.email} image={user.image} size="lg" />
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-foreground truncate">{user.name ?? 'Usuário'}</p>
+              <p className="text-sm text-muted-foreground truncate">{user.email ?? ''}</p>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Menu items */}
+          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
+            <button
+              onClick={() => navigate('/dashboard/settings')}
+              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted rounded-xl transition-colors text-left"
+            >
+              <div className="w-9 h-9 rounded-2xl bg-muted flex items-center justify-center shrink-0">
+                <User className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">{t(locale, 'common.profile')}</p>
+                <p className="text-xs text-muted-foreground">{t(locale, 'common.account')}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </button>
+
+            <button
+              onClick={() => navigate('/dashboard/settings')}
+              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted rounded-xl transition-colors text-left"
+            >
+              <div className="w-9 h-9 rounded-2xl bg-muted flex items-center justify-center shrink-0">
+                <Settings className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">{t(locale, 'page.settings')}</p>
+                <p className="text-xs text-muted-foreground">{t(locale, 'topbar.settings_hint')}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </button>
+          </div>
+
+          {/* Theme row */}
+          <div className="shrink-0 flex items-center justify-between px-5 py-3 mx-3 rounded-2xl bg-muted/30 mb-3">
+            <span className="text-sm font-semibold text-foreground">{t(locale, 'common.theme')}</span>
+            <ThemeToggle showLabel />
+          </div>
+
+          {/* Sign out */}
+          <div className="shrink-0 px-3 pb-10">
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-destructive/10 hover:bg-destructive/15 text-destructive transition-colors"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span className="text-sm font-semibold">{t(locale, 'common.logout')}</span>
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
-        render={
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-            aria-label="Menu do usuário"
-          />
-        }
+    <>
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setOpen(true)}
+        className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        aria-label="Menu do usuário"
       >
         <UserAvatar name={user.name} email={user.email} image={user.image} size="md" />
-      </SheetTrigger>
+      </motion.button>
 
-      <SheetContent side="bottom" showCloseButton={false} className="h-[100dvh] rounded-none border-0 gap-0 p-0 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center gap-4 px-5 py-5 border-b border-border shrink-0">
-          <UserAvatar name={user.name} email={user.email} image={user.image} size="lg" />
-          <div className="min-w-0 flex-1">
-            <p className="font-bold text-foreground truncate">{user.name ?? 'Usuário'}</p>
-            <p className="text-sm text-muted-foreground truncate">{user.email ?? ''}</p>
-          </div>
-          <SheetClose
-            render={<button className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0" />}
-          >
-            ✕
-          </SheetClose>
-        </div>
-
-        {/* Menu items */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
-          <MenuActions onClose={() => setOpen(false)} />
-        </div>
-
-        {/* Theme row */}
-        <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-border mx-3 rounded-2xl bg-muted/30 mb-3">
-          <span className="text-sm font-semibold text-foreground">{t(locale, 'common.theme')}</span>
-          <ThemeToggle showLabel />
-        </div>
-
-        {/* Sign out */}
-        <div className="shrink-0 px-3 pb-8">
-          <button
-            onClick={() => signOut({ callbackUrl: '/' })}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-destructive/10 hover:bg-destructive/15 text-destructive transition-colors"
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            <span className="text-sm font-semibold">{t(locale, 'common.logout')}</span>
-          </button>
-        </div>
-      </SheetContent>
-    </Sheet>
+      {mounted && createPortal(menu, document.body)}
+    </>
   );
 }
 
