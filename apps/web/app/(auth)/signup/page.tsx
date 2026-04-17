@@ -7,9 +7,26 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, Loader2, Mail, Lock, User, Phone,
-  Eye, EyeOff, ChevronDown, ShieldCheck, ArrowLeft,
+  Eye, EyeOff, ChevronDown, ShieldCheck, ArrowLeft, Globe,
 } from 'lucide-react';
 import { useLocale, t } from '@/lib/i18n';
+
+// Country code mapping
+const COUNTRY_CODES: Record<string, { code: string; flag: string; name: string }> = {
+  BR: { code: '55', flag: '🇧🇷', name: 'Brasil' },
+  US: { code: '1', flag: '🇺🇸', name: 'EUA' },
+  MX: { code: '52', flag: '🇲🇽', name: 'México' },
+  AR: { code: '54', flag: '🇦🇷', name: 'Argentina' },
+  PT: { code: '351', flag: '🇵🇹', name: 'Portugal' },
+  ES: { code: '34', flag: '🇪🇸', name: 'Espanha' },
+  FR: { code: '33', flag: '🇫🇷', name: 'França' },
+  DE: { code: '49', flag: '🇩🇪', name: 'Alemanha' },
+  IT: { code: '39', flag: '🇮🇹', name: 'Itália' },
+  GB: { code: '44', flag: '🇬🇧', name: 'Reino Unido' },
+  AU: { code: '61', flag: '🇦🇺', name: 'Austrália' },
+  JP: { code: '81', flag: '🇯🇵', name: 'Japão' },
+  CN: { code: '86', flag: '🇨🇳', name: 'China' },
+};
 
 type Step = 'form' | 'verify';
 
@@ -33,12 +50,31 @@ export default function SignupPage() {
 
   const [step, setStep] = useState<Step>('form');
   const [emailExpanded, setEmailExpanded] = useState(false);
+  const [countryCode, setCountryCode] = useState('BR');
+  const [countryDropdown, setCountryDropdown] = useState(false);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Detect user location on mount
+  useEffect(() => {
+    const getCountry = async () => {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        if (data.country_code && COUNTRY_CODES[data.country_code]) {
+          setCountryCode(data.country_code);
+        }
+      } catch {
+        // Default to BR if detection fails
+        setCountryCode('BR');
+      }
+    };
+    getCountry();
+  }, []);
 
   const [digits, setDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -219,6 +255,7 @@ export default function SignupPage() {
                       phone={phone} setPhone={setPhone} password={password} setPassword={setPassword}
                       showPassword={showPassword} setShowPassword={setShowPassword}
                       isLoading={isLoading} loadingProvider={loadingProvider} formValid={formValid}
+                      countryCode={countryCode} setCountryCode={setCountryCode}
                       onSubmit={handleSignup} className="pt-2"
                     />
                   </motion.div>
@@ -239,6 +276,7 @@ export default function SignupPage() {
                 phone={phone} setPhone={setPhone} password={password} setPassword={setPassword}
                 showPassword={showPassword} setShowPassword={setShowPassword}
                 isLoading={isLoading} loadingProvider={loadingProvider} formValid={formValid}
+                countryCode={countryCode} setCountryCode={setCountryCode}
                 onSubmit={handleSignup}
               />
             </div>
@@ -342,7 +380,8 @@ export default function SignupPage() {
 function SignupForm({
   locale, name, setName, email, setEmail, phone, setPhone,
   password, setPassword, showPassword, setShowPassword,
-  isLoading, loadingProvider, formValid, onSubmit, className,
+  isLoading, loadingProvider, formValid, countryCode, setCountryCode,
+  onSubmit, className,
 }: {
   locale: string;
   name: string; setName: (v: string) => void;
@@ -351,7 +390,8 @@ function SignupForm({
   password: string; setPassword: (v: string) => void;
   showPassword: boolean; setShowPassword: (v: boolean) => void;
   isLoading: boolean; loadingProvider: string | null;
-  formValid: boolean; onSubmit: (e: React.FormEvent) => void;
+  formValid: boolean; countryCode: string; setCountryCode: (v: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
   className?: string;
 }) {
   return (
@@ -360,8 +400,10 @@ function SignupForm({
         placeholder={t(locale as any, 'auth.name_placeholder' as any)} autoComplete="name" required />
       <GlassInput icon={Mail} type="email" value={email} onChange={setEmail}
         placeholder={t(locale as any, 'auth.email_placeholder' as any)} autoComplete="email" required />
-      <GlassInput icon={Phone} type="tel" value={phone} onChange={setPhone}
-        placeholder={t(locale as any, 'auth.phone_placeholder' as any)} autoComplete="tel" required />
+      <PhoneInput
+        countryCode={countryCode} setCountryCode={setCountryCode}
+        phone={phone} setPhone={setPhone}
+      />
       <div className="space-y-1.5">
         <GlassInput
           icon={Lock} type={showPassword ? 'text' : 'password'} value={password} onChange={setPassword}
@@ -495,6 +537,89 @@ function GlassInput({
         className="w-full h-12 pl-11 pr-11 rounded-2xl bg-white/[0.08] border border-white/15 text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:bg-white/[0.12] focus:border-white/30 transition-all backdrop-blur-sm"
       />
       {rightSlot && <div className="absolute right-4 top-1/2 -translate-y-1/2">{rightSlot}</div>}
+    </div>
+  );
+}
+
+function PhoneInput({
+  countryCode, setCountryCode, phone, setPhone,
+}: {
+  countryCode: string; setCountryCode: (v: string) => void;
+  phone: string; setPhone: (v: string) => void;
+}) {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const currentCountry = COUNTRY_CODES[countryCode];
+
+  const handlePhoneChange = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    setPhone(cleaned);
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <div className="relative group flex-1">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 group-focus-within:text-white/80 transition-colors">
+            <Phone className="w-4 h-4" />
+          </div>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            placeholder="(11) 99999-9999"
+            maxLength={15}
+            required
+            autoComplete="tel"
+            className="w-full h-12 pl-11 pr-11 rounded-2xl bg-white/[0.08] border border-white/15 text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:bg-white/[0.12] focus:border-white/30 transition-all backdrop-blur-sm"
+          />
+        </div>
+
+        <div className="relative">
+          <motion.button
+            type="button"
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="h-12 px-3 rounded-2xl bg-white/[0.08] border border-white/15 hover:bg-white/[0.12] transition-all flex items-center gap-2 text-[13px] font-medium text-white"
+          >
+            <span className="text-lg">{currentCountry?.flag}</span>
+            <span>+{currentCountry?.code}</span>
+          </motion.button>
+
+          <AnimatePresence>
+            {showDropdown && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 top-12 z-50 w-64 bg-zinc-900 border border-white/15 rounded-2xl shadow-xl overflow-hidden backdrop-blur-xl"
+              >
+                <div className="max-h-64 overflow-y-auto">
+                  {Object.entries(COUNTRY_CODES).map(([code, { flag, name, code: phoneCode }]) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => {
+                        setCountryCode(code);
+                        setShowDropdown(false);
+                      }}
+                      className={`w-full px-4 py-2.5 flex items-center gap-3 text-[13px] transition-colors ${
+                        countryCode === code
+                          ? 'bg-indigo-500/20 border-l-2 border-indigo-400 text-white'
+                          : 'hover:bg-white/[0.08] text-white/80 hover:text-white border-l-2 border-transparent'
+                      }`}
+                    >
+                      <span className="text-lg">{flag}</span>
+                      <span className="flex-1 text-left">{name}</span>
+                      <span className="text-white/50">+{phoneCode}</span>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+      <p className="text-[11px] text-white/40 pl-2">Incluir código de área (ex: 11 para São Paulo)</p>
     </div>
   );
 }
