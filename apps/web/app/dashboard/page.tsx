@@ -377,14 +377,79 @@ export default function DashboardPage() {
       {/* ═══════════════════════════════════════════════════ */}
       {/* BENTO GRID — The Core Visual                       */}
       {/* ═══════════════════════════════════════════════════ */}
-      <motion.div
-        variants={stagger.container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-max lg:auto-rows-[minmax(180px,auto)]"
-      >
-        {/* ── Card 1: Próxima Viagem — full-width mobile, 2×2 desktop ── */}
-        <motion.div variants={stagger.item} className="col-span-2 lg:row-span-2">
+      {trips.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full"
+        >
+          <div className="relative overflow-hidden rounded-[2rem] min-h-[360px] md:min-h-[420px] border border-border/40">
+            {/* BG Aurora */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/20 via-zinc-900 to-purple-950/20" />
+            <div className="absolute -top-40 -right-40 w-96 h-96 aurora opacity-30 pointer-events-none" />
+            <div className="absolute -bottom-20 -left-20 w-80 h-80 aurora opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(124,92,255,0.15), transparent)' }} />
+
+            {/* Content */}
+            <div className="relative z-10 h-full flex flex-col items-center justify-center px-8 md:px-12 py-16 text-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="w-20 h-20 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6"
+              >
+                <Globe className="w-10 h-10 text-indigo-400" />
+              </motion.div>
+
+              <motion.h2
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-3 max-w-2xl"
+              >
+                Comece a desbravar as maravilhas do mundo
+              </motion.h2>
+
+              <motion.p
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="text-base md:text-lg text-white/60 max-w-xl mb-8"
+              >
+                Crie sua primeira viagem e comece a planejar sua próxima aventura com a inteligência da IA ao seu lado.
+              </motion.p>
+
+              <motion.button
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => router.push('/dashboard/trips/new')}
+                className="group relative z-10 flex items-center overflow-hidden rounded-full p-[2px] bg-gradient-to-r from-indigo-500 to-purple-500 shadow-xl shadow-indigo-500/30"
+              >
+                <span className="relative flex items-center rounded-full bg-zinc-900 px-8 py-3.5 ring-1 ring-border transition-all group-hover:bg-zinc-800">
+                  <span className="absolute inset-0 overflow-hidden rounded-full">
+                    <span className="absolute top-0 left-0 h-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:animate-[shimmer_1.5s_infinite] group-hover:opacity-100" />
+                  </span>
+                  <span className="relative z-10 text-base font-semibold tracking-wide text-white">
+                    Crie sua viagem agora
+                  </span>
+                  <ArrowRight className="w-5 h-5 ml-2 text-indigo-400 group-hover:translate-x-1 transition-transform relative z-10" />
+                </span>
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          variants={stagger.container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-max lg:auto-rows-[minmax(180px,auto)]"
+        >
+          {/* ── Card 1: Próxima Viagem — full-width mobile, 2×2 desktop ── */}
+          <motion.div variants={stagger.item} className="col-span-2 lg:row-span-2">
           <TiltCard className="h-full p-5 flex flex-col justify-between">
             {/* ── Destination photo as elegant background ── */}
             {tripPhoto && (
@@ -609,7 +674,8 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* ═══════════════════════════════════════════════════ */}
       {/* EXPLORE — Category Grid                            */}
