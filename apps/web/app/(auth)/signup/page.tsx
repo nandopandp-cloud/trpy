@@ -159,7 +159,9 @@ export default function SignupPage() {
           redirect: false,
           callbackUrl: '/dashboard',
         });
-        router.push(result?.url ?? '/dashboard');
+        setTimeout(() => {
+          router.push(result?.url ?? '/dashboard');
+        }, 800);
       }
     } catch {
       setError(t(locale, 'auth.error_connection' as any));

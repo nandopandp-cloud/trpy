@@ -381,7 +381,7 @@ export default function DashboardPage() {
         variants={stagger.container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:auto-rows-[minmax(160px,auto)]"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-max lg:auto-rows-[minmax(180px,auto)]"
       >
         {/* ── Card 1: Próxima Viagem — full-width mobile, 2×2 desktop ── */}
         <motion.div variants={stagger.item} className="col-span-2 lg:row-span-2">
