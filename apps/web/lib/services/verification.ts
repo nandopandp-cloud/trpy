@@ -69,32 +69,109 @@ export async function sendVerificationEmail(email: string, code: string, name?: 
     return { success: false, error: 'Email not configured' };
   }
 
+  const displayName = name ?? 'viajante';
+
   try {
     const response = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: `${code} — Código de verificação TRPY`,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 460px; margin: 0 auto; padding: 32px 24px;">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <h1 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin: 0;">TRPY</h1>
-          </div>
-          <p style="font-size: 15px; color: #333; margin: 0 0 8px;">
-            ${name ? `Olá, ${name}!` : 'Olá!'}
-          </p>
-          <p style="font-size: 15px; color: #555; margin: 0 0 24px;">
-            Seu código de verificação é:
-          </p>
-          <div style="background: #f4f4f5; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
-            <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #18181b; font-family: monospace;">
-              ${code}
-            </span>
-          </div>
-          <p style="font-size: 13px; color: #888; margin: 0;">
-            Este código expira em ${CODE_EXPIRY_MINUTES} minutos. Se você não solicitou esta verificação, ignore este email.
-          </p>
-        </div>
-      `,
+      html: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verifique sua conta - Trpy</title>
+</head>
+<body style="margin:0; padding:0; background:#050507; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" style="max-width:600px; width:100%; background:#0B0B0F; border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.04);">
+
+          <tr>
+            <td style="padding:28px 32px;">
+              <span style="font-size:22px; font-weight:800; color:#FFFFFF; letter-spacing:-0.5px;">TRPY</span>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px;">
+              <h1 style="margin:0; font-size:28px; color:#FFFFFF; font-weight:700;">
+                Sua jornada começa agora, ${displayName} ✈️
+              </h1>
+              <p style="margin:12px 0 24px; color:#A1A1AA; font-size:16px; line-height:1.6;">
+                Estamos prontos para te levar mais longe. Use o código abaixo para verificar sua conta e começar a planejar sua próxima aventura.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px;">
+              <div style="height:1px; background:rgba(255,255,255,0.06);"></div>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:24px 32px;">
+              <p style="margin:0 0 14px; color:#6B7280; font-size:14px;">
+                Seu código de acesso:
+              </p>
+              <div style="
+                padding:22px 32px;
+                border-radius:14px;
+                background: linear-gradient(135deg,#141422,#0F0F18);
+                border:1px solid rgba(124,92,255,0.2);
+                display:inline-block;
+              ">
+                <span style="
+                  font-size:36px;
+                  letter-spacing:10px;
+                  font-weight:700;
+                  color:#FFFFFF;
+                  font-family: 'Courier New', monospace;
+                ">
+                  ${code}
+                </span>
+              </div>
+              <p style="margin:14px 0 0; color:#6B7280; font-size:13px;">
+                Este código expira em ${CODE_EXPIRY_MINUTES} minutos.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px 32px;">
+              <div style="
+                border-radius:16px;
+                padding:20px;
+                background: linear-gradient(135deg, rgba(124,92,255,0.08), rgba(77,175,255,0.08));
+                border:1px solid rgba(255,255,255,0.05);
+              ">
+                <p style="margin:0; color:#FFFFFF; font-weight:500; font-size:15px;">
+                  ✨ Planeje. Explore. Viva.
+                </p>
+                <p style="margin:6px 0 0; color:#9CA3AF; font-size:14px;">
+                  Seu próximo destino está a poucos cliques de distância.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px 32px;">
+              <p style="margin:0; font-size:13px; color:#6B7280;">
+                Se você não solicitou esta verificação, ignore este email. &copy; 2026 Trpy.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
     });
 
     if (response.error) {

@@ -40,7 +40,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
+    <div className="relative min-h-screen w-full overflow-y-auto bg-black text-white">
 
       {/* ── BACKGROUND ────────────────────────────────────────────────────── */}
       <div className="absolute inset-0 z-0">
@@ -112,7 +112,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* ── UNIFIED LAYOUT: mobile headline (shown only on mobile) + shared content ── */}
-        <main className="flex-1 flex flex-col justify-end md:justify-center px-5 md:px-10 pb-8 md:py-12">
+        <main className="flex-1 flex flex-col justify-end md:justify-center px-5 md:px-10 pb-8 md:py-12 overflow-y-auto">
           <div className="w-full md:max-w-6xl md:mx-auto md:grid md:grid-cols-2 md:gap-16 md:items-center">
 
             {/* LEFT col — desktop headline (hidden on mobile) */}
