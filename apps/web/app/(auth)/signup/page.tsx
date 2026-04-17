@@ -536,7 +536,7 @@ function CodeInput({ value, onChange }: { value: string; onChange: (v: string) =
           onChange={(e) => handleChange(i, e.target.value)}
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={i === 0 ? handlePaste : undefined}
-          className="w-11 h-13 rounded-xl bg-white/[0.08] border border-white/15 text-center text-xl font-bold text-white focus:outline-none focus:bg-white/[0.12] focus:border-white/30 transition-all"
+          className="w-12 h-12 rounded-lg bg-white/10 border border-white/20 text-center text-lg font-bold text-white placeholder:text-white/30 focus:outline-none focus:bg-white/15 focus:border-white/40 transition-all"
         />
       ))}
     </div>
