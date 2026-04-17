@@ -379,7 +379,7 @@ export default function DashboardPage() {
       {/* ═══════════════════════════════════════════════════ */}
       {/* BENTO GRID — The Core Visual                       */}
       {/* ═══════════════════════════════════════════════════ */}
-      {trips.length > 0 && (
+      {trips.length > 0 ? (
         <motion.div
           variants={stagger.container}
           initial="hidden"
@@ -613,7 +613,7 @@ export default function DashboardPage() {
         )}
 
         </motion.div>
-      )}
+      ) : null}
 
       {/* ═══════════════════════════════════════════════════ */}
       {/* EXPLORE — Category Grid                            */}
