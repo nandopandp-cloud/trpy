@@ -54,9 +54,14 @@ function calcTooltipPos(rect: Rect, position: OnboardingStep['position']) {
 
 export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPrevious, onSkip }: Props) {
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
 
   const measureTarget = useCallback(() => {
+    setIsMobile(window.innerWidth < 768);
     const el = document.querySelector(step.target);
     if (!el) return;
     const r = el.getBoundingClientRect();
@@ -81,15 +86,13 @@ export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPr
   }, [onNext, onPrevious, onSkip, currentIndex]);
 
   const Icon = step.icon;
+  const progress = Math.round(((currentIndex + 1) / totalSteps) * 100);
 
-  // Tooltip position
-  let tooltipStyle: React.CSSProperties = {};
-  if (isMobile || !targetRect) {
-    // Mobile: fixed to bottom of screen
-    tooltipStyle = { position: 'fixed', bottom: 90, left: 12, right: 12, width: 'auto' };
-  } else {
+  // Desktop tooltip position
+  let desktopStyle: React.CSSProperties = {};
+  if (!isMobile && targetRect) {
     const pos = calcTooltipPos(targetRect, step.position);
-    tooltipStyle = { position: 'fixed', top: pos.top, left: pos.left, width: TOOLTIP_W };
+    desktopStyle = { position: 'fixed', top: pos.top, left: pos.left, width: TOOLTIP_W };
   }
 
   return (
@@ -126,82 +129,161 @@ export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPr
           />
         )}
 
-        {/* Progress bar */}
-        <div className="fixed top-0 left-0 right-0 h-0.5 bg-border z-10">
-          <motion.div
-            className="h-full bg-indigo-500"
-            initial={{ width: `${(currentIndex / totalSteps) * 100}%` }}
-            animate={{ width: `${((currentIndex + 1) / totalSteps) * 100}%` }}
-            transition={{ duration: 0.4 }}
-          />
-        </div>
-
-        {/* Tooltip card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          style={tooltipStyle}
-          className="bg-card border border-border rounded-2xl p-5 shadow-2xl z-10"
-        >
-          {/* Header */}
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
-                <Icon className="w-5 h-5 text-indigo-500" />
-              </div>
-              <h3 className="text-sm font-semibold text-foreground leading-tight">{step.title}</h3>
-            </div>
-            <button
-              onClick={onSkip}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-              aria-label="Fechar tour"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+        {/* ── DESKTOP: thin progress bar on top ── */}
+        {!isMobile && (
+          <div className="fixed top-0 left-0 right-0 h-0.5 bg-white/10 z-10">
+            <motion.div
+              className="h-full bg-indigo-500"
+              initial={{ width: `${(currentIndex / totalSteps) * 100}%` }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.4 }}
+            />
           </div>
+        )}
 
-          <p className="text-xs text-muted-foreground leading-relaxed mb-4">{step.description}</p>
+        {/* ── DESKTOP tooltip card ── */}
+        {!isMobile && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            style={desktopStyle}
+            className="bg-card border border-border rounded-2xl p-5 shadow-2xl z-10"
+          >
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-indigo-500" />
+                </div>
+                <h3 className="text-sm font-semibold text-foreground leading-tight">{step.title}</h3>
+              </div>
+              <button
+                onClick={onSkip}
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                aria-label="Fechar tour"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground leading-relaxed mb-4">{step.description}</p>
+
+            <div className="flex items-center justify-between">
+              <div className="flex gap-1">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={`rounded-full transition-all duration-300 ${
+                      i === currentIndex ? 'w-4 h-1.5 bg-indigo-500' : 'w-1.5 h-1.5 bg-border'
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                {currentIndex > 0 && (
+                  <button
+                    onClick={onPrevious}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label="Passo anterior"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={onNext}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold hover:opacity-90 active:scale-95 transition-all"
+                >
+                  {currentIndex < totalSteps - 1 ? <>Próximo <ChevronRight className="w-3.5 h-3.5" /></> : 'Concluir 🎉'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── MOBILE: bottom sheet card ── */}
+        {isMobile && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-0 left-0 right-0 z-10 bg-card border-t border-border rounded-t-3xl shadow-2xl px-5 pt-5 pb-8"
+          >
+            {/* Drag handle */}
+            <div className="w-10 h-1 rounded-full bg-border mx-auto mb-5" />
+
+            {/* Step counter + close */}
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">
+                {currentIndex + 1} / {totalSteps}
+              </span>
+              <button
+                onClick={onSkip}
+                className="w-9 h-9 flex items-center justify-center rounded-xl bg-muted text-muted-foreground active:scale-95 transition-all"
+                aria-label="Fechar tour"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Progress bar — prominent inside card on mobile */}
+            <div className="w-full h-2 bg-muted rounded-full mb-5 overflow-hidden">
+              <motion.div
+                className="h-full bg-indigo-500 rounded-full"
+                initial={{ width: `${(currentIndex / totalSteps) * 100}%` }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.4 }}
+              />
+            </div>
+
+            {/* Icon + title */}
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+                <Icon className="w-7 h-7 text-indigo-500" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground leading-tight">{step.title}</h3>
+            </div>
+
+            <p className="text-sm text-muted-foreground leading-relaxed mb-6">{step.description}</p>
+
             {/* Dots */}
-            <div className="flex gap-1">
+            <div className="flex gap-1.5 justify-center mb-6">
               {Array.from({ length: totalSteps }).map((_, i) => (
                 <span
                   key={i}
                   className={`rounded-full transition-all duration-300 ${
-                    i === currentIndex ? 'w-4 h-1.5 bg-indigo-500' : 'w-1.5 h-1.5 bg-border'
+                    i === currentIndex ? 'w-6 h-2 bg-indigo-500' : 'w-2 h-2 bg-border'
                   }`}
                 />
               ))}
             </div>
 
-            {/* Buttons */}
-            <div className="flex items-center gap-2">
-              {currentIndex > 0 && (
+            {/* Navigation buttons — full width, large touch targets */}
+            <div className="flex gap-3">
+              {currentIndex > 0 ? (
                 <button
                   onClick={onPrevious}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 h-13 py-3.5 rounded-2xl border border-border text-foreground font-semibold text-sm active:scale-95 transition-all"
                   aria-label="Passo anterior"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-5 h-5" /> Anterior
+                </button>
+              ) : (
+                <button
+                  onClick={onSkip}
+                  className="flex-1 flex items-center justify-center h-13 py-3.5 rounded-2xl border border-border text-muted-foreground font-medium text-sm active:scale-95 transition-all"
+                >
+                  Pular tour
                 </button>
               )}
               <button
                 onClick={onNext}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold hover:opacity-90 active:scale-95 transition-all"
-                aria-label={currentIndex < totalSteps - 1 ? 'Próximo passo' : 'Concluir tour'}
+                className="flex-1 flex items-center justify-center gap-2 h-13 py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold text-sm active:scale-95 transition-all"
               >
-                {currentIndex < totalSteps - 1 ? (
-                  <>Próximo <ChevronRight className="w-3.5 h-3.5" /></>
-                ) : (
-                  'Concluir 🎉'
-                )}
+                {currentIndex < totalSteps - 1 ? <>Próximo <ChevronRight className="w-5 h-5" /></> : 'Concluir 🎉'}
               </button>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </motion.div>
     </AnimatePresence>
   );

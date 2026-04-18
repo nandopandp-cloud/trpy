@@ -1,13 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { User, Palette, ShieldCheck, LogOut } from 'lucide-react';
+import { User, Palette, ShieldCheck, LogOut, Sparkles } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { LanguageSelector } from '@/components/language/language-selector';
 import { UserAvatar } from '@/components/user/user-avatar';
 import { useLocale, t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { useOnboarding } from '@/components/onboarding/use-onboarding';
 
 const stagger = {
   container: { hidden: {}, show: { transition: { staggerChildren: 0.06 } } },
@@ -18,6 +20,8 @@ export default function SettingsPage() {
   const { data: session } = useSession();
   const user = session?.user;
   const [locale] = useLocale();
+  const { reset } = useOnboarding();
+  const router = useRouter();
 
   const SECTIONS = [
     {
@@ -81,6 +85,38 @@ export default function SettingsPage() {
         <div className="px-5 py-4">
           <LanguageSelector />
         </div>
+      </motion.div>
+
+      {/* Onboarding tour */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="rounded-3xl border border-border bg-card overflow-hidden shadow-card"
+      >
+        <div className="px-5 py-4 border-b border-border">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tour guiado</p>
+        </div>
+        <button
+          onClick={() => {
+            reset();
+            router.push('/dashboard');
+          }}
+          className="w-full px-5 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-indigo-500" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-foreground">Rever o tour guiado</p>
+              <p className="text-xs text-muted-foreground">Repita o tour de boas-vindas a qualquer momento</p>
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 px-2.5 py-1 rounded-full">
+            Iniciar
+          </span>
+        </button>
       </motion.div>
 
       {/* Other sections */}
