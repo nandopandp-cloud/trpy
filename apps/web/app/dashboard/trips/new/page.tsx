@@ -60,7 +60,6 @@ export default function NewTripPage({
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 py-6">
-        <div className="md:max-w-lg md:mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -224,7 +223,6 @@ export default function NewTripPage({
             </motion.div>
           )}
         </AnimatePresence>
-        </div>
       </div>
     </div>
   );
