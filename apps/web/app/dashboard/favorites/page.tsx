@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -152,6 +153,7 @@ function FavoriteCard({ favorite, onRemove, onClick }: { favorite: Favorite; onR
 
 export default function FavoritesPage() {
   const [locale] = useLocale();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<FavoriteType | 'ALL'>('ALL');
   const [selectedPlace, setSelectedPlace] = useState<{
     placeId: string;
@@ -196,13 +198,9 @@ export default function FavoritesPage() {
       });
       return;
     }
-    // PLACE — also backed by Google Places; show as ACTIVITY
+    // PLACE — favorited trip, navigate to trip page
     if (fav.type === 'PLACE') {
-      setSelectedPlace({
-        placeId: fav.externalId,
-        favoriteType: 'ACTIVITY',
-        fallbackName: fav.name,
-      });
+      router.push(`/dashboard/trips/${fav.externalId}`);
       return;
     }
     // YouTube video — open embedded player
