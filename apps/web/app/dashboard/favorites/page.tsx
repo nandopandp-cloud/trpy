@@ -114,15 +114,15 @@ function FavoriteCard({ favorite, onRemove, onClick }: { favorite: Favorite; onR
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
-        {/* Remove button */}
+        {/* Remove button — always visible */}
         <motion.button
-          initial={{ opacity: 0 }}
           whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
           }}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10"
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-red-500 transition-colors z-10"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </motion.button>

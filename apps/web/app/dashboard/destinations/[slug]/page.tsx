@@ -390,17 +390,14 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsSaved(!isSaved)}
-              className={cn(
-                'w-10 h-10 rounded-2xl backdrop-blur-md border flex items-center justify-center transition-all',
-                isSaved
-                  ? 'bg-red-500/80 border-red-400/50 text-white'
-                  : 'bg-black/20 border-white/10 text-white hover:bg-black/30'
-              )}
-            >
-              <Heart className={cn('w-4 h-4', isSaved && 'fill-current')} />
-            </button>
+            <FavoriteButton
+              type="PLACE"
+              externalId={params.slug}
+              name={destination}
+              image={coverImage ?? undefined}
+              size="md"
+              className="bg-black/20 backdrop-blur-md border border-white/10"
+            />
             <button className="w-10 h-10 rounded-2xl bg-black/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/30 transition-colors">
               <Share2 className="w-4 h-4" />
             </button>
@@ -449,14 +446,6 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                 Explorar lugares
                 <ChevronRight className="w-4 h-4" data-icon="inline-end" />
               </Button>
-              <FavoriteButton
-                type="PLACE"
-                externalId={params.slug}
-                name={destination}
-                image={coverImage ?? undefined}
-                size="lg"
-                className="bg-black/30 backdrop-blur-sm border border-white/20"
-              />
             </div>
           </motion.div>
         </div>
