@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { PlaceDetailModal } from './place-detail-modal';
-import { PlacesFilter, applyFilters, DEFAULT_FILTERS, type PlacesFilters } from './places-filter';
+import { PlacesFilter, applyFilters, countActiveFilters, DEFAULT_FILTERS, type PlacesFilters } from './places-filter';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
 import { useLocale, t, formatNumber, type Locale } from '@/lib/i18n';
 
@@ -267,16 +267,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
   const currentVisible = visibleCount[activeTab] ?? PAGE_SIZE;
   const visiblePlaces = filteredPlaces.slice(0, currentVisible);
   const hasMore = filteredPlaces.length > currentVisible;
-  const activeFiltersCount = useMemo(() => {
-    let n = 0;
-    if (filters.minRating != null) n++;
-    if (filters.maxRating != null) n++;
-    if (filters.minPrice != null || filters.maxPrice != null) n++;
-    if (filters.openNow != null) n++;
-    if (filters.minReviews != null) n++;
-    if (filters.sort !== 'relevance') n++;
-    return n;
-  }, [filters]);
+  const activeFiltersCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   function handleTabChange(key: typeof activeTab) {
     setActiveTab(key);
