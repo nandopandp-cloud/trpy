@@ -123,7 +123,7 @@ export function ItineraryItemForm({
       startTime: item?.startTime ?? '',
       durationMins: item?.durationMins ? String(item.durationMins) : '',
       cost: item?.cost ? String(Number(item.cost)) : '',
-      currency: 'BRL',
+      currency: (item as any)?.currency ?? 'BRL',
     },
   });
 
