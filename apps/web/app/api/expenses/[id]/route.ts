@@ -4,24 +4,16 @@ import { ExpenseCategory } from '@trpy/database';
 import { prisma } from '@/lib/prisma';
 import { ok, err, handleError } from '@/lib/api';
 import { getCurrentUserId } from '@/lib/auth-utils';
+import { recalcTotalSpent } from '@/lib/recalc-total-spent';
 
 const updateExpenseSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   amount: z.number().positive().optional(),
   category: z.nativeEnum(ExpenseCategory).optional(),
   date: z.string().datetime().optional(),
+  currency: z.string().length(3).optional(),
   notes: z.string().max(500).nullable().optional(),
 });
-
-async function recalcTotalSpent(tripId: string) {
-  await prisma.$queryRawUnsafe(
-    `UPDATE trips SET "totalSpent" = (
-      COALESCE((SELECT SUM(amount) FROM expenses WHERE "tripId" = $1), 0)
-      + COALESCE((SELECT SUM(ii.cost) FROM itinerary_items ii JOIN itinerary_days id ON ii."dayId" = id.id WHERE id."tripId" = $1 AND ii.cost IS NOT NULL), 0)
-    ), "updatedAt" = NOW() WHERE id = $1`,
-    tripId
-  );
-}
 
 // PUT /api/expenses/[id]
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
@@ -45,6 +37,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         ...(data.amount !== undefined && { amount: data.amount }),
         ...(data.category && { category: data.category }),
         ...(data.date && { date: new Date(data.date) }),
+        ...(data.currency && { currency: data.currency }),
         ...(data.notes !== undefined && { notes: data.notes }),
       },
     });

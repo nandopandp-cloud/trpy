@@ -4,6 +4,7 @@ import { ExpenseCategory } from '@trpy/database';
 import { prisma } from '@/lib/prisma';
 import { ok, err, handleError } from '@/lib/api';
 import { getCurrentUserId } from '@/lib/auth-utils';
+import { recalcTotalSpent } from '@/lib/recalc-total-spent';
 
 const createExpenseSchema = z.object({
   title: z.string().min(1).max(200),
@@ -65,26 +66,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const body = await req.json();
     const data = createExpenseSchema.parse(body);
 
-    const [expense] = await prisma.$transaction([
-      prisma.expense.create({
-        data: {
-          tripId: params.id,
-          title: data.title,
-          amount: data.amount,
-          category: data.category,
-          date: new Date(data.date),
-          currency: data.currency,
-          notes: data.notes,
-        },
-      }),
-      prisma.$queryRawUnsafe(
-        `UPDATE trips SET "totalSpent" = (
-          COALESCE((SELECT SUM(amount) FROM expenses WHERE "tripId" = $1), 0)
-          + COALESCE((SELECT SUM(ii.cost) FROM itinerary_items ii JOIN itinerary_days id ON ii."dayId" = id.id WHERE id."tripId" = $1 AND ii.cost IS NOT NULL), 0)
-        ), "updatedAt" = NOW() WHERE id = $1`,
-        params.id
-      ),
-    ]);
+    const expense = await prisma.expense.create({
+      data: {
+        tripId: params.id,
+        title: data.title,
+        amount: data.amount,
+        category: data.category,
+        date: new Date(data.date),
+        currency: data.currency,
+        notes: data.notes,
+      },
+    });
+
+    await recalcTotalSpent(params.id);
 
     return ok(expense, 201);
   } catch (error) {

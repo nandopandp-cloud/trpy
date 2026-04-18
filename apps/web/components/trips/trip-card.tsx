@@ -16,6 +16,18 @@ const STATUS_STYLE: Record<string, string> = {
   CANCELLED: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/20',
 };
 
+type EffectiveStatus = 'PLANNING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
+
+function deriveStatus(trip: Trip): EffectiveStatus {
+  if (trip.status === 'CANCELLED') return 'CANCELLED';
+  const now = new Date();
+  const start = new Date(trip.startDate);
+  const end = new Date(trip.endDate);
+  if (now > end) return 'COMPLETED';
+  if (now >= start && now <= end) return 'ONGOING';
+  return 'PLANNING';
+}
+
 const GRADIENT_FALLBACKS = [
   'from-indigo-600 via-violet-600 to-purple-700',
   'from-sky-600 via-blue-600 to-indigo-700',
@@ -47,6 +59,7 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
   const progress = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
   const daysLeft = differenceInDays(new Date(trip.startDate), new Date());
   const fallback = GRADIENT_FALLBACKS[index % GRADIENT_FALLBACKS.length];
+  const effectiveStatus = deriveStatus(trip);
 
   const progressColor =
     progress >= 90 ? 'from-red-500 to-orange-400' :
@@ -86,12 +99,18 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
           {/* Top badges */}
           <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
             <span className={cn(
-              'text-[11px] font-medium px-2.5 py-1 rounded-full border backdrop-blur-sm',
-              STATUS_STYLE[trip.status]
+              'inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border backdrop-blur-sm',
+              STATUS_STYLE[effectiveStatus]
             )}>
-              {STATUS_LABEL[trip.status]}
+              {effectiveStatus === 'ONGOING' && (
+                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+              )}
+              {STATUS_LABEL[effectiveStatus]}
             </span>
-            {trip.status === 'PLANNING' && daysLeft > 0 && (
+            {effectiveStatus === 'PLANNING' && daysLeft > 0 && (
               <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-black/40 text-white/90 border border-white/15 backdrop-blur-sm">
                 {daysLeft}d
               </span>

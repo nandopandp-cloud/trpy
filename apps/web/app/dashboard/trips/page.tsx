@@ -250,7 +250,14 @@ export default function TripsPage() {
                   <div className="divide-y divide-border">
                     <AnimatePresence mode="popLayout">
                       {restTrips.map((trip, i) => {
-                        const isActive = trip.status === 'ONGOING';
+                        const now = new Date();
+                        const start = new Date(trip.startDate);
+                        const end = new Date(trip.endDate);
+                        const effectiveStatus = trip.status === 'CANCELLED' ? 'CANCELLED'
+                          : now > end ? 'COMPLETED'
+                          : now >= start && now <= end ? 'ONGOING'
+                          : 'PLANNING';
+                        const isActive = effectiveStatus === 'ONGOING';
                         const fallback = GRADIENT_FALLBACKS[i % GRADIENT_FALLBACKS.length];
                         return (
                           <motion.div
@@ -278,17 +285,18 @@ export default function TripsPage() {
                             </div>
                             <span className={cn(
                               'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium shrink-0',
-                              isActive ? 'bg-emerald-500/10 text-emerald-500' :
-                              trip.status === 'PLANNING' ? 'bg-indigo-500/10 text-indigo-400' :
+                              effectiveStatus === 'ONGOING' ? 'bg-emerald-500/10 text-emerald-500' :
+                              effectiveStatus === 'PLANNING' ? 'bg-amber-500/10 text-amber-500' :
+                              effectiveStatus === 'CANCELLED' ? 'bg-red-500/10 text-red-500' :
                               'bg-muted text-muted-foreground'
                             )}>
-                              {isActive && (
+                              {effectiveStatus === 'ONGOING' && (
                                 <span className="relative flex h-1.5 w-1.5 shrink-0">
                                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                                 </span>
                               )}
-                              {STATUS_LABEL[trip.status]}
+                              {STATUS_LABEL[effectiveStatus]}
                             </span>
                             <div className="flex items-center gap-1 shrink-0">
                               <button

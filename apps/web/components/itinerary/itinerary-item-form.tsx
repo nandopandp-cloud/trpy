@@ -143,6 +143,7 @@ export function ItineraryItemForm({
       startTime,
       durationMins: durationMins && durationMins > 0 ? durationMins : undefined,
       cost: cost != null && cost >= 0 ? cost : undefined,
+      currency: values.currency ?? 'BRL',
     };
 
     let res: Response;

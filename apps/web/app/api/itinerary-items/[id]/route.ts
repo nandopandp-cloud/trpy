@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ItemType } from '@trpy/database';
 import { prisma } from '@/lib/prisma';
 import { ok, err, handleError } from '@/lib/api';
+import { recalcTotalSpent } from '@/lib/recalc-total-spent';
 
 const updateSchema = z.object({
   type: z.nativeEnum(ItemType).optional(),
@@ -15,16 +16,6 @@ const updateSchema = z.object({
   currency: z.string().length(3).optional(),
   order: z.number().int().optional(),
 });
-
-async function recalcTotalSpent(tripId: string) {
-  await prisma.$queryRawUnsafe(
-    `UPDATE trips SET "totalSpent" = (
-      COALESCE((SELECT SUM(amount) FROM expenses WHERE "tripId" = $1), 0)
-      + COALESCE((SELECT SUM(ii.cost) FROM itinerary_items ii JOIN itinerary_days id ON ii."dayId" = id.id WHERE id."tripId" = $1 AND ii.cost IS NOT NULL), 0)
-    ), "updatedAt" = NOW() WHERE id = $1`,
-    tripId
-  );
-}
 
 // PUT /api/itinerary-items/[id]
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {

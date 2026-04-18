@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { DestinationShareModal } from '@/components/destinations/destination-share-modal';
 import {
   ArrowLeft, MapPin, Plus, Heart, Share2, Star,
   Globe, Calendar, Coins, Languages, Compass,
@@ -280,28 +280,16 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
   const [placeTab, setPlaceTab] = useState<PlaceTab>('restaurants');
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<{
     placeId: string;
     name: string;
     favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
   } | null>(null);
 
-  const handleShare = useCallback(async () => {
-    const url = `${window.location.origin}/dashboard/destinations/${params.slug}`;
-    const title = destination;
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({ title, url });
-        return;
-      } catch { /* user cancelled or not supported */ }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success('Link copiado!', { description: 'Cole e compartilhe com quem quiser.' });
-    } catch {
-      toast.error('Não foi possível copiar o link.');
-    }
-  }, [destination, params.slug]);
+  const handleShare = useCallback(() => {
+    setShowShareModal(true);
+  }, []);
 
   /* Hero parallax */
   const heroRef = useRef<HTMLDivElement>(null);
@@ -795,6 +783,18 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
           favoriteType={selectedPlace.favoriteType}
           fallbackName={selectedPlace.name}
           onClose={() => setSelectedPlace(null)}
+        />
+      )}
+    </AnimatePresence>
+
+    {/* Share modal */}
+    <AnimatePresence>
+      {showShareModal && (
+        <DestinationShareModal
+          destination={destination}
+          slug={params.slug}
+          coverImage={coverImage}
+          onClose={() => setShowShareModal(false)}
         />
       )}
     </AnimatePresence>
