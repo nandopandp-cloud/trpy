@@ -79,38 +79,53 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
   const StepImage = STEP_IMAGES[step.mobileImageKey];
   const progress = Math.round(((currentIndex + 1) / totalSteps) * 100);
 
-  // Drag motion value — drives both image and text together
+  // Drag x — shared by draggable container + visual content
   const x = useMotionValue(0);
-  const dragOpacity = useTransform(x, [-120, 0, 120], [0.4, 1, 0.4]);
+  const dragOpacity = useTransform(x, [-140, 0, 140], [0.35, 1, 0.35]);
+
+  // Content opacity — fades during step transition (separate from drag)
+  const contentOpacity = useMotionValue(1);
 
   // Hint arrows
   const leftArrowOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
   const rightArrowOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
 
-  // Track swipe direction to feed the entry animation of the next step
   const swipeDir = useRef<'left' | 'right'>('left');
+  const isTransitioning = useRef(false);
+
+  // When step changes (from button click or swipe), fade content out then in
+  // The container/card itself NEVER moves — only content opacity transitions
+  useEffect(() => {
+    if (isTransitioning.current) return;
+    // Already handled by swipe animation path; this covers button-click navigation
+    animate(contentOpacity, 0, { duration: 0.12 }).then(() => {
+      animate(contentOpacity, 1, { duration: 0.2, ease: [0.16, 1, 0.3, 1] });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step.id]);
 
   function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
     const dx = info.offset.x;
     if (dx < -SWIPE_THRESHOLD) {
       swipeDir.current = 'left';
-      animate(x, -window.innerWidth, { duration: 0.2, ease: [0.4, 0, 1, 1] }).then(() => {
+      isTransitioning.current = true;
+      animate(x, -window.innerWidth, { duration: 0.18, ease: [0.4, 0, 1, 1] }).then(() => {
         x.set(0);
+        isTransitioning.current = false;
         onNext();
       });
     } else if (dx > SWIPE_THRESHOLD && currentIndex > 0) {
       swipeDir.current = 'right';
-      animate(x, window.innerWidth, { duration: 0.2, ease: [0.4, 0, 1, 1] }).then(() => {
+      isTransitioning.current = true;
+      animate(x, window.innerWidth, { duration: 0.18, ease: [0.4, 0, 1, 1] }).then(() => {
         x.set(0);
+        isTransitioning.current = false;
         onPrevious();
       });
     } else {
       animate(x, 0, { type: 'spring', stiffness: 500, damping: 36 });
     }
   }
-
-  // Entry offset: new content slides in from the correct side
-  const entryX = swipeDir.current === 'left' ? 40 : -40;
 
   return (
     <motion.div
@@ -143,7 +158,7 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
         </div>
       </div>
 
-      {/* ── Content area — drag here, image + text move together ── */}
+      {/* ── Content area ── */}
       <div className="flex-1 overflow-hidden relative">
         {/* Hint arrows */}
         <motion.div style={{ opacity: rightArrowOpacity }}
@@ -156,39 +171,42 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
         </motion.div>
 
         {/*
-          Single draggable block: image + icon + title + description.
-          - While dragging: follows finger via `x`, fades via `dragOpacity`
-          - On step change: cross-fade from entryX → 0, no y movement at all
+          NO key prop — this element NEVER remounts.
+          x drives drag movement + opacity fade.
+          contentOpacity drives step-change cross-fade independently.
+          Both are motion values, no React re-render involved.
         */}
         <motion.div
-          key={step.id}
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.25}
+          dragElastic={0.22}
           dragMomentum={false}
           onDragEnd={handleDragEnd}
           style={{ x, opacity: dragOpacity }}
-          initial={{ opacity: 0, x: entryX }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute inset-0 px-5 pt-4 flex flex-col cursor-grab active:cursor-grabbing select-none"
+          className="absolute inset-0 cursor-grab active:cursor-grabbing"
         >
-          {/* Illustration */}
-          <div
-            className="w-full rounded-2xl overflow-hidden border border-border/40 mb-4 shrink-0"
-            style={{ aspectRatio: '2 / 1' }}
+          {/* Inner content — fades on step change, no position change */}
+          <motion.div
+            style={{ opacity: contentOpacity }}
+            className="h-full px-5 pt-4 flex flex-col select-none"
           >
-            <StepImage />
-          </div>
-
-          {/* Icon + title + description */}
-          <div className="flex items-center gap-3 mb-2.5">
-            <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
-              <Icon className="w-5 h-5 text-indigo-500" />
+            {/* Illustration */}
+            <div
+              className="w-full rounded-2xl overflow-hidden border border-border/40 mb-4 shrink-0"
+              style={{ aspectRatio: '2 / 1' }}
+            >
+              <StepImage />
             </div>
-            <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+
+            {/* Icon + title + description */}
+            <div className="flex items-center gap-3 mb-2.5">
+              <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+                <Icon className="w-5 h-5 text-indigo-500" />
+              </div>
+              <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+          </motion.div>
         </motion.div>
       </div>
 
