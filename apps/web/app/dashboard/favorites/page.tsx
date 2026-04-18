@@ -198,8 +198,10 @@ export default function FavoritesPage() {
       });
       return;
     }
-    // PLACE — if it has a googlePlaceId (or externalId looks like a Google Place ID), open modal
-    // Otherwise it's a favorited trip, navigate to the trip page
+    // PLACE — three sub-cases:
+    // 1. Has a Google Place ID (ChIJ...) → open Google Places modal
+    // 2. Looks like a destination slug (short, no hyphens typical of UUIDs) → navigate to destination page
+    // 3. Otherwise it's a favorited trip UUID → navigate to trip page
     if (fav.type === 'PLACE') {
       const googleId = fav.googlePlaceId || (fav.externalId.startsWith('ChIJ') ? fav.externalId : null);
       if (googleId) {
@@ -208,7 +210,11 @@ export default function FavoritesPage() {
           favoriteType: 'PLACE',
           fallbackName: fav.name,
         });
+      } else if (!fav.externalId.includes('-') || fav.externalId.length < 30) {
+        // Destination slug (e.g. "bali", "paris", "new-york")
+        router.push(`/dashboard/destinations/${encodeURIComponent(fav.externalId)}`);
       } else {
+        // Trip UUID
         router.push(`/dashboard/trips/${fav.externalId}`);
       }
       return;

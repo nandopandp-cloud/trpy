@@ -449,6 +449,14 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                 Explorar lugares
                 <ChevronRight className="w-4 h-4" data-icon="inline-end" />
               </Button>
+              <FavoriteButton
+                type="PLACE"
+                externalId={params.slug}
+                name={destination}
+                image={coverImage ?? undefined}
+                size="lg"
+                className="bg-black/30 backdrop-blur-sm border border-white/20"
+              />
             </div>
           </motion.div>
         </div>
