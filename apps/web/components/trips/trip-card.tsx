@@ -8,25 +8,7 @@ import { MapPin, Calendar, ArrowRight, Wallet } from 'lucide-react';
 import type { Trip } from '@trpy/database';
 import { cn } from '@/lib/utils';
 import { useLocale, t, formatNumber } from '@/lib/i18n';
-
-const STATUS_STYLE: Record<string, string> = {
-  PLANNING: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/20',
-  ONGOING: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/20',
-  COMPLETED: 'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-500/15 dark:text-zinc-400 dark:border-zinc-500/20',
-  CANCELLED: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/20',
-};
-
-type EffectiveStatus = 'PLANNING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
-
-function deriveStatus(trip: Trip): EffectiveStatus {
-  if (trip.status === 'CANCELLED') return 'CANCELLED';
-  const now = new Date();
-  const start = new Date(trip.startDate);
-  const end = new Date(trip.endDate);
-  if (now > end) return 'COMPLETED';
-  if (now >= start && now <= end) return 'ONGOING';
-  return 'PLANNING';
-}
+import { deriveStatus, STATUS_LABEL, STATUS_BADGE_DARK } from '@/lib/trip-status';
 
 const GRADIENT_FALLBACKS = [
   'from-indigo-600 via-violet-600 to-purple-700',
@@ -46,13 +28,6 @@ interface TripCardProps {
 
 export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCardProps) {
   const [locale] = useLocale();
-
-  const STATUS_LABEL: Record<string, string> = {
-    PLANNING: t(locale, 'status.planning'),
-    ONGOING: t(locale, 'status.ongoing'),
-    COMPLETED: t(locale, 'status.completed'),
-    CANCELLED: t(locale, 'status.cancelled'),
-  };
 
   const spent = Number(trip.totalSpent);
   const budget = Number(trip.budget);
@@ -99,13 +74,13 @@ export function TripCard({ trip, onClick, onEdit, onDelete, index = 0 }: TripCar
           {/* Top badges */}
           <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
             <span className={cn(
-              'inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border backdrop-blur-sm',
-              STATUS_STYLE[effectiveStatus]
+              'inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border',
+              STATUS_BADGE_DARK[effectiveStatus]
             )}>
               {effectiveStatus === 'ONGOING' && (
                 <span className="relative flex h-1.5 w-1.5 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/70 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
                 </span>
               )}
               {STATUS_LABEL[effectiveStatus]}

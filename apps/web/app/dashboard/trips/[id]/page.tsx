@@ -47,21 +47,11 @@ const PlacesRecommendations = dynamic(() => import('@/components/integrations/go
 });
 import { cn } from '@/lib/utils';
 import { useLocale, t } from '@/lib/i18n';
+import { deriveStatus, STATUS_LABEL, STATUS_BADGE_DARK } from '@/lib/trip-status';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import type { ItineraryItem } from '@trpy/database';
 
 // ─── constants ────────────────────────────────────────────────────────────────
-
-const STATUS_STYLE: Record<string, string> = {
-  PLANNING:  'bg-sky-500/25 text-sky-300 border border-sky-500/40',
-  ONGOING:   'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40',
-  COMPLETED: 'bg-slate-500/25 text-slate-300 border border-slate-500/40',
-  CANCELLED: 'bg-red-500/25 text-red-300 border border-red-500/40',
-};
-const STATUS_LABEL_KEY: Record<string, string> = {
-  PLANNING: 'status.planning', ONGOING: 'status.ongoing',
-  COMPLETED: 'status.completed', CANCELLED: 'status.cancelled',
-};
 
 const PRESET_GRADIENTS = [
   { id: 'emerald',  class: 'from-emerald-600 via-teal-600 to-cyan-700',     labelKey: 'gradient.tropical' },
@@ -749,8 +739,17 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
         {/* Hero content */}
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 md:px-6 md:pb-6">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <span className={cn('inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full mb-2', STATUS_STYLE[trip.status])}>
-              {t(locale, (STATUS_LABEL_KEY[trip.status] ?? 'status.planning') as any)}
+            <span className={cn(
+              'inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border mb-2',
+              STATUS_BADGE_DARK[deriveStatus(trip)]
+            )}>
+              {deriveStatus(trip) === 'ONGOING' && (
+                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/70 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
+                </span>
+              )}
+              {STATUS_LABEL[deriveStatus(trip)]}
             </span>
             <h1 className="text-2xl md:text-3xl font-black text-white leading-tight drop-shadow-md">
               {trip.title}

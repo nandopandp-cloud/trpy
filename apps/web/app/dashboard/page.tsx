@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { useLocale, formatNumber } from '@/lib/i18n';
+import { deriveStatus, STATUS_LABEL, STATUS_BADGE_LIGHT } from '@/lib/trip-status';
 
 /* ── Animated Counter ─────────────────────────────────── */
 
@@ -206,16 +207,6 @@ const CATEGORIES = [
   { label: 'Família', emoji: '👨‍👩‍👧', gradient: 'from-pink-400 to-fuchsia-600', desc: 'Para toda família', query: 'family vacation fun travel' },
 ];
 
-const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string }> = {
-  PLANNING: { bg: 'bg-indigo-500/10', text: 'text-indigo-500', dot: 'bg-indigo-500' },
-  ONGOING: { bg: 'bg-emerald-500/10', text: 'text-emerald-500', dot: 'bg-emerald-500' },
-  COMPLETED: { bg: 'bg-zinc-500/10', text: 'text-zinc-500', dot: 'bg-zinc-500' },
-  CANCELLED: { bg: 'bg-red-500/10', text: 'text-red-500', dot: 'bg-red-500' },
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  PLANNING: 'Planejando', ONGOING: 'Em andamento', COMPLETED: 'Concluída', CANCELLED: 'Cancelada',
-};
 
 const GRADIENT_FALLBACKS = [
   'from-indigo-600 via-violet-600 to-purple-700',
@@ -709,9 +700,9 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-3">
             {trips.map((trip, i) => {
-              const style = STATUS_STYLE[trip.status] ?? STATUS_STYLE.PLANNING;
+              const effectiveStatus = deriveStatus(trip);
+              const isActive = effectiveStatus === 'ONGOING';
               const fallback = GRADIENT_FALLBACKS[i % GRADIENT_FALLBACKS.length];
-              const isActive = trip.status === 'ONGOING';
 
               return (
                 <motion.div
@@ -751,10 +742,16 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-semibold text-foreground tracking-tight truncate">{trip.title}</h4>
                       <span className={cn(
-                        'hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shrink-0',
-                        style.bg, style.text
+                        'hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border shrink-0',
+                        STATUS_BADGE_LIGHT[effectiveStatus]
                       )}>
-                        {STATUS_LABEL[trip.status]}
+                        {isActive && (
+                          <span className="relative flex h-1.5 w-1.5 shrink-0">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                          </span>
+                        )}
+                        {STATUS_LABEL[effectiveStatus]}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">

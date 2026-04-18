@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useLocale, t, type Locale } from '@/lib/i18n';
 import { useConfirm } from '@/components/ui/confirm-dialog';
+import { deriveStatus, STATUS_LABEL, STATUS_BADGE_LIGHT } from '@/lib/trip-status';
 
 const GRADIENT_FALLBACKS = [
   'from-indigo-600 via-violet-600 to-purple-700',
@@ -39,13 +40,6 @@ export default function TripsPage() {
     { label: t(locale, 'trips.filter.ongoing'), value: 'ONGOING' },
     { label: t(locale, 'trips.filter.completed'), value: 'COMPLETED' },
   ];
-
-  const STATUS_LABEL: Record<string, string> = {
-    PLANNING: t(locale, 'status.planning'),
-    ONGOING: t(locale, 'status.ongoing'),
-    COMPLETED: t(locale, 'status.completed'),
-    CANCELLED: t(locale, 'status.cancelled'),
-  };
 
   const { data, isLoading, isError } = useTrips({
     status: activeFilter !== 'ALL' ? (activeFilter as TripStatus) : undefined,
@@ -250,13 +244,7 @@ export default function TripsPage() {
                   <div className="divide-y divide-border">
                     <AnimatePresence mode="popLayout">
                       {restTrips.map((trip, i) => {
-                        const now = new Date();
-                        const start = new Date(trip.startDate);
-                        const end = new Date(trip.endDate);
-                        const effectiveStatus = trip.status === 'CANCELLED' ? 'CANCELLED'
-                          : now > end ? 'COMPLETED'
-                          : now >= start && now <= end ? 'ONGOING'
-                          : 'PLANNING';
+                        const effectiveStatus = deriveStatus(trip);
                         const isActive = effectiveStatus === 'ONGOING';
                         const fallback = GRADIENT_FALLBACKS[i % GRADIENT_FALLBACKS.length];
                         return (
@@ -284,13 +272,10 @@ export default function TripsPage() {
                               </p>
                             </div>
                             <span className={cn(
-                              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium shrink-0',
-                              effectiveStatus === 'ONGOING' ? 'bg-emerald-500/10 text-emerald-500' :
-                              effectiveStatus === 'PLANNING' ? 'bg-amber-500/10 text-amber-500' :
-                              effectiveStatus === 'CANCELLED' ? 'bg-red-500/10 text-red-500' :
-                              'bg-muted text-muted-foreground'
+                              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border shrink-0',
+                              STATUS_BADGE_LIGHT[effectiveStatus]
                             )}>
-                              {effectiveStatus === 'ONGOING' && (
+                              {isActive && (
                                 <span className="relative flex h-1.5 w-1.5 shrink-0">
                                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />

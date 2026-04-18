@@ -8,13 +8,7 @@ import { MapPin, Calendar, ArrowRight, Wallet } from 'lucide-react';
 import type { Trip } from '@trpy/database';
 import { cn } from '@/lib/utils';
 import { useLocale, formatNumber } from '@/lib/i18n';
-
-const STATUS_LABEL: Record<string, string> = {
-  PLANNING: 'Planejando',
-  ONGOING: 'Em andamento',
-  COMPLETED: 'Concluída',
-  CANCELLED: 'Cancelada',
-};
+import { deriveStatus, STATUS_LABEL, STATUS_BADGE_DARK } from '@/lib/trip-status';
 
 const GRADIENT_FALLBACKS = [
   'from-emerald-700 via-teal-700 to-cyan-800',
@@ -35,6 +29,7 @@ export function HeroCard({ trip, onClick, className }: HeroCardProps) {
   const spent = Number(trip.totalSpent);
   const progress = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
   const gradient = GRADIENT_FALLBACKS[trip.id.charCodeAt(0) % GRADIENT_FALLBACKS.length];
+  const effectiveStatus = deriveStatus(trip);
 
   return (
     <motion.div
@@ -61,8 +56,17 @@ export function HeroCard({ trip, onClick, className }: HeroCardProps) {
 
         {/* Status badge */}
         <div className="absolute top-4 left-4">
-          <span className="text-xs font-semibold text-white/90 bg-black/30 backdrop-blur-sm border border-white/15 px-3 py-1 rounded-full">
-            {STATUS_LABEL[trip.status]}
+          <span className={cn(
+            'inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border',
+            STATUS_BADGE_DARK[effectiveStatus]
+          )}>
+            {effectiveStatus === 'ONGOING' && (
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/70 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
+              </span>
+            )}
+            {STATUS_LABEL[effectiveStatus]}
           </span>
         </div>
 
