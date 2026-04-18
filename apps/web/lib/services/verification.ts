@@ -270,7 +270,7 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 
 <tr>
 <td>
-  <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470" width="100%" style="display:block; height:320px; object-fit:cover;"/>
+  <img src="https://trpy.vercel.app/email/photo-cover.jpg" width="100%" style="display:block; height:320px; object-fit:cover;"/>
 </td>
 </tr>
 
@@ -299,18 +299,18 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 <table width="100%" cellspacing="0" cellpadding="0">
 <tr>
 <td width="50%" style="padding:4px;">
-<img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
+<img src="https://trpy.vercel.app/email/photo-block-1.jpg" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
 </td>
 <td width="50%" style="padding:4px;">
-<img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MjExNzZ8MHwxfHNlYXJjaHwxfHxOb3ZhJTIwWW9ya3xlbnwxfDB8fHwxNzc2Mjk3OTgxfDA&ixlib=rb-4.1.0&q=80&w=1080" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
+<img src="https://trpy.vercel.app/email/photo-block-2.jpg" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
 </td>
 </tr>
 <tr>
 <td width="50%" style="padding:4px;">
-<img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
+<img src="https://trpy.vercel.app/email/photo-block-3.jpg" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
 </td>
 <td width="50%" style="padding:4px;">
-<img src="https://images.unsplash.com/photo-1560703650-ef3e0f254ae0?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
+<img src="https://trpy.vercel.app/email/photo-block-4.jpg" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
 </td>
 </tr>
 </table>
@@ -341,7 +341,7 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 <tr>
 <td style="padding:0 32px 40px;">
 <div style="border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
-  <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a" width="100%" style="height:200px; object-fit:cover; display:block;"/>
+  <img src="https://trpy.vercel.app/email/photo-footer.jpg" width="100%" style="height:200px; object-fit:cover; display:block;"/>
   <div style="padding:20px; background:#0F0F18;">
     <strong style="color:#fff;">Paris, França 🇫🇷</strong>
     <p style="margin:6px 0 0; color:#9CA3AF; font-size:14px;">Um destino perfeito para começar sua jornada.</p>
