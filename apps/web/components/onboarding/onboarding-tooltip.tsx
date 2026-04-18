@@ -111,8 +111,7 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed bottom-0 left-0 right-0 z-10 bg-card border-t border-border rounded-t-3xl shadow-2xl flex flex-col"
-      style={{ height: '90dvh' }}
+      className="fixed inset-0 z-10 bg-card flex flex-col"
     >
       {/* ── Static header — never moves ── */}
       <div className="px-5 pt-4 pb-0 shrink-0">
@@ -144,53 +143,63 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
       </div>
 
       {/* ── Swipeable content area ── */}
-      <div className="flex-1 overflow-hidden relative px-1">
-        {/* Drag hint arrows */}
+      {/* The drag zone is invisible — only image and text move visually */}
+      <div className="flex-1 overflow-hidden relative">
+        {/* Drag hint arrows — appear on the sides while dragging */}
         <motion.div
           style={{ opacity: rightArrowOpacity }}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20"
+          className="absolute left-4 top-[40%] -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20"
         >
           <ChevronLeft className="w-4 h-4 text-indigo-400" />
         </motion.div>
         <motion.div
           style={{ opacity: leftArrowOpacity }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20"
+          className="absolute right-4 top-[40%] -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20"
         >
           <ChevronRight className="w-4 h-4 text-indigo-400" />
         </motion.div>
 
+        {/* Transparent drag capture layer — full area, no visual */}
         <motion.div
-          key={step.id}
           drag="x"
-          dragConstraints={{ left: -160, right: 160 }}
-          dragElastic={0.12}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.3}
+          dragMomentum={false}
           onDragEnd={handleDragEnd}
-          style={{ x, opacity: contentOpacity, scale: contentScale }}
-          className="h-full px-4 pt-4 cursor-grab active:cursor-grabbing select-none"
-        >
-          {/* Step illustration */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`img-${step.mobileImageKey}`}
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -24 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full rounded-2xl overflow-hidden border border-border/40 mb-4"
-              style={{ aspectRatio: '2 / 1' }}
-            >
-              <StepImage />
-            </motion.div>
-          </AnimatePresence>
+          style={{ x }}
+          className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
+        />
 
-          {/* Icon + title */}
+        {/* Visual content — image and text, transformed by x */}
+        <div className="h-full px-5 pt-4 flex flex-col pointer-events-none">
+          {/* Step illustration */}
+          <motion.div
+            style={{ aspectRatio: '2 / 1', x, opacity: contentOpacity }}
+            className="w-full rounded-2xl overflow-hidden border border-border/40 mb-4 shrink-0"
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`img-${step.mobileImageKey}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="w-full h-full"
+              >
+                <StepImage />
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
+
+          {/* Icon + title + description */}
           <AnimatePresence mode="wait">
             <motion.div
               key={`content-${step.id}`}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, delay: 0.05 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col"
             >
               <div className="flex items-center gap-3 mb-2.5">
                 <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
@@ -201,7 +210,7 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
               <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
             </motion.div>
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
 
       {/* ── Static footer — never moves ── */}
