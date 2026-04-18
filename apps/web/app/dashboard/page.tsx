@@ -254,7 +254,7 @@ export default function DashboardPage() {
   const tripPhoto = nextTrip?.coverImage ?? tripPhotoFromEngine;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-6">
 
       {/* ═══════════════════════════════════════════════════ */}
       {/* STORIES — always visible                           */}
