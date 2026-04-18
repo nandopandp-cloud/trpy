@@ -30,7 +30,7 @@ interface TrpyReview {
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
-type FavoriteType = 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
+type FavoriteType = 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' | 'PLACE';
 
 interface PlaceDetailModalProps {
   placeId: string;

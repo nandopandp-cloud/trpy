@@ -157,7 +157,7 @@ export default function FavoritesPage() {
   const [activeTab, setActiveTab] = useState<FavoriteType | 'ALL'>('ALL');
   const [selectedPlace, setSelectedPlace] = useState<{
     placeId: string;
-    favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
+    favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' | 'PLACE';
     fallbackName: string;
   } | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<Favorite | null>(null);
@@ -198,9 +198,19 @@ export default function FavoritesPage() {
       });
       return;
     }
-    // PLACE — favorited trip, navigate to trip page
+    // PLACE — if it has a googlePlaceId (or externalId looks like a Google Place ID), open modal
+    // Otherwise it's a favorited trip, navigate to the trip page
     if (fav.type === 'PLACE') {
-      router.push(`/dashboard/trips/${fav.externalId}`);
+      const googleId = fav.googlePlaceId || (fav.externalId.startsWith('ChIJ') ? fav.externalId : null);
+      if (googleId) {
+        setSelectedPlace({
+          placeId: googleId,
+          favoriteType: 'PLACE',
+          fallbackName: fav.name,
+        });
+      } else {
+        router.push(`/dashboard/trips/${fav.externalId}`);
+      }
       return;
     }
     // YouTube video — open embedded player
