@@ -91,16 +91,12 @@ export const authOptions: NextAuthOptions = {
   },
 
   events: {
+    // Fires once when a new user record is created — only OAuth providers reach here
+    // because credentials users are created manually in /api/auth/signup.
+    // Welcome email for credentials users is sent in /api/auth/verify after OTP confirmation.
     async createUser({ user }) {
-      if (!user.email) return;
-      // Only send welcome for Google/OAuth users — they arrive with emailVerified set.
-      // Credentials users go through OTP verify first; welcome is sent there instead.
-      const dbUser = await prisma.user.findUnique({
-        where: { email: user.email },
-        select: { emailVerified: true, name: true },
-      });
-      if (dbUser?.emailVerified) {
-        sendWelcomeEmail(user.email, dbUser.name ?? undefined).catch((e) =>
+      if (user.email) {
+        sendWelcomeEmail(user.email, user.name ?? undefined).catch((e) =>
           console.error('[auth] welcome email failed:', e),
         );
       }
