@@ -294,6 +294,29 @@ export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPr
     desktopStyle = { position: 'fixed', top: pos.top, left: pos.left, width: TOOLTIP_W };
   }
 
+  // ── MOBILE: render outside AnimatePresence — no remount ever ──
+  if (isMobile) {
+    return (
+      <div
+        className="fixed inset-0 z-[9999]"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Passo ${currentIndex + 1} de ${totalSteps}: ${step.title}`}
+      >
+        <MobileBottomSheet
+          isMobile={true}
+          step={step}
+          currentIndex={currentIndex}
+          totalSteps={totalSteps}
+          onNext={onNext}
+          onPrevious={onPrevious}
+          onSkip={onSkip}
+        />
+      </div>
+    );
+  }
+
+  // ── DESKTOP: AnimatePresence + key is fine — full card remounts on step change ──
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -328,89 +351,72 @@ export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPr
           />
         )}
 
-        {/* ── DESKTOP: thin progress bar on top ── */}
-        {!isMobile && (
-          <div className="fixed top-0 left-0 right-0 h-0.5 bg-white/10 z-10">
-            <motion.div
-              className="h-full bg-indigo-500"
-              initial={{ width: `${(currentIndex / totalSteps) * 100}%` }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.4 }}
-            />
-          </div>
-        )}
-
-        {/* ── DESKTOP tooltip card ── */}
-        {!isMobile && (
+        {/* Thin progress bar on top */}
+        <div className="fixed top-0 left-0 right-0 h-0.5 bg-white/10 z-10">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            style={desktopStyle}
-            className="bg-card border border-border rounded-2xl p-5 shadow-2xl z-10"
-          >
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-indigo-500" />
-                </div>
-                <h3 className="text-sm font-semibold text-foreground leading-tight">{step.title}</h3>
+            className="h-full bg-indigo-500"
+            initial={{ width: `${(currentIndex / totalSteps) * 100}%` }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.4 }}
+          />
+        </div>
+
+        {/* Desktop tooltip card */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          style={desktopStyle}
+          className="bg-card border border-border rounded-2xl p-5 shadow-2xl z-10"
+        >
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+                <Icon className="w-5 h-5 text-indigo-500" />
               </div>
+              <h3 className="text-sm font-semibold text-foreground leading-tight">{step.title}</h3>
+            </div>
+            <button
+              onClick={onSkip}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+              aria-label="Fechar tour"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <p className="text-xs text-muted-foreground leading-relaxed mb-4">{step.description}</p>
+
+          <div className="flex items-center justify-between">
+            <div className="flex gap-1">
+              {Array.from({ length: totalSteps }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === currentIndex ? 'w-4 h-1.5 bg-indigo-500' : 'w-1.5 h-1.5 bg-border'
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              {currentIndex > 0 && (
+                <button
+                  onClick={onPrevious}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Passo anterior"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              )}
               <button
-                onClick={onSkip}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-                aria-label="Fechar tour"
+                onClick={onNext}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold hover:opacity-90 active:scale-95 transition-all"
               >
-                <X className="w-3.5 h-3.5" />
+                {currentIndex < totalSteps - 1 ? <>Próximo <ChevronRight className="w-3.5 h-3.5" /></> : 'Concluir 🎉'}
               </button>
             </div>
-
-            <p className="text-xs text-muted-foreground leading-relaxed mb-4">{step.description}</p>
-
-            <div className="flex items-center justify-between">
-              <div className="flex gap-1">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <span
-                    key={i}
-                    className={`rounded-full transition-all duration-300 ${
-                      i === currentIndex ? 'w-4 h-1.5 bg-indigo-500' : 'w-1.5 h-1.5 bg-border'
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                {currentIndex > 0 && (
-                  <button
-                    onClick={onPrevious}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    aria-label="Passo anterior"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                )}
-                <button
-                  onClick={onNext}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold hover:opacity-90 active:scale-95 transition-all"
-                >
-                  {currentIndex < totalSteps - 1 ? <>Próximo <ChevronRight className="w-3.5 h-3.5" /></> : 'Concluir 🎉'}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── MOBILE: swipeable bottom sheet ── */}
-        {isMobile && (
-          <MobileBottomSheet
-            isMobile={true}
-            step={step}
-            currentIndex={currentIndex}
-            totalSteps={totalSteps}
-            onNext={onNext}
-            onPrevious={onPrevious}
-            onSkip={onSkip}
-          />
-        )}
+          </div>
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   );
