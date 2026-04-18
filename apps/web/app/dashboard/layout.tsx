@@ -1,6 +1,7 @@
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { OnboardingTour } from '@/components/onboarding/onboarding-tour';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
       {/* Mobile bottom nav */}
       <BottomNav />
+      {/* Onboarding tour — portal rendered above everything */}
+      <OnboardingTour />
     </div>
   );
 }

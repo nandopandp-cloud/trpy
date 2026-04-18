@@ -12,10 +12,10 @@ export function BottomNav() {
   const [locale] = useLocale();
 
   const NAV = [
-    { href: '/dashboard', label: t(locale, 'nav.inicio'), icon: Home, exact: true },
-    { href: '/dashboard/trips', label: t(locale, 'nav.viagens'), icon: PlaneTakeoff },
-    { href: '/dashboard/budget', label: t(locale, 'nav.financas'), icon: Wallet },
-    { href: '/dashboard/favorites', label: t(locale, 'nav.favoritos'), icon: Heart },
+    { href: '/dashboard', label: t(locale, 'nav.inicio'), icon: Home, exact: true, id: undefined },
+    { href: '/dashboard/trips', label: t(locale, 'nav.viagens'), icon: PlaneTakeoff, id: 'onboarding-nav-trips' },
+    { href: '/dashboard/budget', label: t(locale, 'nav.financas'), icon: Wallet, id: 'onboarding-nav-budget' },
+    { href: '/dashboard/favorites', label: t(locale, 'nav.favoritos'), icon: Heart, id: 'onboarding-nav-favorites' },
   ];
 
   function isActive(href: string, exact = false) {
@@ -32,6 +32,7 @@ export function BottomNav() {
             return (
               <Link key={item.href} href={item.href} className="flex-1">
                 <motion.div
+                  id={item.id}
                   whileTap={{ scale: 0.88 }}
                   className="flex flex-col items-center gap-1 py-1.5 px-2 rounded-2xl relative"
                 >

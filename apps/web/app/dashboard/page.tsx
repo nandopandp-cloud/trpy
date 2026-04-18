@@ -358,6 +358,7 @@ export default function DashboardPage() {
             <div className="group relative">
               <div className="absolute -inset-2 rounded-full bg-primary/15 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
               <button
+                id="onboarding-new-trip"
                 onClick={() => router.push('/dashboard/trips/new')}
                 className="group relative z-10 flex items-center overflow-hidden rounded-full p-[1.5px] bg-gradient-to-r from-primary/60 to-primary/40"
               >

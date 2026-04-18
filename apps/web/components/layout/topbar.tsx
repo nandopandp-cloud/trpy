@@ -261,7 +261,7 @@ export function Topbar() {
         </div>
 
         {/* Mobile bottom sheet (hidden on desktop) */}
-        <div className="md:hidden">
+        <div id="onboarding-nav-settings" className="md:hidden">
           <MobileUserMenu user={user} />
         </div>
       </div>
