@@ -109,7 +109,7 @@ export default function DestinationsPage() {
   );
 
   return (
-    <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-6">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -12 }}

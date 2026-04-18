@@ -99,7 +99,7 @@ export default function BudgetPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}

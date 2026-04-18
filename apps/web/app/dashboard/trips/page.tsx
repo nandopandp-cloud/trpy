@@ -82,7 +82,7 @@ export default function TripsPage() {
   const restTrips = trips.filter(tr => tr.id !== featuredTrip?.id || search !== '' || activeFilter !== 'ALL');
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-6">
 
       {/* ── Header ──────────────────────────────────────── */}
       <motion.div

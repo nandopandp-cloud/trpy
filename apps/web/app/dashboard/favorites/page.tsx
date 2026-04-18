@@ -234,7 +234,7 @@ export default function FavoritesPage() {
 
   return (
     <>
-      <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
       {/* Header */}
       <div className="space-y-1">
         <h1 className="text-2xl font-medium text-foreground tracking-tight">{t(locale, 'favorites.title' as any)}</h1>

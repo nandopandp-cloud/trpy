@@ -466,7 +466,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
               : 'bg-background border-border/50'
           )}
         >
-          <div className="max-w-2xl mx-auto px-4 md:px-6">
+          <div className="max-w-4xl mx-auto px-4 md:px-6">
             <div className="flex gap-1 overflow-x-auto hide-scrollbar py-2">
               {NAV_TABS.map(tab => {
                 const Icon = tab.icon;
@@ -502,7 +502,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
       {/* ═══════════════════════════════════════════════ */}
       {/* CONTENT                                        */}
       {/* ═══════════════════════════════════════════════ */}
-      <div className="max-w-2xl mx-auto px-4 md:px-6 mt-6">
+      <div className="max-w-4xl mx-auto px-4 md:px-6 mt-6">
         <AnimatePresence mode="wait">
 
           {/* ── OVERVIEW ────────────────────────────── */}

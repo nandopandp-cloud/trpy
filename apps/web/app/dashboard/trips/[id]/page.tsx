@@ -407,7 +407,7 @@ function StickyTabs({
       ref={ref}
       className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border"
     >
-      <div className="max-w-2xl mx-auto px-0">
+      <div className="max-w-4xl mx-auto px-0">
         <div className="flex overflow-x-auto scrollbar-hide">
           {availableTabs.map((tab) => {
             const isActive = active === tab.id;
@@ -617,7 +617,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <DashboardSkeleton />
         </div>
       </div>
@@ -785,7 +785,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
       />
 
       {/* ── BODY ──────────────────────────────────────────────────────────── */}
-      <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 space-y-6">
 
         {/* Budget strip — always visible */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
