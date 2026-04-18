@@ -68,6 +68,9 @@ function calcTooltipPos(rect: Rect, position: OnboardingStep['position']) {
 }
 
 // ── Mobile swipeable bottom sheet ──────────────────────────────────────────────
+// Strategy: the sheet itself slides up once and stays fixed.
+// Only the inner step content (image + icon + title + description) swipes.
+// Progress bar, counter, close, dots and buttons are always visible.
 
 type MobileCardProps = Props & { isMobile: true };
 
@@ -76,81 +79,53 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
   const StepImage = STEP_IMAGES[step.mobileImageKey];
   const progress = Math.round(((currentIndex + 1) / totalSteps) * 100);
 
-  // Motion values for drag feedback
+  // Per-step swipe state — only the content block drags
   const x = useMotionValue(0);
-  const cardOpacity = useTransform(x, [-120, 0, 120], [0.4, 1, 0.4]);
-  const cardRotate = useTransform(x, [-120, 0, 120], [-4, 0, 4]);
-  const cardScale = useTransform(x, [-120, 0, 120], [0.96, 1, 0.96]);
+  const contentOpacity = useTransform(x, [-100, 0, 100], [0.5, 1, 0.5]);
+  const contentScale = useTransform(x, [-100, 0, 100], [0.97, 1, 0.97]);
 
-  // Direction hint arrows that appear while dragging
-  const leftHintOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
-  const rightHintOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
-
-  const isDragging = useRef(false);
+  // Hint arrows while dragging
+  const leftArrowOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
+  const rightArrowOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
 
   function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
-    isDragging.current = false;
-    const vx = info.offset.x;
-    if (vx < -SWIPE_THRESHOLD) {
-      // Snap out to the left then call onNext
-      animate(x, -window.innerWidth, { duration: 0.22, ease: [0.4, 0, 1, 1] }).then(() => {
+    const dx = info.offset.x;
+    if (dx < -SWIPE_THRESHOLD) {
+      animate(x, -window.innerWidth * 0.7, { duration: 0.18, ease: [0.4, 0, 1, 1] }).then(() => {
+        x.set(0);
         onNext();
       });
-    } else if (vx > SWIPE_THRESHOLD && currentIndex > 0) {
-      animate(x, window.innerWidth, { duration: 0.22, ease: [0.4, 0, 1, 1] }).then(() => {
+    } else if (dx > SWIPE_THRESHOLD && currentIndex > 0) {
+      animate(x, window.innerWidth * 0.7, { duration: 0.18, ease: [0.4, 0, 1, 1] }).then(() => {
+        x.set(0);
         onPrevious();
       });
     } else {
-      animate(x, 0, { type: 'spring', stiffness: 400, damping: 30 });
+      animate(x, 0, { type: 'spring', stiffness: 500, damping: 35 });
     }
   }
 
   return (
+    // Sheet slides up once on mount — does NOT exit/re-enter on step change
     <motion.div
-      key={`mobile-sheet-${step.id}`}
-      initial={{ y: 60, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 60, opacity: 0 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed bottom-0 left-0 right-0 z-10"
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed bottom-0 left-0 right-0 z-10 bg-card border-t border-border rounded-t-3xl shadow-2xl flex flex-col"
+      style={{ height: '90dvh' }}
     >
-      {/* Drag direction hints */}
-      <motion.div
-        style={{ opacity: rightHintOpacity }}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center pointer-events-none z-20"
-      >
-        <ChevronLeft className="w-5 h-5 text-indigo-400" />
-      </motion.div>
-      <motion.div
-        style={{ opacity: leftHintOpacity }}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center pointer-events-none z-20"
-      >
-        <ChevronRight className="w-5 h-5 text-indigo-400" />
-      </motion.div>
-
-      {/* The draggable card */}
-      <motion.div
-        drag="x"
-        dragConstraints={{ left: -200, right: 200 }}
-        dragElastic={0.15}
-        onDragStart={() => { isDragging.current = true; }}
-        onDragEnd={handleDragEnd}
-        style={{ x, opacity: cardOpacity, rotate: cardRotate, scale: cardScale }}
-        className="bg-card border-t border-border rounded-t-3xl shadow-2xl px-5 pt-4 pb-8 cursor-grab active:cursor-grabbing"
-        // Prevent text selection while dragging
-        onPointerDown={(e) => e.preventDefault()}
-      >
+      {/* ── Static header — never moves ── */}
+      <div className="px-5 pt-4 pb-0 shrink-0">
         {/* Drag handle */}
         <div className="w-10 h-1 rounded-full bg-border mx-auto mb-4" />
 
-        {/* Step counter + close */}
+        {/* Counter + close */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">
             {currentIndex + 1} / {totalSteps}
           </span>
           <button
             onClick={onSkip}
-            onPointerDown={(e) => e.stopPropagation()}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-muted text-muted-foreground active:scale-95 transition-all"
             aria-label="Fechar tour"
           >
@@ -159,43 +134,80 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
         </div>
 
         {/* Progress bar */}
-        <div className="w-full h-1.5 bg-muted rounded-full mb-4 overflow-hidden">
+        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-indigo-500 rounded-full"
-            initial={{ width: `${(currentIndex / totalSteps) * 100}%` }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.4 }}
           />
         </div>
+      </div>
 
-        {/* Step illustration — swipe hint label on first step */}
-        <div className="w-full rounded-2xl overflow-hidden mb-4 border border-border/40 relative" style={{ aspectRatio: '2 / 1' }}>
+      {/* ── Swipeable content area ── */}
+      <div className="flex-1 overflow-hidden relative px-1">
+        {/* Drag hint arrows */}
+        <motion.div
+          style={{ opacity: rightArrowOpacity }}
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20"
+        >
+          <ChevronLeft className="w-4 h-4 text-indigo-400" />
+        </motion.div>
+        <motion.div
+          style={{ opacity: leftArrowOpacity }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20"
+        >
+          <ChevronRight className="w-4 h-4 text-indigo-400" />
+        </motion.div>
+
+        <motion.div
+          key={step.id}
+          drag="x"
+          dragConstraints={{ left: -160, right: 160 }}
+          dragElastic={0.12}
+          onDragEnd={handleDragEnd}
+          style={{ x, opacity: contentOpacity, scale: contentScale }}
+          className="h-full px-4 pt-4 cursor-grab active:cursor-grabbing select-none"
+        >
+          {/* Step illustration */}
           <AnimatePresence mode="wait">
             <motion.div
-              key={step.mobileImageKey}
-              initial={{ opacity: 0, x: 30 }}
+              key={`img-${step.mobileImageKey}`}
+              initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full h-full"
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full rounded-2xl overflow-hidden border border-border/40 mb-4"
+              style={{ aspectRatio: '2 / 1' }}
             >
               <StepImage />
             </motion.div>
           </AnimatePresence>
-        </div>
 
-        {/* Icon + title */}
-        <div className="flex items-center gap-3 mb-2.5">
-          <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
-            <Icon className="w-5 h-5 text-indigo-500" />
-          </div>
-          <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
-        </div>
+          {/* Icon + title */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`content-${step.id}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, delay: 0.05 }}
+            >
+              <div className="flex items-center gap-3 mb-2.5">
+                <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-indigo-500" />
+                </div>
+                <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
+      </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed mb-5">{step.description}</p>
-
+      {/* ── Static footer — never moves ── */}
+      <div className="px-5 pb-8 pt-3 shrink-0">
         {/* Dots */}
-        <div className="flex gap-1.5 justify-center mb-5">
+        <div className="flex gap-1.5 justify-center mb-4">
           {Array.from({ length: totalSteps }).map((_, i) => (
             <span
               key={i}
@@ -207,7 +219,7 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
         </div>
 
         {/* Nav buttons */}
-        <div className="flex gap-3" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="flex gap-3">
           {currentIndex > 0 ? (
             <button
               onClick={onPrevious}
@@ -231,7 +243,7 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
             {currentIndex < totalSteps - 1 ? <>Próximo <ChevronRight className="w-5 h-5" /></> : 'Concluir 🎉'}
           </button>
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }

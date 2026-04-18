@@ -1,4 +1,4 @@
-// Trpy brand mark for onboarding welcome — animated SVG icon
+// Trpy brand mark for onboarding welcome — plane + route arc + destination pin
 
 export function TrpyBrandMark() {
   return (
@@ -8,59 +8,67 @@ export function TrpyBrandMark() {
           <stop stopColor="#4338ca" />
           <stop offset="1" stopColor="#6366f1" />
         </linearGradient>
-        <linearGradient id="bm-trail" x1="12" y1="56" x2="68" y2="24" gradientUnits="userSpaceOnUse">
-          <stop stopColor="white" stopOpacity="0" />
-          <stop offset="1" stopColor="white" stopOpacity="0.5" />
+        <linearGradient id="bm-trail" x1="20" y1="60" x2="62" y2="18" gradientUnits="userSpaceOnUse">
+          <stop stopColor="white" stopOpacity="0.1" />
+          <stop offset="1" stopColor="white" stopOpacity="0.6" />
         </linearGradient>
-        <filter id="bm-glow" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
       </defs>
 
-      {/* Background rounded square */}
-      <rect width="80" height="80" rx="22" fill="url(#bm-bg)" />
+      {/* Background */}
+      <rect width="80" height="80" rx="20" fill="url(#bm-bg)" />
+      {/* Top gloss */}
+      <rect x="0" y="0" width="80" height="36" rx="20" fill="white" opacity="0.07" />
 
-      {/* Subtle inner highlight */}
-      <rect x="1" y="1" width="78" height="38" rx="21" fill="white" opacity="0.06" />
-
-      {/* Dotted arc trail — destination path */}
+      {/* Arc trail — dashed route */}
       <path
-        d="M 18 58 Q 20 30 52 22"
+        d="M 22 60 Q 26 32 58 20"
         stroke="white"
-        strokeWidth="1.5"
-        strokeDasharray="2.5 3.5"
+        strokeWidth="1.8"
+        strokeDasharray="3 4"
         strokeLinecap="round"
-        opacity="0.35"
+        opacity="0.3"
         fill="none"
       />
-
-      {/* Gradient trail glow */}
+      {/* Gradient solid trail on top */}
       <path
-        d="M 18 58 Q 20 30 52 22"
+        d="M 22 60 Q 26 32 58 20"
         stroke="url(#bm-trail)"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinecap="round"
         fill="none"
       />
 
-      {/* Destination pin — landing point */}
-      <circle cx="54" cy="21" r="5" fill="white" opacity="0.9" />
-      <circle cx="54" cy="21" r="2.5" fill="#4338ca" />
-      {/* Pin drop shadow */}
-      <ellipse cx="54" cy="27" rx="4" ry="1.5" fill="white" opacity="0.15" />
+      {/* Destination pin at top-right */}
+      <circle cx="60" cy="19" r="6.5" fill="white" opacity="0.95" />
+      <circle cx="60" cy="19" r="3" fill="#4338ca" />
+      <ellipse cx="60" cy="26.5" rx="4" ry="1.5" fill="white" opacity="0.18" />
 
-      {/* Takeoff plane — bottom left, angled toward pin */}
-      {/* Wing */}
-      <path d="M16 60 l6-10 4 2 -5 9z" fill="white" opacity="0.95" />
-      {/* Body */}
-      <path d="M18 62 l10-14 5 3 -10 14z" fill="white" />
+      {/* Plane — centered bottom-left, tilted ~45° toward pin */}
+      {/* Body — long diagonal */}
+      <path
+        d="M 18 57 L 38 37"
+        stroke="white"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+      {/* Nose tip */}
+      <circle cx="39" cy="36" r="3" fill="white" />
+      {/* Left wing */}
+      <path
+        d="M 25 50 L 16 42 L 22 40 L 31 46 Z"
+        fill="white"
+        opacity="0.9"
+      />
       {/* Tail fin */}
-      <path d="M18 62 l-2-4 5-2z" fill="white" opacity="0.7" />
+      <path
+        d="M 20 55 L 14 52 L 16 48 L 22 52 Z"
+        fill="white"
+        opacity="0.75"
+      />
 
       {/* Origin dot */}
-      <circle cx="16" cy="63" r="3" fill="white" opacity="0.4" />
-      <circle cx="16" cy="63" r="1.5" fill="white" opacity="0.7" />
+      <circle cx="17" cy="60" r="3.5" fill="white" opacity="0.25" />
+      <circle cx="17" cy="60" r="1.8" fill="white" opacity="0.5" />
     </svg>
   );
 }
