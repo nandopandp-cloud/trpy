@@ -240,7 +240,11 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
     name: string;
     favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
   } | null>(null);
-  const [filters, setFilters] = useState<PlacesFilters>(DEFAULT_FILTERS);
+  const [filtersByTab, setFiltersByTab] = useState<Record<string, PlacesFilters>>({
+    restaurants: { ...DEFAULT_FILTERS },
+    hotels:      { ...DEFAULT_FILTERS },
+    attractions: { ...DEFAULT_FILTERS },
+  });
   const [visibleCount, setVisibleCount] = useState<Record<string, number>>({
     restaurants: PAGE_SIZE,
     hotels: PAGE_SIZE,
@@ -262,6 +266,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
   });
 
   const tab = TABS.find((t) => t.key === activeTab)!;
+  const filters = filtersByTab[activeTab] ?? DEFAULT_FILTERS;
   const allPlaces: PlaceSearchResult[] = data?.[activeTab] ?? [];
   const filteredPlaces = useMemo(() => applyFilters(allPlaces, filters), [allPlaces, filters]);
   const currentVisible = visibleCount[activeTab] ?? PAGE_SIZE;
@@ -271,8 +276,12 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
 
   function handleTabChange(key: typeof activeTab) {
     setActiveTab(key);
-    setFilters(DEFAULT_FILTERS);
-    setVisibleCount((v) => ({ ...v, [key]: PAGE_SIZE }));
+    // Each tab keeps its own filters — no reset needed
+  }
+
+  function handleFiltersChange(f: PlacesFilters) {
+    setFiltersByTab((prev) => ({ ...prev, [activeTab]: f }));
+    setVisibleCount((v) => ({ ...v, [activeTab]: PAGE_SIZE }));
   }
 
   function loadMore() {
@@ -315,10 +324,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
       {!isLoading && !isError && allPlaces.length > 0 && (
         <PlacesFilter
           filters={filters}
-          onChange={(f) => {
-            setFilters(f);
-            setVisibleCount((v) => ({ ...v, [activeTab]: PAGE_SIZE }));
-          }}
+          onChange={handleFiltersChange}
           totalCount={allPlaces.length}
           filteredCount={filteredPlaces.length}
         />
@@ -352,7 +358,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
                 destination={destination}
                 locale={locale}
                 hasFilters={activeFiltersCount > 0}
-                onReset={() => setFilters(DEFAULT_FILTERS)}
+                onReset={() => handleFiltersChange(DEFAULT_FILTERS)}
               />
             ) : (
               <>

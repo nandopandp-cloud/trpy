@@ -287,7 +287,11 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
     name: string;
     favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
   } | null>(null);
-  const [placeFilters, setPlaceFilters] = useState<PlacesFilters>(DEFAULT_FILTERS);
+  const [filtersByTab, setFiltersByTab] = useState<Record<string, PlacesFilters>>({
+    restaurants: { ...DEFAULT_FILTERS },
+    hotels:      { ...DEFAULT_FILTERS },
+    attractions: { ...DEFAULT_FILTERS },
+  });
   const [visibleCount, setVisibleCount] = useState<Record<string, number>>({
     restaurants: PAGE_SIZE,
     hotels: PAGE_SIZE,
@@ -356,6 +360,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
 
   const allCurrentPlaces: PlaceSearchResult[] = placesData?.[placeTab] ?? [];
   const currentPlaceTabMeta = PLACE_TABS.find(t => t.key === placeTab)!;
+  const placeFilters = filtersByTab[placeTab] ?? DEFAULT_FILTERS;
 
   const filteredPlaces = useMemo(
     () => applyFilters(allCurrentPlaces, placeFilters),
@@ -367,8 +372,12 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
 
   function handlePlaceTabChange(key: PlaceTab) {
     setPlaceTab(key);
-    setPlaceFilters(DEFAULT_FILTERS);
-    setVisibleCount((v) => ({ ...v, [key]: PAGE_SIZE }));
+    // Each tab keeps its own filters — no reset
+  }
+
+  function handlePlaceFiltersChange(f: PlacesFilters) {
+    setFiltersByTab((prev) => ({ ...prev, [placeTab]: f }));
+    setVisibleCount((v) => ({ ...v, [placeTab]: PAGE_SIZE }));
   }
 
   function loadMore() {
@@ -697,10 +706,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
               {!placesLoading && !placesError && allCurrentPlaces.length > 0 && (
                 <PlacesFilter
                   filters={placeFilters}
-                  onChange={(f) => {
-                    setPlaceFilters(f);
-                    setVisibleCount((v) => ({ ...v, [placeTab]: PAGE_SIZE }));
-                  }}
+                  onChange={handlePlaceFiltersChange}
                   totalCount={allCurrentPlaces.length}
                   filteredCount={filteredPlaces.length}
                 />
@@ -739,7 +745,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                             <p className="text-sm font-medium text-foreground">Nenhum lugar com esses filtros</p>
                             <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros para ver mais resultados.</p>
                             <button
-                              onClick={() => setPlaceFilters(DEFAULT_FILTERS)}
+                              onClick={() => handlePlaceFiltersChange(DEFAULT_FILTERS)}
                               className="mt-2 text-xs font-semibold text-primary hover:underline"
                             >
                               Limpar filtros
