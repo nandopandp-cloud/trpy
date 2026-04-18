@@ -132,7 +132,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="dark min-h-screen bg-background overflow-x-hidden">
 
       {/* ── Navbar ──────────────────────────────────────── */}
       <header className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-xl border-b border-border/50 transition-all duration-300">

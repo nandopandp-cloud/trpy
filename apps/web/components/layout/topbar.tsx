@@ -101,7 +101,7 @@ function DesktopUserMenu({ user }: { user: { name?: string | null; email?: strin
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={() => signOut({ callbackUrl: '/login' })}
           variant="destructive"
           className="gap-2.5 rounded-xl py-2 px-2.5 cursor-pointer"
         >
@@ -200,7 +200,7 @@ function MobileUserMenu({ user }: { user: { name?: string | null; email?: string
           {/* Sign out */}
           <div className="shrink-0 px-3 pb-10">
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => signOut({ callbackUrl: '/login' })}
               className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-destructive/10 hover:bg-destructive/15 text-destructive transition-colors"
             >
               <LogOut className="w-4 h-4 shrink-0" />

@@ -141,7 +141,7 @@ export default function SettingsPage() {
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t(locale, 'settings.session')}</p>
         </div>
         <button
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={() => signOut({ callbackUrl: '/login' })}
           className="w-full px-5 py-4 flex items-center gap-3 text-destructive hover:bg-destructive/5 transition-colors"
         >
           <div className="w-9 h-9 rounded-2xl bg-destructive/10 flex items-center justify-center">
