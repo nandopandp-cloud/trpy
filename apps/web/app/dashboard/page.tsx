@@ -21,7 +21,7 @@ const TripStories = dynamic(() => import('@/components/dashboard/trip-stories').
 });
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { cn } from '@/lib/utils';
+import { cn, toSlug } from '@/lib/utils';
 import { useLocale, formatNumber } from '@/lib/i18n';
 import { deriveStatus, STATUS_LABEL, STATUS_BADGE_LIGHT } from '@/lib/trip-status';
 
@@ -800,7 +800,7 @@ function TrendingHeroCard({ dest, delay }: { dest: TrendingDest; delay: number }
       transition={{ delay }}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
-      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
+      onClick={() => router.push(`/dashboard/destinations/${toSlug(dest.name)}`)}
       className="relative h-[200px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg hover:shadow-2xl transition-shadow duration-500"
     >
       {/* Background: photo or gradient fallback */}
@@ -857,7 +857,7 @@ function TrendingSmallCard({ dest, delay }: { dest: TrendingDest; delay: number 
       transition={{ delay }}
       whileHover={{ y: -6, scale: 1.03 }}
       whileTap={{ scale: 0.96 }}
-      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(dest.name.toLowerCase())}`)}
+      onClick={() => router.push(`/dashboard/destinations/${toSlug(dest.name)}`)}
       className="shrink-0 cursor-pointer group"
       style={{ width: 148 }}
     >
@@ -908,7 +908,7 @@ function CategoryBubble({ cat, delay }: { cat: CategoryItem; delay: number }) {
       transition={{ delay, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ scale: 1.06, y: -3 }}
       whileTap={{ scale: 0.93 }}
-      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(cat.label.toLowerCase())}`)}
+      onClick={() => router.push(`/dashboard/destinations/${toSlug(cat.label)}`)}
       className="group flex flex-col items-center gap-2 cursor-pointer"
     >
       {/* Photo or gradient bubble */}

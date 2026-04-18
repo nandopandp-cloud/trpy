@@ -8,7 +8,7 @@ import {
   Heart, MapPin, Utensils, Hotel, Zap,
   Youtube, Image as ImageIcon, Star, Trash2, Play, X, ExternalLink,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, toSlug } from '@/lib/utils';
 import { useLocale, t } from '@/lib/i18n';
 import { PlaceDetailModal } from '@/components/integrations/google/place-detail-modal';
 
@@ -212,7 +212,7 @@ export default function FavoritesPage() {
         });
       } else if (!fav.externalId.includes('-') || fav.externalId.length < 30) {
         // Destination slug (e.g. "bali", "paris", "new-york")
-        router.push(`/dashboard/destinations/${encodeURIComponent(fav.externalId)}`);
+        router.push(`/dashboard/destinations/${toSlug(fav.externalId)}`);
       } else {
         // Trip UUID
         router.push(`/dashboard/trips/${fav.externalId}`);

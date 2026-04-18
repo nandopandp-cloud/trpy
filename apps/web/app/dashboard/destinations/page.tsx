@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search } from 'lucide-react';
 import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
-import { cn } from '@/lib/utils';
+import { cn, toSlug } from '@/lib/utils';
 import { useLocale, t, type Locale } from '@/lib/i18n';
 
 const ALL_CATEGORIES = [
@@ -51,7 +51,7 @@ function CategoryCard({ cat, locale }: { cat: CatItem; locale: Locale }) {
       variants={stagger.item}
       whileHover={{ scale: 1.03, y: -4 }}
       whileTap={{ scale: 0.96 }}
-      onClick={() => router.push(`/dashboard/destinations/${encodeURIComponent(t(locale, cat.labelKey as any).toLowerCase())}`)}
+      onClick={() => router.push(`/dashboard/destinations/${toSlug(t(locale, cat.labelKey as any))}`)}
       className="group relative overflow-hidden rounded-2xl text-left cursor-pointer"
     >
       <div className={cn('h-[120px] relative overflow-hidden', !photo && `bg-gradient-to-br ${cat.gradient}`)}>

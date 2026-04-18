@@ -31,7 +31,7 @@ const YouTubeGallery = dynamic(() => import('@/components/integrations/youtube/y
 });
 import type { YouTubeVideo } from '@/lib/integrations/youtube/youtube-service';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
-import { cn } from '@/lib/utils';
+import { cn, toSlug, fromSlug } from '@/lib/utils';
 
 /* ── Constants ───────────────────────────────────────── */
 
@@ -44,42 +44,44 @@ const GRADIENTS = [
 ];
 
 /* Category-to-photo-query mapping — same as dashboard */
+// Keys are normalized ASCII slugs — must match toSlug() output
 const CATEGORY_QUERIES: Record<string, string> = {
-  praias: 'tropical beach ocean waves',
-  montanhas: 'mountain peaks landscape snow',
-  cidades: 'city architecture skyline urban',
-  aventura: 'extreme adventure sports nature',
-  gastronomia: 'gourmet food cuisine restaurant',
-  cultura: 'historical temple ruins architecture',
-  relax: 'spa pool resort infinity wellness',
-  família: 'family vacation kids park fun',
-  natureza: 'rainforest wildlife nature jungle',
-  inverno: 'snow winter ski mountain landscape',
-  cruzeiros: 'cruise ship ocean sea travel',
-  safari: 'safari africa wildlife savanna lion',
-  festas: 'festival carnival celebration fireworks',
-  compras: 'shopping mall market street fashion',
-  esportes: 'surf diving underwater ocean sport',
-  'lua de mel': 'romantic sunset couple beach travel',
+  praias:     'tropical beach ocean waves',
+  montanhas:  'mountain peaks landscape snow',
+  cidades:    'city architecture skyline urban',
+  aventura:   'extreme adventure sports nature',
+  gastronomia:'gourmet food cuisine restaurant',
+  cultura:    'historical temple ruins architecture',
+  relax:      'spa pool resort infinity wellness',
+  familia:    'family vacation kids park fun',
+  natureza:   'rainforest wildlife nature jungle',
+  inverno:    'snow winter ski mountain landscape',
+  cruzeiros:  'cruise ship ocean sea travel',
+  safari:     'safari africa wildlife savanna lion',
+  festas:     'festival carnival celebration fireworks',
+  compras:    'shopping mall market street fashion',
+  esportes:   'surf diving underwater ocean sport',
+  'lua-de-mel':'romantic sunset couple beach travel',
 };
 
 /* Destination metadata — enriches the overview section */
+// Keys are normalized ASCII slugs (no accents) — must match toSlug() output
 const DEST_META: Record<string, { desc: string; highlights: string[]; bestTime: string; currency: string; language: string }> = {
-  bali:       { desc: 'Ilha dos deuses, famosa por praias paradisíacas, templos hindus milenares e uma gastronomia rica em sabores tropicais.', highlights: ['Praias', 'Templos', 'Surf', 'Yoga', 'Arrozais'], bestTime: 'Abr–Out', currency: 'IDR (Rupia)', language: 'Indonésio' },
-  paris:      { desc: 'A Cidade Luz encanta com museus icônicos, gastronomia de classe mundial e a Torre Eiffel iluminando as noites.', highlights: ['Museus', 'Gastronomia', 'Moda', 'Romance', 'Arte'], bestTime: 'Abr–Jun', currency: 'EUR (Euro)', language: 'Francês' },
-  'patagônia':{ desc: 'Paisagens dramáticas de geleiras, montanhas e lagos cristalinos no extremo sul da América do Sul.', highlights: ['Trekking', 'Geleiras', 'Natureza', 'Vida selvagem', 'Lagos'], bestTime: 'Nov–Mar', currency: 'ARS (Peso)', language: 'Espanhol' },
-  tóquio:     { desc: 'Metrópole vibrante onde a tradição milenar encontra a tecnologia de ponta, templos ao lado de arranha-céus.', highlights: ['Tecnologia', 'Templos', 'Sushi', 'Anime', 'Cerejeiras'], bestTime: 'Mar–Mai', currency: 'JPY (Iene)', language: 'Japonês' },
-  santorini:  { desc: 'Pôr do sol mais famoso do mundo, casas brancas com cúpulas azuis e águas cristalinas no Mar Egeu.', highlights: ['Pôr do sol', 'Vinícolas', 'Praias vulcânicas', 'Romance', 'Arquitetura'], bestTime: 'Jun–Set', currency: 'EUR (Euro)', language: 'Grego' },
-  kyoto:      { desc: 'Antiga capital imperial do Japão, com milhares de templos, jardins zen e gueixas preservando tradições centenárias.', highlights: ['Templos', 'Jardins', 'Gueixas', 'Cerimônia do chá', 'Bambu'], bestTime: 'Mar–Mai', currency: 'JPY (Iene)', language: 'Japonês' },
-  maldivas:   { desc: 'Paraíso tropical com águas turquesas, resorts sobre palafitas e recifes de coral que tiram o fôlego.', highlights: ['Snorkeling', 'Resorts', 'Praias', 'Mergulho', 'Romance'], bestTime: 'Nov–Abr', currency: 'MVR (Rufiyaa)', language: 'Divehi' },
-  lisboa:     { desc: 'Capital portuguesa charmosa com ruas de paralelepípedo, pastéis de nata, fado e mirantes deslumbrantes.', highlights: ['Fado', 'Gastronomia', 'Mirantes', 'Pastéis', 'Alfama'], bestTime: 'Mar–Out', currency: 'EUR (Euro)', language: 'Português' },
-  'rio de janeiro': { desc: 'Cidade maravilhosa com montanhas selvagens, praias icônicas e uma energia contagiante o ano todo.', highlights: ['Praia', 'Montanhas', 'Carnaval', 'Pão de Açúcar', 'Samba'], bestTime: 'Dez–Mar', currency: 'BRL (Real)', language: 'Português' },
-  'nova york': { desc: 'A metrópole que nunca dorme, com edifícios imponentes, museus e uma cena gastronômica de classe mundial.', highlights: ['Arranha-céus', 'Museus', 'Broadway', 'Central Park', 'Gastronomia'], bestTime: 'Abr–Jun', currency: 'USD (Dólar)', language: 'Inglês' },
-  'barcelona': { desc: 'Cidade catalã vibrante com arquitetura única, praias mediterrâneas e uma culinária que conquista paladares.', highlights: ['Arquitetura', 'Praias', 'Gastronomia', 'Arte', 'Cultura'], bestTime: 'Abr–Jun', currency: 'EUR (Euro)', language: 'Catalão/Espanhol' },
-  'amsterdã': { desc: 'Capital dos Países Baixos com canais pitorescos, museus famosos e uma atmosfera cosmopolita e descontraída.', highlights: ['Canais', 'Museus', 'Bicicletas', 'Tulipas', 'Arquitetura'], bestTime: 'Abr–Set', currency: 'EUR (Euro)', language: 'Holandês' },
-  'bangkok': { desc: 'Metrópole tailandesa fervilhante com templos dourados, mercados flutuantes e gastronomia picante e saborosa.', highlights: ['Templos', 'Mercados', 'Gastronomia', 'Compras', 'Vida noturna'], bestTime: 'Nov–Fev', currency: 'THB (Bath)', language: 'Tailandês' },
-  'marrocos': { desc: 'País mágico com desertos fascinantes, medinas coloridas e uma cultura rica em tradições milenares.', highlights: ['Deserto', 'Medinas', 'Montanhas', 'Marroquinaria', 'Gastronomia'], bestTime: 'Set–Abr', currency: 'MAD (Dirã)', language: 'Árabe/Francês' },
-  'vancouver': { desc: 'Cidade canadense aninhada entre montanhas e oceano, com natureza selvagem e uma cena urbana sofisticada.', highlights: ['Natureza', 'Montanhas', 'Praias', 'Parques', 'Gastronomia'], bestTime: 'Jun–Set', currency: 'CAD (Dólar Canadense)', language: 'Inglês' },
+  bali:            { desc: 'Ilha dos deuses, famosa por praias paradisíacas, templos hindus milenares e uma gastronomia rica em sabores tropicais.', highlights: ['Praias', 'Templos', 'Surf', 'Yoga', 'Arrozais'], bestTime: 'Abr–Out', currency: 'IDR (Rupia)', language: 'Indonésio' },
+  paris:           { desc: 'A Cidade Luz encanta com museus icônicos, gastronomia de classe mundial e a Torre Eiffel iluminando as noites.', highlights: ['Museus', 'Gastronomia', 'Moda', 'Romance', 'Arte'], bestTime: 'Abr–Jun', currency: 'EUR (Euro)', language: 'Francês' },
+  patagonia:       { desc: 'Paisagens dramáticas de geleiras, montanhas e lagos cristalinos no extremo sul da América do Sul.', highlights: ['Trekking', 'Geleiras', 'Natureza', 'Vida selvagem', 'Lagos'], bestTime: 'Nov–Mar', currency: 'ARS (Peso)', language: 'Espanhol' },
+  toquio:          { desc: 'Metrópole vibrante onde a tradição milenar encontra a tecnologia de ponta, templos ao lado de arranha-céus.', highlights: ['Tecnologia', 'Templos', 'Sushi', 'Anime', 'Cerejeiras'], bestTime: 'Mar–Mai', currency: 'JPY (Iene)', language: 'Japonês' },
+  santorini:       { desc: 'Pôr do sol mais famoso do mundo, casas brancas com cúpulas azuis e águas cristalinas no Mar Egeu.', highlights: ['Pôr do sol', 'Vinícolas', 'Praias vulcânicas', 'Romance', 'Arquitetura'], bestTime: 'Jun–Set', currency: 'EUR (Euro)', language: 'Grego' },
+  kyoto:           { desc: 'Antiga capital imperial do Japão, com milhares de templos, jardins zen e gueixas preservando tradições centenárias.', highlights: ['Templos', 'Jardins', 'Gueixas', 'Cerimônia do chá', 'Bambu'], bestTime: 'Mar–Mai', currency: 'JPY (Iene)', language: 'Japonês' },
+  maldivas:        { desc: 'Paraíso tropical com águas turquesas, resorts sobre palafitas e recifes de coral que tiram o fôlego.', highlights: ['Snorkeling', 'Resorts', 'Praias', 'Mergulho', 'Romance'], bestTime: 'Nov–Abr', currency: 'MVR (Rufiyaa)', language: 'Divehi' },
+  lisboa:          { desc: 'Capital portuguesa charmosa com ruas de paralelepípedo, pastéis de nata, fado e mirantes deslumbrantes.', highlights: ['Fado', 'Gastronomia', 'Mirantes', 'Pastéis', 'Alfama'], bestTime: 'Mar–Out', currency: 'EUR (Euro)', language: 'Português' },
+  'rio-de-janeiro':{ desc: 'Cidade maravilhosa com montanhas selvagens, praias icônicas e uma energia contagiante o ano todo.', highlights: ['Praia', 'Montanhas', 'Carnaval', 'Pão de Açúcar', 'Samba'], bestTime: 'Dez–Mar', currency: 'BRL (Real)', language: 'Português' },
+  'nova-york':     { desc: 'A metrópole que nunca dorme, com edifícios imponentes, museus e uma cena gastronômica de classe mundial.', highlights: ['Arranha-céus', 'Museus', 'Broadway', 'Central Park', 'Gastronomia'], bestTime: 'Abr–Jun', currency: 'USD (Dólar)', language: 'Inglês' },
+  barcelona:       { desc: 'Cidade catalã vibrante com arquitetura única, praias mediterrâneas e uma culinária que conquista paladares.', highlights: ['Arquitetura', 'Praias', 'Gastronomia', 'Arte', 'Cultura'], bestTime: 'Abr–Jun', currency: 'EUR (Euro)', language: 'Catalão/Espanhol' },
+  amsterda:        { desc: 'Capital dos Países Baixos com canais pitorescos, museus famosos e uma atmosfera cosmopolita e descontraída.', highlights: ['Canais', 'Museus', 'Bicicletas', 'Tulipas', 'Arquitetura'], bestTime: 'Abr–Set', currency: 'EUR (Euro)', language: 'Holandês' },
+  bangkok:         { desc: 'Metrópole tailandesa fervilhante com templos dourados, mercados flutuantes e gastronomia picante e saborosa.', highlights: ['Templos', 'Mercados', 'Gastronomia', 'Compras', 'Vida noturna'], bestTime: 'Nov–Fev', currency: 'THB (Bath)', language: 'Tailandês' },
+  marrocos:        { desc: 'País mágico com desertos fascinantes, medinas coloridas e uma cultura rica em tradições milenares.', highlights: ['Deserto', 'Medinas', 'Montanhas', 'Marroquinaria', 'Gastronomia'], bestTime: 'Set–Abr', currency: 'MAD (Dirã)', language: 'Árabe/Francês' },
+  vancouver:       { desc: 'Cidade canadense aninhada entre montanhas e oceano, com natureza selvagem e uma cena urbana sofisticada.', highlights: ['Natureza', 'Montanhas', 'Praias', 'Parques', 'Gastronomia'], bestTime: 'Jun–Set', currency: 'CAD (Dólar Canadense)', language: 'Inglês' },
 };
 
 const DEFAULT_META = { desc: 'Descubra o melhor que este destino tem a oferecer — restaurantes, hotéis, atrações e experiências imperdíveis.', highlights: ['Cultura', 'Gastronomia', 'Natureza', 'Aventura'], bestTime: 'Consulte', currency: 'Consulte', language: 'Consulte' };
@@ -271,9 +273,12 @@ function EmptyState({ icon: Icon, title, subtitle }: { icon: typeof Compass; tit
 
 export default function DestinationDetailPage({ params }: { params: { slug: string } }) {
   const router = useRouter();
-  const destination = decodeURIComponent(params.slug).replace(/-/g, ' ');
-  const destKey = destination.toLowerCase();
-  const meta = DEST_META[destKey] ?? DEFAULT_META;
+  // params.slug is already decoded by Next.js; normalize to ASCII slug for DEST_META lookup
+  const slugKey = toSlug(params.slug);
+  // Human-readable name for display (hyphens → spaces, capitalize first letter of each word)
+  const destination = fromSlug(slugKey)
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const meta = DEST_META[slugKey] ?? DEFAULT_META;
   const gradient = GRADIENTS[destination.charCodeAt(0) % GRADIENTS.length];
 
   const PAGE_SIZE = 10;
@@ -320,7 +325,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
   }, []);
 
   /* Cover image — synced from hook to local state for animation compatibility */
-  const categoryQuery = CATEGORY_QUERIES[destination?.toLowerCase() || ''];
+  const categoryQuery = CATEGORY_QUERIES[slugKey];
   const photoFromHook = useDestinationPhoto(categoryQuery || destination);
 
   useEffect(() => {
