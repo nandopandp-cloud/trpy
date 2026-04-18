@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { DestinationShareModal } from '@/components/destinations/destination-share-modal';
 import {
-  ArrowLeft, MapPin, Plus, Heart, Share2, Star,
+  ArrowLeft, MapPin, Plus, Share2, Star,
   Globe, Calendar, Coins, Languages, Compass,
   Utensils, Hotel, Landmark, Youtube, Map,
-  ChevronRight, Clock, Building2,
-  ImageIcon,
+  ChevronRight, Clock, Building2, ChevronDown,
 } from 'lucide-react';
+import { PlacesFilter, applyFilters, DEFAULT_FILTERS, type PlacesFilters } from '@/components/integrations/google/places-filter';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
@@ -276,16 +276,23 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
   const meta = DEST_META[destKey] ?? DEFAULT_META;
   const gradient = GRADIENTS[destination.charCodeAt(0) % GRADIENTS.length];
 
+  const PAGE_SIZE = 10;
+
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [placeTab, setPlaceTab] = useState<PlaceTab>('restaurants');
   const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<{
     placeId: string;
     name: string;
     favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
   } | null>(null);
+  const [placeFilters, setPlaceFilters] = useState<PlacesFilters>(DEFAULT_FILTERS);
+  const [visibleCount, setVisibleCount] = useState<Record<string, number>>({
+    restaurants: PAGE_SIZE,
+    hotels: PAGE_SIZE,
+    attractions: PAGE_SIZE,
+  });
 
   const handleShare = useCallback(() => {
     setShowShareModal(true);
@@ -324,7 +331,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
   }>({
     queryKey: ['recommendations', destination],
     queryFn: async () => {
-      const res = await fetch(`/api/recommendations?destination=${encodeURIComponent(destination)}`);
+      const res = await fetch(`/api/recommendations?destination=${encodeURIComponent(destination)}&limit=40`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       return json.data;
@@ -347,8 +354,25 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
     enabled: activeTab === 'overview',
   });
 
-  const currentPlaces: PlaceSearchResult[] = placesData?.[placeTab] ?? [];
+  const allCurrentPlaces: PlaceSearchResult[] = placesData?.[placeTab] ?? [];
   const currentPlaceTabMeta = PLACE_TABS.find(t => t.key === placeTab)!;
+
+  const filteredPlaces = useMemo(
+    () => applyFilters(allCurrentPlaces, placeFilters),
+    [allCurrentPlaces, placeFilters],
+  );
+  const currentVisible = visibleCount[placeTab] ?? PAGE_SIZE;
+  const visiblePlaces = filteredPlaces.slice(0, currentVisible);
+  const hasMore = filteredPlaces.length > currentVisible;
+
+  function handlePlaceTabChange(key: PlaceTab) {
+    setPlaceTab(key);
+    setVisibleCount((v) => ({ ...v, [key]: PAGE_SIZE }));
+  }
+
+  function loadMore() {
+    setVisibleCount((v) => ({ ...v, [placeTab]: (v[placeTab] ?? PAGE_SIZE) + PAGE_SIZE }));
+  }
 
   return (
     <>
@@ -648,7 +672,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                   return (
                     <button
                       key={t.key}
-                      onClick={() => setPlaceTab(t.key)}
+                      onClick={() => handlePlaceTabChange(t.key)}
                       className={cn(
                         'flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all border',
                         isActive
@@ -667,6 +691,19 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                   );
                 })}
               </div>
+
+              {/* Filter bar */}
+              {!placesLoading && !placesError && allCurrentPlaces.length > 0 && (
+                <PlacesFilter
+                  filters={placeFilters}
+                  onChange={(f) => {
+                    setPlaceFilters(f);
+                    setVisibleCount((v) => ({ ...v, [placeTab]: PAGE_SIZE }));
+                  }}
+                  totalCount={allCurrentPlaces.length}
+                  filteredCount={filteredPlaces.length}
+                />
+              )}
 
               {/* Content */}
               {placesLoading && <CardSkeleton count={5} />}
@@ -687,25 +724,62 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                     transition={{ duration: 0.15 }}
                     className="space-y-2"
                   >
-                    {currentPlaces.length === 0 ? (
-                      <EmptyState
-                        icon={currentPlaceTabMeta.icon}
-                        title={`Nenhum resultado para ${currentPlaceTabMeta.label.toLowerCase()}`}
-                        subtitle="Explore outras categorias ou tente outro destino."
-                      />
-                    ) : (
-                      currentPlaces.map(place => (
-                        <PlaceCard
-                          key={place.place_id}
-                          place={place}
-                          favoriteType={currentPlaceTabMeta.favoriteType}
-                          onOpen={() => setSelectedPlace({
-                            placeId: place.place_id,
-                            name: place.name,
-                            favoriteType: currentPlaceTabMeta.favoriteType,
-                          })}
+                    {filteredPlaces.length === 0 ? (
+                      allCurrentPlaces.length === 0 ? (
+                        <EmptyState
+                          icon={currentPlaceTabMeta.icon}
+                          title={`Nenhum resultado para ${currentPlaceTabMeta.label.toLowerCase()}`}
+                          subtitle="Explore outras categorias ou tente outro destino."
                         />
-                      ))
+                      ) : (
+                        <div className="rounded-2xl border border-dashed border-border p-8 text-center space-y-3">
+                          <currentPlaceTabMeta.icon className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Nenhum lugar com esses filtros</p>
+                            <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros para ver mais resultados.</p>
+                            <button
+                              onClick={() => setPlaceFilters(DEFAULT_FILTERS)}
+                              className="mt-2 text-xs font-semibold text-primary hover:underline"
+                            >
+                              Limpar filtros
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    ) : (
+                      <>
+                        {visiblePlaces.map(place => (
+                          <PlaceCard
+                            key={place.place_id}
+                            place={place}
+                            favoriteType={currentPlaceTabMeta.favoriteType}
+                            onOpen={() => setSelectedPlace({
+                              placeId: place.place_id,
+                              name: place.name,
+                              favoriteType: currentPlaceTabMeta.favoriteType,
+                            })}
+                          />
+                        ))}
+
+                        {/* Load more */}
+                        {hasMore && (
+                          <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            onClick={loadMore}
+                            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/40 transition-all"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                            Ver mais {filteredPlaces.length - currentVisible} lugares
+                          </motion.button>
+                        )}
+
+                        {!hasMore && filteredPlaces.length > PAGE_SIZE && (
+                          <p className="text-center text-xs text-muted-foreground py-2">
+                            {filteredPlaces.length} lugares encontrados
+                          </p>
+                        )}
+                      </>
                     )}
                   </motion.div>
                 </AnimatePresence>
