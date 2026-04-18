@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { type OnboardingStep } from './onboarding-steps';
@@ -70,6 +70,7 @@ function calcTooltipPos(rect: Rect, position: OnboardingStep['position']) {
 export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPrevious, onSkip }: Props) {
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -222,6 +223,15 @@ export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPr
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
             className="fixed bottom-0 left-0 right-0 z-10 bg-card border-t border-border rounded-t-3xl shadow-2xl px-5 pt-5 pb-8"
+            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+              if (touchStartX.current === null) return;
+              const dx = e.changedTouches[0].clientX - touchStartX.current;
+              touchStartX.current = null;
+              if (Math.abs(dx) < 50) return;
+              if (dx < 0) onNext();
+              else if (dx > 0 && currentIndex > 0) onPrevious();
+            }}
           >
             {/* Drag handle */}
             <div className="w-10 h-1 rounded-full bg-border mx-auto mb-5" />
