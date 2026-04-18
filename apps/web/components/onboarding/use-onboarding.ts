@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'trpy_onboarding_completed';
+const RESET_EVENT = 'trpy:onboarding-reset';
 
 export function useOnboarding() {
   const [show, setShow] = useState(false);
@@ -14,6 +15,10 @@ export function useOnboarding() {
     } catch {
       // localStorage unavailable (SSR or private mode)
     }
+
+    function onReset() { setShow(true); }
+    window.addEventListener(RESET_EVENT, onReset);
+    return () => window.removeEventListener(RESET_EVENT, onReset);
   }, []);
 
   function complete() {
@@ -27,7 +32,7 @@ export function useOnboarding() {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
-    setShow(true);
+    window.dispatchEvent(new CustomEvent(RESET_EVENT));
   }
 
   return { show, complete, reset };

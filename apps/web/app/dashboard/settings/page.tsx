@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { User, Palette, ShieldCheck, LogOut, Sparkles } from 'lucide-react';
+import { User, Palette, ShieldCheck, LogOut, PlaneTakeoff } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
@@ -95,7 +95,7 @@ export default function SettingsPage() {
         className="rounded-3xl border border-border bg-card overflow-hidden shadow-card"
       >
         <div className="px-5 py-4 border-b border-border">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tour guiado</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Viajando pela Trpy</p>
         </div>
         <button
           onClick={() => {
@@ -106,7 +106,7 @@ export default function SettingsPage() {
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-indigo-500" />
+              <PlaneTakeoff className="w-4 h-4 text-indigo-500" />
             </div>
             <div className="text-left">
               <p className="text-sm font-semibold text-foreground">Rever o tour guiado</p>

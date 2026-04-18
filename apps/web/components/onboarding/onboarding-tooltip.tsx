@@ -4,6 +4,21 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { type OnboardingStep } from './onboarding-steps';
+import {
+  StepImageNewTrip,
+  StepImageTrips,
+  StepImageBudget,
+  StepImageFavorites,
+  StepImageSettings,
+} from './onboarding-step-images';
+
+const STEP_IMAGES: Record<OnboardingStep['mobileImageKey'], React.ComponentType> = {
+  'new-trip': StepImageNewTrip,
+  'trips': StepImageTrips,
+  'budget': StepImageBudget,
+  'favorites': StepImageFavorites,
+  'settings': StepImageSettings,
+};
 
 type Rect = { top: number; left: number; width: number; height: number };
 
@@ -235,12 +250,29 @@ export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPr
               />
             </div>
 
+            {/* Step illustration */}
+            {(() => {
+              const StepImage = STEP_IMAGES[step.mobileImageKey];
+              return (
+                <motion.div
+                  key={step.mobileImageKey}
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  className="w-full rounded-2xl overflow-hidden mb-5 border border-border/50"
+                  style={{ aspectRatio: '2 / 1' }}
+                >
+                  <StepImage />
+                </motion.div>
+              );
+            })()}
+
             {/* Icon + title */}
             <div className="flex items-center gap-4 mb-3">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
-                <Icon className="w-7 h-7 text-indigo-500" />
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+                <Icon className="w-6 h-6 text-indigo-500" />
               </div>
-              <h3 className="text-lg font-bold text-foreground leading-tight">{step.title}</h3>
+              <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
             </div>
 
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">{step.description}</p>

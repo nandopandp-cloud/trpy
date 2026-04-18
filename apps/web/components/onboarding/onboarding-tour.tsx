@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useOnboarding } from './use-onboarding';
 import { OnboardingWelcome } from './onboarding-welcome';
@@ -14,6 +14,14 @@ export function OnboardingTour() {
   const { show, complete } = useOnboarding();
   const [screen, setScreen] = useState<Screen>('welcome');
   const [step, setStep] = useState(0);
+
+  // Reset internal state whenever the tour is re-triggered
+  useEffect(() => {
+    if (show) {
+      setScreen('welcome');
+      setStep(0);
+    }
+  }, [show]);
 
   if (!show) return null;
 
