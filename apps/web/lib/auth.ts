@@ -4,6 +4,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@trpy/database';
+import { sendWelcomeEmail } from '@/lib/services/verification';
 
 export const authOptions: NextAuthOptions = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,6 +87,18 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email as string;
       }
       return session;
+    },
+  },
+
+  events: {
+    async createUser({ user }) {
+      // Only send welcome for Google/OAuth users — they arrive with emailVerified set.
+      // Credentials users go through OTP verify first; welcome is sent there instead.
+      if (user.email && user.emailVerified) {
+        sendWelcomeEmail(user.email, user.name ?? undefined).catch((e) =>
+          console.error('[auth] welcome email failed:', e),
+        );
+      }
     },
   },
 

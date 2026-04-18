@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
       data: { emailVerified: new Date() },
     });
 
+    // User verified OTP — they can now log in, send welcome email
     sendWelcomeEmail(user.email!, user.name ?? undefined).catch((e) =>
       console.error('[verify] welcome email failed:', e),
     );
