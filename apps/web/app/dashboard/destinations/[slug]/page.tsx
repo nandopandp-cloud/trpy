@@ -367,6 +367,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
 
   function handlePlaceTabChange(key: PlaceTab) {
     setPlaceTab(key);
+    setPlaceFilters(DEFAULT_FILTERS);
     setVisibleCount((v) => ({ ...v, [key]: PAGE_SIZE }));
   }
 

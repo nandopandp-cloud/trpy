@@ -280,7 +280,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
 
   function handleTabChange(key: typeof activeTab) {
     setActiveTab(key);
-    // Reset pagination for the new tab but keep filters
+    setFilters(DEFAULT_FILTERS);
     setVisibleCount((v) => ({ ...v, [key]: PAGE_SIZE }));
   }
 
