@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { TrpyBrandMark } from './trpy-brand-mark';
 
 type Props = {
   onStart: () => void;
@@ -27,9 +27,9 @@ export function OnboardingWelcome({ onStart, onSkip }: Props) {
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className="bg-card border border-border rounded-3xl p-8 md:p-10 max-w-md w-full text-center shadow-2xl"
       >
-        {/* Icon */}
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/25">
-          <Sparkles className="w-9 h-9 text-white" />
+        {/* Brand mark */}
+        <div className="w-20 h-20 mx-auto mb-6">
+          <TrpyBrandMark />
         </div>
 
         {/* Text */}

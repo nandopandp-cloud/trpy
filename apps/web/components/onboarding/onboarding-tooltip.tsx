@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { type OnboardingStep } from './onboarding-steps';
 import {
@@ -34,6 +34,7 @@ type Props = {
 const TOOLTIP_W = 340;
 const TOOLTIP_H = 220;
 const OFFSET = 16;
+const SWIPE_THRESHOLD = 60;
 
 function calcTooltipPos(rect: Rect, position: OnboardingStep['position']) {
   const vw = window.innerWidth;
@@ -60,17 +61,186 @@ function calcTooltipPos(rect: Rect, position: OnboardingStep['position']) {
       break;
   }
 
-  // Clamp inside viewport
   top = Math.max(12, Math.min(top, vh - TOOLTIP_H - 12));
   left = Math.max(12, Math.min(left, vw - TOOLTIP_W - 12));
 
   return { top, left };
 }
 
+// ── Mobile swipeable bottom sheet ──────────────────────────────────────────────
+
+type MobileCardProps = Props & { isMobile: true };
+
+function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious, onSkip }: MobileCardProps) {
+  const Icon = step.icon;
+  const StepImage = STEP_IMAGES[step.mobileImageKey];
+  const progress = Math.round(((currentIndex + 1) / totalSteps) * 100);
+
+  // Motion values for drag feedback
+  const x = useMotionValue(0);
+  const cardOpacity = useTransform(x, [-120, 0, 120], [0.4, 1, 0.4]);
+  const cardRotate = useTransform(x, [-120, 0, 120], [-4, 0, 4]);
+  const cardScale = useTransform(x, [-120, 0, 120], [0.96, 1, 0.96]);
+
+  // Direction hint arrows that appear while dragging
+  const leftHintOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
+  const rightHintOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
+
+  const isDragging = useRef(false);
+
+  function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
+    isDragging.current = false;
+    const vx = info.offset.x;
+    if (vx < -SWIPE_THRESHOLD) {
+      // Snap out to the left then call onNext
+      animate(x, -window.innerWidth, { duration: 0.22, ease: [0.4, 0, 1, 1] }).then(() => {
+        onNext();
+      });
+    } else if (vx > SWIPE_THRESHOLD && currentIndex > 0) {
+      animate(x, window.innerWidth, { duration: 0.22, ease: [0.4, 0, 1, 1] }).then(() => {
+        onPrevious();
+      });
+    } else {
+      animate(x, 0, { type: 'spring', stiffness: 400, damping: 30 });
+    }
+  }
+
+  return (
+    <motion.div
+      key={`mobile-sheet-${step.id}`}
+      initial={{ y: 60, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 60, opacity: 0 }}
+      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed bottom-0 left-0 right-0 z-10"
+    >
+      {/* Drag direction hints */}
+      <motion.div
+        style={{ opacity: rightHintOpacity }}
+        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center pointer-events-none z-20"
+      >
+        <ChevronLeft className="w-5 h-5 text-indigo-400" />
+      </motion.div>
+      <motion.div
+        style={{ opacity: leftHintOpacity }}
+        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center pointer-events-none z-20"
+      >
+        <ChevronRight className="w-5 h-5 text-indigo-400" />
+      </motion.div>
+
+      {/* The draggable card */}
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -200, right: 200 }}
+        dragElastic={0.15}
+        onDragStart={() => { isDragging.current = true; }}
+        onDragEnd={handleDragEnd}
+        style={{ x, opacity: cardOpacity, rotate: cardRotate, scale: cardScale }}
+        className="bg-card border-t border-border rounded-t-3xl shadow-2xl px-5 pt-4 pb-8 cursor-grab active:cursor-grabbing"
+        // Prevent text selection while dragging
+        onPointerDown={(e) => e.preventDefault()}
+      >
+        {/* Drag handle */}
+        <div className="w-10 h-1 rounded-full bg-border mx-auto mb-4" />
+
+        {/* Step counter + close */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">
+            {currentIndex + 1} / {totalSteps}
+          </span>
+          <button
+            onClick={onSkip}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-muted text-muted-foreground active:scale-95 transition-all"
+            aria-label="Fechar tour"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full h-1.5 bg-muted rounded-full mb-4 overflow-hidden">
+          <motion.div
+            className="h-full bg-indigo-500 rounded-full"
+            initial={{ width: `${(currentIndex / totalSteps) * 100}%` }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.4 }}
+          />
+        </div>
+
+        {/* Step illustration — swipe hint label on first step */}
+        <div className="w-full rounded-2xl overflow-hidden mb-4 border border-border/40 relative" style={{ aspectRatio: '2 / 1' }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step.mobileImageKey}
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -30 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full h-full"
+            >
+              <StepImage />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Icon + title */}
+        <div className="flex items-center gap-3 mb-2.5">
+          <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+            <Icon className="w-5 h-5 text-indigo-500" />
+          </div>
+          <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
+        </div>
+
+        <p className="text-sm text-muted-foreground leading-relaxed mb-5">{step.description}</p>
+
+        {/* Dots */}
+        <div className="flex gap-1.5 justify-center mb-5">
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <span
+              key={i}
+              className={`rounded-full transition-all duration-300 ${
+                i === currentIndex ? 'w-6 h-2 bg-indigo-500' : 'w-2 h-2 bg-border'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Nav buttons */}
+        <div className="flex gap-3" onPointerDown={(e) => e.stopPropagation()}>
+          {currentIndex > 0 ? (
+            <button
+              onClick={onPrevious}
+              className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-border text-foreground font-semibold text-sm active:scale-95 transition-all"
+              aria-label="Passo anterior"
+            >
+              <ChevronLeft className="w-5 h-5" /> Anterior
+            </button>
+          ) : (
+            <button
+              onClick={onSkip}
+              className="flex-1 flex items-center justify-center py-3.5 rounded-2xl border border-border text-muted-foreground font-medium text-sm active:scale-95 transition-all"
+            >
+              Pular tour
+            </button>
+          )}
+          <button
+            onClick={onNext}
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold text-sm active:scale-95 transition-all"
+          >
+            {currentIndex < totalSteps - 1 ? <>Próximo <ChevronRight className="w-5 h-5" /></> : 'Concluir 🎉'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ── Main tooltip component ──────────────────────────────────────────────────────
+
 export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPrevious, onSkip }: Props) {
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -104,7 +274,6 @@ export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPr
   const Icon = step.icon;
   const progress = Math.round(((currentIndex + 1) / totalSteps) * 100);
 
-  // Desktop tooltip position
   let desktopStyle: React.CSSProperties = {};
   if (!isMobile && targetRect) {
     const pos = calcTooltipPos(targetRect, step.position);
@@ -216,115 +385,17 @@ export function OnboardingTooltip({ step, currentIndex, totalSteps, onNext, onPr
           </motion.div>
         )}
 
-        {/* ── MOBILE: bottom sheet card ── */}
+        {/* ── MOBILE: swipeable bottom sheet ── */}
         {isMobile && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-0 left-0 right-0 z-10 bg-card border-t border-border rounded-t-3xl shadow-2xl px-5 pt-5 pb-8"
-            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
-            onTouchEnd={(e) => {
-              if (touchStartX.current === null) return;
-              const dx = e.changedTouches[0].clientX - touchStartX.current;
-              touchStartX.current = null;
-              if (Math.abs(dx) < 50) return;
-              if (dx < 0) onNext();
-              else if (dx > 0 && currentIndex > 0) onPrevious();
-            }}
-          >
-            {/* Drag handle */}
-            <div className="w-10 h-1 rounded-full bg-border mx-auto mb-5" />
-
-            {/* Step counter + close */}
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">
-                {currentIndex + 1} / {totalSteps}
-              </span>
-              <button
-                onClick={onSkip}
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-muted text-muted-foreground active:scale-95 transition-all"
-                aria-label="Fechar tour"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Progress bar — prominent inside card on mobile */}
-            <div className="w-full h-2 bg-muted rounded-full mb-5 overflow-hidden">
-              <motion.div
-                className="h-full bg-indigo-500 rounded-full"
-                initial={{ width: `${(currentIndex / totalSteps) * 100}%` }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.4 }}
-              />
-            </div>
-
-            {/* Step illustration */}
-            {(() => {
-              const StepImage = STEP_IMAGES[step.mobileImageKey];
-              return (
-                <motion.div
-                  key={step.mobileImageKey}
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full rounded-2xl overflow-hidden mb-5 border border-border/50"
-                  style={{ aspectRatio: '2 / 1' }}
-                >
-                  <StepImage />
-                </motion.div>
-              );
-            })()}
-
-            {/* Icon + title */}
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
-                <Icon className="w-6 h-6 text-indigo-500" />
-              </div>
-              <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
-            </div>
-
-            <p className="text-sm text-muted-foreground leading-relaxed mb-6">{step.description}</p>
-
-            {/* Dots */}
-            <div className="flex gap-1.5 justify-center mb-6">
-              {Array.from({ length: totalSteps }).map((_, i) => (
-                <span
-                  key={i}
-                  className={`rounded-full transition-all duration-300 ${
-                    i === currentIndex ? 'w-6 h-2 bg-indigo-500' : 'w-2 h-2 bg-border'
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Navigation buttons — full width, large touch targets */}
-            <div className="flex gap-3">
-              {currentIndex > 0 ? (
-                <button
-                  onClick={onPrevious}
-                  className="flex-1 flex items-center justify-center gap-2 h-13 py-3.5 rounded-2xl border border-border text-foreground font-semibold text-sm active:scale-95 transition-all"
-                  aria-label="Passo anterior"
-                >
-                  <ChevronLeft className="w-5 h-5" /> Anterior
-                </button>
-              ) : (
-                <button
-                  onClick={onSkip}
-                  className="flex-1 flex items-center justify-center h-13 py-3.5 rounded-2xl border border-border text-muted-foreground font-medium text-sm active:scale-95 transition-all"
-                >
-                  Pular tour
-                </button>
-              )}
-              <button
-                onClick={onNext}
-                className="flex-1 flex items-center justify-center gap-2 h-13 py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold text-sm active:scale-95 transition-all"
-              >
-                {currentIndex < totalSteps - 1 ? <>Próximo <ChevronRight className="w-5 h-5" /></> : 'Concluir 🎉'}
-              </button>
-            </div>
-          </motion.div>
+          <MobileBottomSheet
+            isMobile={true}
+            step={step}
+            currentIndex={currentIndex}
+            totalSteps={totalSteps}
+            onNext={onNext}
+            onPrevious={onPrevious}
+            onSkip={onSkip}
+          />
         )}
       </motion.div>
     </AnimatePresence>
