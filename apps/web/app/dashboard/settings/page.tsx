@@ -30,7 +30,8 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
+      <div className="md:max-w-2xl md:mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-black text-foreground">{t(locale, 'settings.title')}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'settings.subtitle')}</p>
@@ -154,6 +155,7 @@ export default function SettingsPage() {
       <p className="text-center text-xs text-muted-foreground pb-2">
         {t(locale, 'settings.version')}
       </p>
+      </div>
     </div>
   );
 }

@@ -431,7 +431,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
             <div className="flex items-center gap-3 mt-4">
               <Button
                 size="lg"
-                onClick={() => router.push('/dashboard/trips/new')}
+                onClick={() => router.push(`/dashboard/trips/new?destination=${encodeURIComponent(destination)}`)}
                 className="shadow-lg"
               >
                 <Plus className="w-4 h-4" data-icon="inline-start" />

@@ -13,11 +13,21 @@ import { cn } from '@/lib/utils';
 import { useLocale, t } from '@/lib/i18n';
 import { getRandomDestinations, type DestinationTemplate } from '@/lib/destination-templates';
 
-export default function NewTripPage() {
+export default function NewTripPage({
+  searchParams,
+}: {
+  searchParams?: { destination?: string };
+}) {
   const router = useRouter();
   const [locale] = useLocale();
   const createTrip = useCreateTrip();
-  const [step, setStep] = useState<'inspire' | 'form'>('inspire');
+
+  // If ?destination= is provided, skip step 1 and go straight to the form
+  const prefillDestination = searchParams?.destination
+    ? decodeURIComponent(searchParams.destination)
+    : null;
+
+  const [step, setStep] = useState<'inspire' | 'form'>(prefillDestination ? 'form' : 'inspire');
   const [selectedTemplate, setSelectedTemplate] = useState<DestinationTemplate | null>(null);
 
   // Get random 6 destinations on mount
@@ -49,7 +59,8 @@ export default function NewTripPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="md:max-w-lg md:mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -179,6 +190,17 @@ export default function NewTripPage() {
                     </div>
                   </div>
                 )}
+                {!selectedTemplate && prefillDestination && (
+                  <div className="mb-6 p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0">
+                      <MapPin className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground text-sm capitalize">{prefillDestination}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Destino pré-selecionado</p>
+                    </div>
+                  </div>
+                )}
                 <TripForm
                   defaultValues={selectedTemplate ? {
                     destination: selectedTemplate.label,
@@ -188,6 +210,10 @@ export default function NewTripPage() {
                     currency: selectedTemplate.currency,
                     startDate: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
                     endDate: format(addDays(new Date(), 1 + selectedTemplate.durationDays), 'yyyy-MM-dd'),
+                  } : prefillDestination ? {
+                    destination: prefillDestination,
+                    title: `Viagem para ${prefillDestination}`,
+                    currency: 'BRL',
                   } : {
                     currency: 'BRL',
                   }}
@@ -198,6 +224,7 @@ export default function NewTripPage() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </div>
   );

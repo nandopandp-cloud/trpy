@@ -30,7 +30,8 @@ export default function EditTripPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-8">
-      <div className="max-w-xl mx-auto">
+      <div className="max-w-5xl mx-auto">
+      <div className="md:max-w-xl md:mx-auto">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -64,6 +65,7 @@ export default function EditTripPage({ params }: { params: { id: string } }) {
             )}
           </div>
         </motion.div>
+      </div>
       </div>
     </div>
   );
