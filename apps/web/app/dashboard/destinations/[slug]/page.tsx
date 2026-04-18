@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowLeft, MapPin, Plus, Heart, Share2, Star,
@@ -285,6 +286,23 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
     favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
   } | null>(null);
 
+  const handleShare = useCallback(async () => {
+    const url = `${window.location.origin}/dashboard/destinations/${params.slug}`;
+    const title = destination;
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch { /* user cancelled or not supported */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copiado!', { description: 'Cole e compartilhe com quem quiser.' });
+    } catch {
+      toast.error('Não foi possível copiar o link.');
+    }
+  }, [destination, params.slug]);
+
   /* Hero parallax */
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
@@ -398,7 +416,11 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
               size="md"
               className="bg-black/20 backdrop-blur-md border border-white/10"
             />
-            <button className="w-10 h-10 rounded-2xl bg-black/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/30 transition-colors">
+            <button
+              onClick={handleShare}
+              className="w-10 h-10 rounded-2xl bg-black/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/30 transition-colors"
+              aria-label="Compartilhar destino"
+            >
               <Share2 className="w-4 h-4" />
             </button>
           </div>

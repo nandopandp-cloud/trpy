@@ -343,6 +343,38 @@
     animation: stripe-move 1s linear infinite;
   }
 
+  /* ── Toast / Sonner Variants ─────────────────────────── */
+  .cn-toast {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+  }
+  .cn-toast-success {
+    background-color: #16a34a !important;
+    color: #ffffff !important;
+    border-color: #15803d !important;
+  }
+  .cn-toast-success [data-description] {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+  .cn-toast-error {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    border-color: #b91c1c !important;
+  }
+  .cn-toast-error [data-description] {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+  .cn-toast-warning {
+    background-color: #d97706 !important;
+    color: #ffffff !important;
+    border-color: #b45309 !important;
+  }
+  .cn-toast-info {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #1d4ed8 !important;
+  }
+
   /* ── Bento Card Base ──────────────────────────────── */
   .bento-card {
     @apply relative overflow-hidden rounded-3xl border border-border/60 bg-card/80 backdrop-blur-xl;

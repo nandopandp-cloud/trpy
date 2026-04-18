@@ -18,10 +18,12 @@ export default function EditTripPage({ params }: { params: { id: string } }) {
   const updateTrip = useUpdateTrip(params.id);
 
   async function handleSubmit(values: TripFormValues) {
+    const [sy, sm, sd] = values.startDate.split('-').map(Number);
+    const [ey, em, ed] = values.endDate.split('-').map(Number);
     await updateTrip.mutateAsync({
       ...values,
-      startDate: new Date(values.startDate),
-      endDate: new Date(values.endDate),
+      startDate: new Date(sy, sm - 1, sd, 12, 0, 0).toISOString(),
+      endDate: new Date(ey, em - 1, ed, 12, 0, 0).toISOString(),
       budget: values.budget,
     } as any);
     toast.success(t(locale, 'edit_trip.success'));

@@ -16,6 +16,16 @@ const updateSchema = z.object({
   order: z.number().int().optional(),
 });
 
+async function recalcTotalSpent(tripId: string) {
+  await prisma.$queryRawUnsafe(
+    `UPDATE trips SET "totalSpent" = (
+      COALESCE((SELECT SUM(amount) FROM expenses WHERE "tripId" = $1), 0)
+      + COALESCE((SELECT SUM(ii.cost) FROM itinerary_items ii JOIN itinerary_days id ON ii."dayId" = id.id WHERE id."tripId" = $1 AND ii.cost IS NOT NULL), 0)
+    ), "updatedAt" = NOW() WHERE id = $1`,
+    tripId
+  );
+}
+
 // PUT /api/itinerary-items/[id]
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -25,7 +35,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const item = await prisma.itineraryItem.update({
       where: { id: params.id },
       data,
+      include: { day: { select: { tripId: true } } },
     });
+
+    await recalcTotalSpent(item.day.tripId);
 
     return ok(item);
   } catch (error) {
@@ -36,10 +49,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 // DELETE /api/itinerary-items/[id]
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const existing = await prisma.itineraryItem.findUnique({ where: { id: params.id } });
+    const existing = await prisma.itineraryItem.findUnique({
+      where: { id: params.id },
+      include: { day: { select: { tripId: true } } },
+    });
     if (!existing) return err('Item não encontrado', 404);
 
     await prisma.itineraryItem.delete({ where: { id: params.id } });
+    await recalcTotalSpent(existing.day.tripId);
+
     return ok({ id: params.id });
   } catch (error) {
     return handleError(error);

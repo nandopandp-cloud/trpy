@@ -35,10 +35,12 @@ export default function NewTripPage({
 
   async function handleSubmit(values: TripFormValues) {
     try {
+      const [sy, sm, sd] = values.startDate.split('-').map(Number);
+      const [ey, em, ed] = values.endDate.split('-').map(Number);
       await createTrip.mutateAsync({
         ...values,
-        startDate: new Date(values.startDate).toISOString(),
-        endDate: new Date(values.endDate).toISOString(),
+        startDate: new Date(sy, sm - 1, sd, 12, 0, 0).toISOString(),
+        endDate: new Date(ey, em - 1, ed, 12, 0, 0).toISOString(),
       });
       toast.success(t(locale, 'new_trip.success'), { description: `${values.title} — ${values.destination}` });
       router.push('/dashboard/trips');

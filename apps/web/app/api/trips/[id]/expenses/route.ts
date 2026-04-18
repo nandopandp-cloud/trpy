@@ -78,7 +78,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         },
       }),
       prisma.$queryRawUnsafe(
-        `UPDATE trips SET "totalSpent" = COALESCE((SELECT SUM(amount) FROM expenses WHERE "tripId" = $1), 0), "updatedAt" = NOW() WHERE id = $1`,
+        `UPDATE trips SET "totalSpent" = (
+          COALESCE((SELECT SUM(amount) FROM expenses WHERE "tripId" = $1), 0)
+          + COALESCE((SELECT SUM(ii.cost) FROM itinerary_items ii JOIN itinerary_days id ON ii."dayId" = id.id WHERE id."tripId" = $1 AND ii.cost IS NOT NULL), 0)
+        ), "updatedAt" = NOW() WHERE id = $1`,
         params.id
       ),
     ]);
