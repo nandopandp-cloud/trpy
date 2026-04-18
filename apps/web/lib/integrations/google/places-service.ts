@@ -85,6 +85,11 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | n
   return data.result as PlaceDetails;
 }
 
+export interface PlaceSearchPage {
+  results: PlaceSearchResult[];
+  nextPageToken?: string;
+}
+
 export async function searchPlaces(
   query: string,
   location?: string,
@@ -103,7 +108,7 @@ export async function searchPlaces(
   const data = await res.json();
 
   if (data.status !== 'OK') return [];
-  return (data.results as PlaceSearchResult[]).slice(0, 10);
+  return (data.results as PlaceSearchResult[]).slice(0, 20);
 }
 
 const TYPE_QUERY: Record<string, string> = {
@@ -116,27 +121,66 @@ const TYPE_QUERY: Record<string, string> = {
 export async function searchPlacesByType(
   location: string,
   type: 'restaurant' | 'lodging' | 'tourist_attraction' | 'museum',
-): Promise<PlaceSearchResult[]> {
+  pageToken?: string,
+): Promise<PlaceSearchPage> {
   const key = getApiKey();
-  // Use explicit query with location for better international results
   const queryTerm = TYPE_QUERY[type] ?? type;
-  const params = new URLSearchParams({
-    query: `${queryTerm} em ${location}`,
-    language: 'pt-BR',
-    key,
-  });
-  // Only add type filter for restaurant and lodging — tourist_attraction type
-  // is too restrictive and can cause 0 results for international destinations
-  if (type === 'restaurant' || type === 'lodging') {
-    params.set('type', type);
+
+  let url: string;
+  if (pageToken) {
+    // Next-page requests only need pagetoken + key
+    const params = new URLSearchParams({ pagetoken: pageToken, key });
+    url = `${BASE_URL}/place/textsearch/json?${params}`;
+  } else {
+    const params = new URLSearchParams({
+      query: `${queryTerm} em ${location}`,
+      language: 'pt-BR',
+      key,
+    });
+    if (type === 'restaurant' || type === 'lodging') {
+      params.set('type', type);
+    }
+    url = `${BASE_URL}/place/textsearch/json?${params}`;
   }
 
-  const url = `${BASE_URL}/place/textsearch/json?${params}`;
   const res = await fetch(url, { next: { revalidate: 1800 } });
   const data = await res.json();
 
-  if (data.status !== 'OK') return [];
-  return (data.results as PlaceSearchResult[]).slice(0, 10);
+  if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+    return { results: [] };
+  }
+
+  return {
+    results: (data.results ?? []) as PlaceSearchResult[],
+    nextPageToken: data.next_page_token as string | undefined,
+  };
+}
+
+/** Fetches up to `limit` places by paginating through Google's next_page_token. */
+export async function searchPlacesByTypeWithLimit(
+  location: string,
+  type: 'restaurant' | 'lodging' | 'tourist_attraction' | 'museum',
+  limit = 40,
+): Promise<{ results: PlaceSearchResult[]; nextPageToken?: string }> {
+  const results: PlaceSearchResult[] = [];
+  let pageToken: string | undefined;
+
+  // Google Text Search returns up to 20 results per page, max 3 pages (60 total)
+  for (let page = 0; page < 3 && results.length < limit; page++) {
+    if (page > 0) {
+      // Google requires a short delay before using next_page_token
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    const page_data = await searchPlacesByType(location, type, pageToken);
+    results.push(...page_data.results);
+    pageToken = page_data.nextPageToken;
+    if (!pageToken) break;
+  }
+
+  return {
+    results: results.slice(0, limit),
+    nextPageToken: results.length >= limit ? pageToken : undefined,
+  };
 }
 
 export async function autocomplete(

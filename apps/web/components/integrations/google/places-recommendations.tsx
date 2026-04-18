@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, MapPin, Clock, ExternalLink, Utensils, Hotel, Landmark, Building2, ChevronRight } from 'lucide-react';
+import {
+  Star, MapPin, ExternalLink, Utensils, Hotel,
+  Landmark, Building2, ChevronRight, ChevronDown,
+} from 'lucide-react';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { PlaceDetailModal } from './place-detail-modal';
+import { PlacesFilter, applyFilters, DEFAULT_FILTERS, type PlacesFilters } from './places-filter';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
 import { useLocale, t, formatNumber, type Locale } from '@/lib/i18n';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface RecommendationsData {
   restaurants: PlaceSearchResult[];
@@ -18,10 +24,13 @@ interface RecommendationsData {
 const TABS = [
   { key: 'restaurants', labelKey: 'places.restaurants', icon: Utensils, favoriteType: 'RESTAURANT' },
   { key: 'hotels',      labelKey: 'places.hotels',       icon: Hotel,    favoriteType: 'HOTEL' },
-  { key: 'attractions', labelKey: 'places.attractions',     icon: Landmark, favoriteType: 'ACTIVITY' },
+  { key: 'attractions', labelKey: 'places.attractions',  icon: Landmark, favoriteType: 'ACTIVITY' },
 ] as const;
 
 const PRICE = ['', '$', '$$', '$$$', '$$$$'];
+const PAGE_SIZE = 10;
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -44,11 +53,13 @@ function PlaceCard({
   favoriteType,
   locale,
   onOpen,
+  index,
 }: {
   place: PlaceSearchResult;
   favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
   locale: Locale;
   onOpen: () => void;
+  index: number;
 }) {
   const photo = place.photos?.[0];
   const photoUrl = photo
@@ -58,13 +69,14 @@ function PlaceCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18, delay: Math.min(index * 0.04, 0.3) }}
       onClick={onOpen}
       className="flex gap-3 p-3 rounded-2xl bg-muted/50 border border-border hover:border-primary/40 hover:bg-muted/70 transition-all cursor-pointer group"
     >
       {/* Thumbnail */}
-      <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-muted">
+      <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-muted relative">
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -77,6 +89,16 @@ function PlaceCard({
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <Building2 className="w-6 h-6 opacity-40" />
           </div>
+        )}
+        {/* Open/Closed badge on thumbnail */}
+        {place.opening_hours?.open_now != null && (
+          <span className={`absolute bottom-1 left-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+            place.opening_hours.open_now
+              ? 'bg-emerald-500 text-white'
+              : 'bg-red-500/90 text-white'
+          }`}>
+            {place.opening_hours.open_now ? 'Aberto' : 'Fechado'}
+          </span>
         )}
       </div>
 
@@ -100,25 +122,22 @@ function PlaceCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-1">
+        {/* Rating row */}
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
           {place.rating != null && (
             <div className="flex items-center gap-1">
               <StarRating value={place.rating} />
-              <span className="text-xs text-muted-foreground">
-                {place.rating.toFixed(1)}
-                {place.user_ratings_total != null && (
-                  <span className="ml-0.5">({formatNumber(locale, place.user_ratings_total)})</span>
-                )}
-              </span>
+              <span className="text-xs text-foreground font-semibold">{place.rating.toFixed(1)}</span>
+              {place.user_ratings_total != null && (
+                <span className="text-xs text-muted-foreground">
+                  ({formatNumber(locale, place.user_ratings_total)})
+                </span>
+              )}
             </div>
           )}
-          {place.price_level != null && (
-            <span className="text-xs text-muted-foreground">{PRICE[place.price_level]}</span>
-          )}
-          {place.opening_hours?.open_now != null && (
-            <span className={`text-xs font-medium flex items-center gap-1 ${place.opening_hours.open_now ? 'text-emerald-500' : 'text-red-500'}`}>
-              <Clock className="w-3 h-3" />
-              {place.opening_hours.open_now ? t(locale as any, 'places.open' as any) : t(locale as any, 'places.closed' as any)}
+          {place.price_level != null && place.price_level > 0 && (
+            <span className="text-xs font-medium text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+              {PRICE[place.price_level]}
             </span>
           )}
         </div>
@@ -138,23 +157,49 @@ function PlaceCard({
   );
 }
 
-function EmptyState({ tab, destination, locale }: { tab: typeof TABS[number]; destination: string; locale: Locale }) {
+function EmptyState({
+  tab,
+  destination,
+  locale,
+  hasFilters,
+  onReset,
+}: {
+  tab: typeof TABS[number];
+  destination: string;
+  locale: Locale;
+  hasFilters: boolean;
+  onReset: () => void;
+}) {
   const tabLabel = t(locale as any, tab.labelKey as any);
-  const mapsQuery = encodeURIComponent(
-    `${tabLabel} ${destination}`
-  );
+  const mapsQuery = encodeURIComponent(`${tabLabel} ${destination}`);
   const mapsUrl = `https://www.google.com/maps/search/${mapsQuery}`;
   const Icon = tab.icon;
+
   return (
     <div className="rounded-2xl border border-dashed border-border p-8 text-center space-y-3">
       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto">
         <Icon className="w-5 h-5 text-muted-foreground" />
       </div>
       <div>
-        <p className="text-sm font-medium text-foreground">{t(locale as any, 'places.empty' as any)}</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {t(locale as any, 'places.no_results_for' as any).replace('{label}', tabLabel.toLowerCase())}
-        </p>
+        {hasFilters ? (
+          <>
+            <p className="text-sm font-medium text-foreground">Nenhum lugar com esses filtros</p>
+            <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros para ver mais resultados.</p>
+            <button
+              onClick={onReset}
+              className="mt-2 text-xs font-semibold text-primary hover:underline"
+            >
+              Limpar filtros
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-medium text-foreground">{t(locale as any, 'places.empty' as any)}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t(locale as any, 'places.no_results_for' as any).replace('{label}', tabLabel.toLowerCase())}
+            </p>
+          </>
+        )}
       </div>
       <a
         href={mapsUrl}
@@ -171,7 +216,7 @@ function EmptyState({ tab, destination, locale }: { tab: typeof TABS[number]; de
 function LoadingSkeleton() {
   return (
     <div className="space-y-3">
-      {[...Array(5)].map((_, i) => (
+      {[...Array(6)].map((_, i) => (
         <div key={i} className="flex gap-3 p-3 rounded-2xl bg-muted/50 border border-border animate-pulse">
           <div className="w-20 h-20 rounded-xl bg-muted shrink-0" />
           <div className="flex-1 space-y-2 pt-1">
@@ -185,6 +230,8 @@ function LoadingSkeleton() {
   );
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export function PlacesRecommendations({ destination }: { destination: string }) {
   const [locale] = useLocale();
   const [activeTab, setActiveTab] = useState<'restaurants' | 'hotels' | 'attractions'>('restaurants');
@@ -193,11 +240,19 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
     name: string;
     favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
   } | null>(null);
+  const [filters, setFilters] = useState<PlacesFilters>(DEFAULT_FILTERS);
+  const [visibleCount, setVisibleCount] = useState<Record<string, number>>({
+    restaurants: PAGE_SIZE,
+    hotels: PAGE_SIZE,
+    attractions: PAGE_SIZE,
+  });
 
   const { data, isLoading, isError } = useQuery<RecommendationsData>({
     queryKey: ['recommendations', destination],
     queryFn: async () => {
-      const res = await fetch(`/api/recommendations?destination=${encodeURIComponent(destination)}`);
+      const res = await fetch(
+        `/api/recommendations?destination=${encodeURIComponent(destination)}&limit=40`,
+      );
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       return json.data;
@@ -207,19 +262,46 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
   });
 
   const tab = TABS.find((t) => t.key === activeTab)!;
-  const places: PlaceSearchResult[] = data?.[activeTab] ?? [];
+  const allPlaces: PlaceSearchResult[] = data?.[activeTab] ?? [];
+  const filteredPlaces = useMemo(() => applyFilters(allPlaces, filters), [allPlaces, filters]);
+  const currentVisible = visibleCount[activeTab] ?? PAGE_SIZE;
+  const visiblePlaces = filteredPlaces.slice(0, currentVisible);
+  const hasMore = filteredPlaces.length > currentVisible;
+  const activeFiltersCount = useMemo(() => {
+    let n = 0;
+    if (filters.minRating != null) n++;
+    if (filters.maxRating != null) n++;
+    if (filters.minPrice != null || filters.maxPrice != null) n++;
+    if (filters.openNow != null) n++;
+    if (filters.minReviews != null) n++;
+    if (filters.sort !== 'relevance') n++;
+    return n;
+  }, [filters]);
+
+  function handleTabChange(key: typeof activeTab) {
+    setActiveTab(key);
+    // Reset pagination for the new tab but keep filters
+    setVisibleCount((v) => ({ ...v, [key]: PAGE_SIZE }));
+  }
+
+  function loadMore() {
+    setVisibleCount((v) => ({
+      ...v,
+      [activeTab]: (v[activeTab] ?? PAGE_SIZE) + PAGE_SIZE,
+    }));
+  }
 
   return (
     <div className="space-y-4">
       {/* Tab pills */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {TABS.map((tb) => {
           const Icon = tb.icon;
           const count = data?.[tb.key]?.length;
           return (
             <button
               key={tb.key}
-              onClick={() => setActiveTab(tb.key)}
+              onClick={() => handleTabChange(tb.key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
                 activeTab === tb.key
                   ? 'bg-primary text-primary-foreground'
@@ -238,13 +320,27 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
         })}
       </div>
 
+      {/* Filter bar — only shown when data is loaded */}
+      {!isLoading && !isError && allPlaces.length > 0 && (
+        <PlacesFilter
+          filters={filters}
+          onChange={(f) => {
+            setFilters(f);
+            setVisibleCount((v) => ({ ...v, [activeTab]: PAGE_SIZE }));
+          }}
+          totalCount={allPlaces.length}
+          filteredCount={filteredPlaces.length}
+        />
+      )}
+
       {/* Content */}
       {isLoading && <LoadingSkeleton />}
 
       {isError && (
         <div className="rounded-2xl border border-dashed border-border p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Adicione <code className="bg-muted px-1.5 py-0.5 rounded text-xs">GOOGLE_PLACES_API_KEY</code> no <code className="bg-muted px-1.5 py-0.5 rounded text-xs">.env.local</code> para ver recomendações.
+            Adicione <code className="bg-muted px-1.5 py-0.5 rounded text-xs">GOOGLE_PLACES_API_KEY</code> no{' '}
+            <code className="bg-muted px-1.5 py-0.5 rounded text-xs">.env.local</code> para ver recomendações.
           </p>
         </div>
       )}
@@ -259,30 +355,59 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
             transition={{ duration: 0.15 }}
             className="space-y-3"
           >
-            {places.length === 0 ? (
-              <EmptyState tab={tab} destination={destination} locale={locale} />
+            {filteredPlaces.length === 0 ? (
+              <EmptyState
+                tab={tab}
+                destination={destination}
+                locale={locale}
+                hasFilters={activeFiltersCount > 0}
+                onReset={() => setFilters(DEFAULT_FILTERS)}
+              />
             ) : (
-              places.map((place) => (
-                <PlaceCard
-                  key={place.place_id}
-                  place={place}
-                  favoriteType={tab.favoriteType}
-                  locale={locale}
-                  onOpen={() =>
-                    setSelectedPlace({
-                      placeId: place.place_id,
-                      name: place.name,
-                      favoriteType: tab.favoriteType,
-                    })
-                  }
-                />
-              ))
+              <>
+                {visiblePlaces.map((place, i) => (
+                  <PlaceCard
+                    key={place.place_id}
+                    place={place}
+                    favoriteType={tab.favoriteType}
+                    locale={locale}
+                    index={i}
+                    onOpen={() =>
+                      setSelectedPlace({
+                        placeId: place.place_id,
+                        name: place.name,
+                        favoriteType: tab.favoriteType,
+                      })
+                    }
+                  />
+                ))}
+
+                {/* Load more */}
+                {hasMore && (
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    onClick={loadMore}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/40 transition-all"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    Ver mais {filteredPlaces.length - currentVisible} lugares
+                  </motion.button>
+                )}
+
+                {/* End of results indicator */}
+                {!hasMore && filteredPlaces.length > PAGE_SIZE && (
+                  <p className="text-center text-xs text-muted-foreground py-2">
+                    {filteredPlaces.length} lugares encontrados
+                  </p>
+                )}
+              </>
             )}
           </motion.div>
         </AnimatePresence>
       )}
 
-      {/* Native place detail modal */}
+      {/* Place detail modal */}
       <AnimatePresence>
         {selectedPlace && (
           <PlaceDetailModal
