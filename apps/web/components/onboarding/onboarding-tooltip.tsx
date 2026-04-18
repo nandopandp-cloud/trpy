@@ -79,46 +79,49 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
   const StepImage = STEP_IMAGES[step.mobileImageKey];
   const progress = Math.round(((currentIndex + 1) / totalSteps) * 100);
 
-  // Per-step swipe state — only the content block drags
+  // Drag motion value — drives both image and text together
   const x = useMotionValue(0);
-  const contentOpacity = useTransform(x, [-100, 0, 100], [0.5, 1, 0.5]);
-  const contentScale = useTransform(x, [-100, 0, 100], [0.97, 1, 0.97]);
+  const dragOpacity = useTransform(x, [-120, 0, 120], [0.4, 1, 0.4]);
 
-  // Hint arrows while dragging
+  // Hint arrows
   const leftArrowOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
   const rightArrowOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
+
+  // Track swipe direction to feed the entry animation of the next step
+  const swipeDir = useRef<'left' | 'right'>('left');
 
   function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
     const dx = info.offset.x;
     if (dx < -SWIPE_THRESHOLD) {
-      animate(x, -window.innerWidth * 0.7, { duration: 0.18, ease: [0.4, 0, 1, 1] }).then(() => {
+      swipeDir.current = 'left';
+      animate(x, -window.innerWidth, { duration: 0.2, ease: [0.4, 0, 1, 1] }).then(() => {
         x.set(0);
         onNext();
       });
     } else if (dx > SWIPE_THRESHOLD && currentIndex > 0) {
-      animate(x, window.innerWidth * 0.7, { duration: 0.18, ease: [0.4, 0, 1, 1] }).then(() => {
+      swipeDir.current = 'right';
+      animate(x, window.innerWidth, { duration: 0.2, ease: [0.4, 0, 1, 1] }).then(() => {
         x.set(0);
         onPrevious();
       });
     } else {
-      animate(x, 0, { type: 'spring', stiffness: 500, damping: 35 });
+      animate(x, 0, { type: 'spring', stiffness: 500, damping: 36 });
     }
   }
 
+  // Entry offset: new content slides in from the correct side
+  const entryX = swipeDir.current === 'left' ? 40 : -40;
+
   return (
-    // Sheet slides up once on mount — does NOT exit/re-enter on step change
     <motion.div
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className="fixed inset-0 z-10 bg-card flex flex-col"
     >
-      {/* ── Static header — never moves ── */}
+      {/* ── Header — static, never moves ── */}
       <div className="px-5 pt-4 pb-0 shrink-0">
-        {/* Drag handle */}
         <div className="w-10 h-1 rounded-full bg-border mx-auto mb-4" />
-
-        {/* Counter + close */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">
             {currentIndex + 1} / {totalSteps}
@@ -131,8 +134,6 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
             <X className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Progress bar */}
         <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-indigo-500 rounded-full"
@@ -142,80 +143,57 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
         </div>
       </div>
 
-      {/* ── Swipeable content area ── */}
-      {/* The drag zone is invisible — only image and text move visually */}
+      {/* ── Content area — drag here, image + text move together ── */}
       <div className="flex-1 overflow-hidden relative">
-        {/* Drag hint arrows — appear on the sides while dragging */}
-        <motion.div
-          style={{ opacity: rightArrowOpacity }}
-          className="absolute left-4 top-[40%] -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20"
-        >
+        {/* Hint arrows */}
+        <motion.div style={{ opacity: rightArrowOpacity }}
+          className="absolute left-4 top-[38%] -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20">
           <ChevronLeft className="w-4 h-4 text-indigo-400" />
         </motion.div>
-        <motion.div
-          style={{ opacity: leftArrowOpacity }}
-          className="absolute right-4 top-[40%] -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20"
-        >
+        <motion.div style={{ opacity: leftArrowOpacity }}
+          className="absolute right-4 top-[38%] -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20">
           <ChevronRight className="w-4 h-4 text-indigo-400" />
         </motion.div>
 
-        {/* Transparent drag capture layer — full area, no visual */}
+        {/*
+          Single draggable block: image + icon + title + description.
+          - While dragging: follows finger via `x`, fades via `dragOpacity`
+          - On step change: cross-fade from entryX → 0, no y movement at all
+        */}
         <motion.div
+          key={step.id}
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.3}
+          dragElastic={0.25}
           dragMomentum={false}
           onDragEnd={handleDragEnd}
-          style={{ x }}
-          className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
-        />
-
-        {/* Visual content — image and text, transformed by x */}
-        <div className="h-full px-5 pt-4 flex flex-col pointer-events-none">
-          {/* Step illustration */}
-          <motion.div
-            style={{ aspectRatio: '2 / 1', x, opacity: contentOpacity }}
+          style={{ x, opacity: dragOpacity }}
+          initial={{ opacity: 0, x: entryX }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 px-5 pt-4 flex flex-col cursor-grab active:cursor-grabbing select-none"
+        >
+          {/* Illustration */}
+          <div
             className="w-full rounded-2xl overflow-hidden border border-border/40 mb-4 shrink-0"
+            style={{ aspectRatio: '2 / 1' }}
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`img-${step.mobileImageKey}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="w-full h-full"
-              >
-                <StepImage />
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
+            <StepImage />
+          </div>
 
           {/* Icon + title + description */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`content-${step.id}`}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col"
-            >
-              <div className="flex items-center gap-3 mb-2.5">
-                <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-indigo-500" />
-                </div>
-                <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+          <div className="flex items-center gap-3 mb-2.5">
+            <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+              <Icon className="w-5 h-5 text-indigo-500" />
+            </div>
+            <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+        </motion.div>
       </div>
 
-      {/* ── Static footer — never moves ── */}
+      {/* ── Footer — static, never moves ── */}
       <div className="px-5 pb-8 pt-3 shrink-0">
-        {/* Dots */}
         <div className="flex gap-1.5 justify-center mb-4">
           {Array.from({ length: totalSteps }).map((_, i) => (
             <span
@@ -226,14 +204,11 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
             />
           ))}
         </div>
-
-        {/* Nav buttons */}
         <div className="flex gap-3">
           {currentIndex > 0 ? (
             <button
               onClick={onPrevious}
               className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-border text-foreground font-semibold text-sm active:scale-95 transition-all"
-              aria-label="Passo anterior"
             >
               <ChevronLeft className="w-5 h-5" /> Anterior
             </button>
