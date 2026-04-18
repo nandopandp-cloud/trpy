@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@trpy/database';
-import { verifyCode } from '@/lib/services/verification';
+import { verifyCode, sendWelcomeEmail } from '@/lib/services/verification';
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,6 +43,10 @@ export async function POST(req: NextRequest) {
       where: { id: user.id },
       data: { emailVerified: new Date() },
     });
+
+    sendWelcomeEmail(user.email!, user.name ?? undefined).catch((e) =>
+      console.error('[verify] welcome email failed:', e),
+    );
 
     return NextResponse.json(
       {

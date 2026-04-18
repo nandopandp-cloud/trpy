@@ -233,6 +233,156 @@ export async function verifyCode(email: string, code: string) {
   return { valid: true };
 }
 
+// ── Send Welcome Email ───────────────────────────────────────────────────────
+
+export async function sendWelcomeEmail(email: string, name?: string) {
+  const resend = getResend();
+  if (!resend) return { success: false };
+
+  const displayName = name ?? 'viajante';
+  const fromEmail = getFromEmail();
+
+  try {
+    const response = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: `Bem-vindo à Trpy, ${displayName}! ✈️`,
+      html: `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bem-vindo à Trpy</title>
+</head>
+<body style="margin:0; padding:0; background:#09090b; font-family:Inter, Arial, sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+<tr>
+<td align="center">
+<table width="640" style="max-width:640px; width:100%; background:#0B0B0F; border-radius:24px; overflow:hidden; border:1px solid rgba(99,102,241,0.15);">
+
+<tr>
+<td style="padding:28px 32px;">
+<img src="https://trpy.vercel.app/logos/logo.png" width="90" style="display:block;"/>
+</td>
+</tr>
+
+<tr>
+<td>
+<img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470" width="100%" style="display:block; height:320px; object-fit:cover;"/>
+</td>
+</tr>
+
+<tr>
+<td style="padding:40px 32px 24px; text-align:center;">
+<h1 style="margin:0; font-size:32px; color:#FFFFFF; line-height:1.2;">
+Sua próxima viagem começa agora ✈️
+</h1>
+<p style="margin:16px 0 0; color:#A1A1AA; font-size:16px; line-height:1.6;">
+Bem-vindo à Trpy, ${displayName}.<br/>
+Planeje, descubra e viva experiências incríveis com inteligência.
+</p>
+</td>
+</tr>
+
+<tr>
+<td align="center" style="padding:0 32px 40px;">
+<a href="https://www.trpy.com.br" style="display:inline-block; padding:18px 34px; border-radius:999px; background:linear-gradient(90deg,#6366f1,#8b5cf6,#f59e0b); color:#ffffff; font-weight:600; text-decoration:none; font-size:16px; box-shadow:0 10px 40px rgba(99,102,241,0.4);">
+Começar minha viagem
+</a>
+</td>
+</tr>
+
+<tr>
+<td style="padding:0 24px 32px;">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td width="50%" style="padding:4px;">
+<img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
+</td>
+<td width="50%" style="padding:4px;">
+<img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MjExNzZ8MHwxfHNlYXJjaHwxfHxOb3ZhJTIwWW9ya3xlbnwxfDB8fHwxNzc2Mjk3OTgxfDA&ixlib=rb-4.1.0&q=80&w=1080" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
+</td>
+</tr>
+<tr>
+<td width="50%" style="padding:4px;">
+<img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
+</td>
+<td width="50%" style="padding:4px;">
+<img src="https://images.unsplash.com/photo-1560703650-ef3e0f254ae0?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" style="width:100%; border-radius:14px; height:140px; object-fit:cover;"/>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+
+<tr>
+<td style="padding:0 32px 40px;">
+<p style="color:#FFFFFF; font-size:18px; margin-bottom:20px;">Tudo que você precisa, num só lugar:</p>
+
+<div style="padding:18px; border-radius:16px; background:#111118; border:1px solid rgba(255,255,255,0.05); margin-bottom:12px;">
+<strong style="color:#fff;">🧠 Planejamento inteligente</strong>
+<p style="margin:6px 0 0; color:#A1A1AA; font-size:14px;">Monte roteiros completos com ajuda de Inteligência Artificial</p>
+</div>
+
+<div style="padding:18px; border-radius:16px; background:#111118; border:1px solid rgba(255,255,255,0.05); margin-bottom:12px;">
+<strong style="color:#fff;">💰 Controle financeiro</strong>
+<p style="margin:6px 0 0; color:#A1A1AA; font-size:14px;">Acompanhe todos os gastos da sua viagem</p>
+</div>
+
+<div style="padding:18px; border-radius:16px; background:#111118; border:1px solid rgba(255,255,255,0.05);">
+<strong style="color:#fff;">🗺 Descubra destinos</strong>
+<p style="margin:6px 0 0; color:#A1A1AA; font-size:14px;">Explore lugares com fotos, reviews e mapas</p>
+</div>
+</td>
+</tr>
+
+<tr>
+<td style="padding:0 32px 40px;">
+<div style="border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
+<img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a" width="100%" style="height:200px; object-fit:cover; display:block;"/>
+<div style="padding:20px; background:#0F0F18;">
+<strong style="color:#fff;">Paris, França 🇫🇷</strong>
+<p style="margin:6px 0 0; color:#9CA3AF; font-size:14px;">Um destino perfeito para começar sua jornada.</p>
+</div>
+</div>
+</td>
+</tr>
+
+<tr>
+<td align="center" style="padding:0 32px 50px;">
+<a href="https://www.trpy.com.br" style="display:inline-block; padding:18px 34px; border-radius:999px; background:linear-gradient(90deg,#6366f1,#8b5cf6,#f59e0b); color:#ffffff; font-weight:600; text-decoration:none; font-size:16px; box-shadow:0 10px 40px rgba(99,102,241,0.4);">
+Explorar destinos
+</a>
+</td>
+</tr>
+
+<tr>
+<td style="padding:0 32px 32px;">
+<p style="margin:0; font-size:12px; color:#6B7280;">© 2026 Trpy — Planeje. Explore. Viva.</p>
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table>
+</body>
+</html>`,
+    });
+
+    if (response.error) {
+      console.error('[welcome] Resend error:', JSON.stringify(response.error));
+      return { success: false };
+    }
+
+    console.log(`[welcome] email queued id=${response.data?.id}`);
+    return { success: true };
+  } catch (error) {
+    console.error('[welcome] Email exception:', String(error));
+    return { success: false };
+  }
+}
+
 // ── Send Verification ────────────────────────────────────────────────────────
 
 export async function sendVerificationCodes(
