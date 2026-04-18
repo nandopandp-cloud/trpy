@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     template: '%s | Trpy',
   },
   description: 'Super-app de viagens com gestão financeira integrada',
+  icons: {
+    icon: '/logos/logo.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
