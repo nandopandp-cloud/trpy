@@ -67,6 +67,46 @@ function calcTooltipPos(rect: Rect, position: OnboardingStep['position']) {
   return { top, left };
 }
 
+// ── Mobile step content — mounts/unmounts per step via AnimatePresence ─────────
+
+type MobileStepContentProps = {
+  step: OnboardingStep;
+  direction: 'left' | 'right';
+};
+
+function MobileStepContent({ step, direction }: MobileStepContentProps) {
+  const Icon = step.icon;
+  const StepImage = STEP_IMAGES[step.mobileImageKey];
+  const enterX = direction === 'left' ? 40 : -40;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: enterX }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -enterX }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="absolute inset-0 px-5 pt-4 flex flex-col select-none"
+    >
+      {/* Illustration */}
+      <div
+        className="w-full rounded-2xl overflow-hidden border border-border/40 mb-4 shrink-0"
+        style={{ aspectRatio: '2 / 1' }}
+      >
+        <StepImage />
+      </div>
+
+      {/* Icon + title + description */}
+      <div className="flex items-center gap-3 mb-2.5">
+        <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+          <Icon className="w-5 h-5 text-indigo-500" />
+        </div>
+        <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
+      </div>
+      <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+    </motion.div>
+  );
+}
+
 // ── Mobile swipeable bottom sheet ──────────────────────────────────────────────
 // Strategy: the sheet itself slides up once and stays fixed.
 // Only the inner step content (image + icon + title + description) swipes.
@@ -75,34 +115,19 @@ function calcTooltipPos(rect: Rect, position: OnboardingStep['position']) {
 type MobileCardProps = Props & { isMobile: true };
 
 function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious, onSkip }: MobileCardProps) {
-  const Icon = step.icon;
-  const StepImage = STEP_IMAGES[step.mobileImageKey];
   const progress = Math.round(((currentIndex + 1) / totalSteps) * 100);
 
-  // Drag x — shared by draggable container + visual content
+  // Drag x for swipe gesture
   const x = useMotionValue(0);
   const dragOpacity = useTransform(x, [-140, 0, 140], [0.35, 1, 0.35]);
-
-  // Content opacity — fades during step transition (separate from drag)
-  const contentOpacity = useMotionValue(1);
 
   // Hint arrows
   const leftArrowOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
   const rightArrowOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
 
+  // Track swipe direction for AnimatePresence slide direction
   const swipeDir = useRef<'left' | 'right'>('left');
   const isTransitioning = useRef(false);
-
-  // When step changes (from button click or swipe), fade content out then in
-  // The container/card itself NEVER moves — only content opacity transitions
-  useEffect(() => {
-    if (isTransitioning.current) return;
-    // Already handled by swipe animation path; this covers button-click navigation
-    animate(contentOpacity, 0, { duration: 0.12 }).then(() => {
-      animate(contentOpacity, 1, { duration: 0.2, ease: [0.16, 1, 0.3, 1] });
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step.id]);
 
   function handleDragEnd(_: unknown, info: { offset: { x: number } }) {
     const dx = info.offset.x;
@@ -125,6 +150,16 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
     } else {
       animate(x, 0, { type: 'spring', stiffness: 500, damping: 36 });
     }
+  }
+
+  function handleNext() {
+    swipeDir.current = 'left';
+    onNext();
+  }
+
+  function handlePrevious() {
+    swipeDir.current = 'right';
+    onPrevious();
   }
 
   return (
@@ -160,7 +195,7 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
 
       {/* ── Content area ── */}
       <div className="flex-1 overflow-hidden relative">
-        {/* Hint arrows */}
+        {/* Hint arrows — driven by drag position */}
         <motion.div style={{ opacity: rightArrowOpacity }}
           className="absolute left-4 top-[38%] -translate-y-1/2 w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center pointer-events-none z-20">
           <ChevronLeft className="w-4 h-4 text-indigo-400" />
@@ -170,12 +205,7 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
           <ChevronRight className="w-4 h-4 text-indigo-400" />
         </motion.div>
 
-        {/*
-          NO key prop — this element NEVER remounts.
-          x drives drag movement + opacity fade.
-          contentOpacity drives step-change cross-fade independently.
-          Both are motion values, no React re-render involved.
-        */}
+        {/* Draggable wrapper — never remounts, x drives swipe gesture */}
         <motion.div
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
@@ -185,28 +215,17 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
           style={{ x, opacity: dragOpacity }}
           className="absolute inset-0 cursor-grab active:cursor-grabbing"
         >
-          {/* Inner content — fades on step change, no position change */}
-          <motion.div
-            style={{ opacity: contentOpacity }}
-            className="h-full px-5 pt-4 flex flex-col select-none"
-          >
-            {/* Illustration */}
-            <div
-              className="w-full rounded-2xl overflow-hidden border border-border/40 mb-4 shrink-0"
-              style={{ aspectRatio: '2 / 1' }}
-            >
-              <StepImage />
-            </div>
-
-            {/* Icon + title + description */}
-            <div className="flex items-center gap-3 mb-2.5">
-              <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
-                <Icon className="w-5 h-5 text-indigo-500" />
-              </div>
-              <h3 className="text-base font-bold text-foreground leading-tight">{step.title}</h3>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
-          </motion.div>
+          {/*
+            AnimatePresence with key=step.id handles content cross-fade cleanly.
+            No manual motion values or useEffect timing hacks needed.
+          */}
+          <AnimatePresence mode="wait" initial={false}>
+            <MobileStepContent
+              key={step.id}
+              step={step}
+              direction={swipeDir.current}
+            />
+          </AnimatePresence>
         </motion.div>
       </div>
 
@@ -225,7 +244,7 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
         <div className="flex gap-3">
           {currentIndex > 0 ? (
             <button
-              onClick={onPrevious}
+              onClick={handlePrevious}
               className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-border text-foreground font-semibold text-sm active:scale-95 transition-all"
             >
               <ChevronLeft className="w-5 h-5" /> Anterior
@@ -239,7 +258,7 @@ function MobileBottomSheet({ step, currentIndex, totalSteps, onNext, onPrevious,
             </button>
           )}
           <button
-            onClick={onNext}
+            onClick={handleNext}
             className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold text-sm active:scale-95 transition-all"
           >
             {currentIndex < totalSteps - 1 ? <>Próximo <ChevronRight className="w-5 h-5" /></> : 'Concluir 🎉'}

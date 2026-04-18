@@ -44,7 +44,7 @@ export function OnboardingTour() {
       )}
       {screen === 'tour' && (
         <OnboardingTooltip
-          key={`step-${step}`}
+          key="tour"
           step={ONBOARDING_STEPS[step]}
           currentIndex={step}
           totalSteps={ONBOARDING_STEPS.length}
