@@ -262,33 +262,35 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 
 <tr>
 <td style="padding:28px 32px;">
-<img src="https://trpy.vercel.app/logos/logo.png" width="90" style="display:block;"/>
+<a href="https://www.trpy.com.br/" target="_blank">
+  <img src="https://trpy.vercel.app/logos/logo.png" width="90"/>
+</a>
 </td>
 </tr>
 
 <tr>
 <td>
-<img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470" width="100%" style="display:block; height:320px; object-fit:cover;"/>
+  <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470" width="100%" style="display:block; height:320px; object-fit:cover;"/>
 </td>
 </tr>
 
 <tr>
 <td style="padding:40px 32px 24px; text-align:center;">
-<h1 style="margin:0; font-size:32px; color:#FFFFFF; line-height:1.2;">
-Sua próxima viagem começa agora ✈️
-</h1>
-<p style="margin:16px 0 0; color:#A1A1AA; font-size:16px; line-height:1.6;">
-Bem-vindo à Trpy, ${displayName}.<br/>
-Planeje, descubra e viva experiências incríveis com inteligência.
-</p>
+  <h1 style="margin:0; font-size:32px; color:#FFFFFF; line-height:1.2;">
+    Sua próxima viagem começa agora ✈️
+  </h1>
+  <p style="margin:16px 0 0; color:#A1A1AA; font-size:16px; line-height:1.6;">
+    Bem-vindo à Trpy, ${displayName}.<br/>
+    Planeje, descubra e viva experiências incríveis com inteligência.
+  </p>
 </td>
 </tr>
 
 <tr>
 <td align="center" style="padding:0 32px 40px;">
-<a href="https://www.trpy.com.br" style="display:inline-block; padding:18px 34px; border-radius:999px; background:linear-gradient(90deg,#6366f1,#8b5cf6,#f59e0b); color:#ffffff; font-weight:600; text-decoration:none; font-size:16px; box-shadow:0 10px 40px rgba(99,102,241,0.4);">
-Começar minha viagem
-</a>
+  <a href="https://www.trpy.com.br" style="display:inline-block; padding:18px 34px; border-radius:999px; background:linear-gradient(90deg,#6366f1,#8b5cf6,#f59e0b); color:#ffffff; font-weight:600; text-decoration:none; font-size:16px; box-shadow:0 10px 40px rgba(99,102,241,0.4);">
+    Começar minha viagem
+  </a>
 </td>
 </tr>
 
@@ -326,12 +328,12 @@ Começar minha viagem
 
 <div style="padding:18px; border-radius:16px; background:#111118; border:1px solid rgba(255,255,255,0.05); margin-bottom:12px;">
 <strong style="color:#fff;">💰 Controle financeiro</strong>
-<p style="margin:6px 0 0; color:#A1A1AA; font-size:14px;">Acompanhe todos os gastos da sua viagem</p>
+<p style="margin:6px 0 0; color:#A1A1AA; font-size:14px;">Acompanhe todos os gastos da sua viagem antes, durante e depois em um só lugar.</p>
 </div>
 
 <div style="padding:18px; border-radius:16px; background:#111118; border:1px solid rgba(255,255,255,0.05);">
-<strong style="color:#fff;">🗺 Descubra destinos</strong>
-<p style="margin:6px 0 0; color:#A1A1AA; font-size:14px;">Explore lugares com fotos, reviews e mapas</p>
+<strong style="color:#fff;">🌍 Descubra destinos</strong>
+<p style="margin:6px 0 0; color:#A1A1AA; font-size:14px;">Explore lugares com fotos, reviews, vídeos e muito mais.</p>
 </div>
 </td>
 </tr>
@@ -339,11 +341,11 @@ Começar minha viagem
 <tr>
 <td style="padding:0 32px 40px;">
 <div style="border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
-<img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a" width="100%" style="height:200px; object-fit:cover; display:block;"/>
-<div style="padding:20px; background:#0F0F18;">
-<strong style="color:#fff;">Paris, França 🇫🇷</strong>
-<p style="margin:6px 0 0; color:#9CA3AF; font-size:14px;">Um destino perfeito para começar sua jornada.</p>
-</div>
+  <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a" width="100%" style="height:200px; object-fit:cover; display:block;"/>
+  <div style="padding:20px; background:#0F0F18;">
+    <strong style="color:#fff;">Paris, França 🇫🇷</strong>
+    <p style="margin:6px 0 0; color:#9CA3AF; font-size:14px;">Um destino perfeito para começar sua jornada.</p>
+  </div>
 </div>
 </td>
 </tr>
