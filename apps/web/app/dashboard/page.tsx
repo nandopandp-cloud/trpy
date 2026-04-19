@@ -229,13 +229,27 @@ export default function DashboardPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const firstName = session?.user?.name?.split(' ')[0] ?? 'viajante';
-  const { data, isLoading } = useTrips({ limit: 5 });
+  const { data, isLoading } = useTrips({ limit: 20 });
   const trips = data?.trips ?? [];
   const TRENDING = useMemo(() => getRandomTrending(), []);
 
   const totalBudget = trips.reduce((s, t) => s + Number(t.budget), 0);
   const totalSpent  = trips.reduce((s, t) => s + Number(t.totalSpent), 0);
-  const nextTrip    = trips.find(t => t.status === 'PLANNING' || t.status === 'ONGOING');
+  // Prioridade: viagem em andamento > próxima por data de início
+  const nextTrip = trips
+    .filter(t => {
+      const s = deriveStatus(t);
+      return s === 'ONGOING' || s === 'PLANNING';
+    })
+    .sort((a, b) => {
+      const sa = deriveStatus(a);
+      const sb = deriveStatus(b);
+      // ONGOING sempre vem antes de PLANNING
+      if (sa === 'ONGOING' && sb !== 'ONGOING') return -1;
+      if (sb === 'ONGOING' && sa !== 'ONGOING') return 1;
+      // Entre iguais, a data mais próxima primeiro
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    })[0] ?? null;
   const daysToNext  = nextTrip ? Math.max(0, differenceInDays(new Date(nextTrip.startDate), new Date())) : null;
 
   // Photo for "Próxima Viagem" card — use saved coverImage or fetch from media engine
@@ -699,7 +713,7 @@ export default function DashboardPage() {
           <EmptyDashboard onNew={() => router.push('/dashboard/trips/new')} />
         ) : (
           <div className="space-y-3">
-            {trips.map((trip, i) => {
+            {trips.slice(0, 5).map((trip, i) => {
               const effectiveStatus = deriveStatus(trip);
               const isActive = effectiveStatus === 'ONGOING';
               const fallback = GRADIENT_FALLBACKS[i % GRADIENT_FALLBACKS.length];
