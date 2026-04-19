@@ -160,7 +160,7 @@ export async function searchPlacesByType(
 export async function searchPlacesByTypeWithLimit(
   location: string,
   type: 'restaurant' | 'lodging' | 'tourist_attraction' | 'museum',
-  limit = 40,
+  limit = 60,
 ): Promise<{ results: PlaceSearchResult[]; nextPageToken?: string }> {
   const results: PlaceSearchResult[] = [];
   let pageToken: string | undefined;

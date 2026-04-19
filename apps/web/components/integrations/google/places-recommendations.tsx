@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import {
   Star, MapPin, ExternalLink, Utensils, Hotel,
-  Landmark, Building2, ChevronRight, ChevronDown,
+  Landmark, Building2, ChevronRight, ChevronLeft,
 } from 'lucide-react';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { PlaceDetailModal } from './place-detail-modal';
@@ -239,17 +239,17 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
     hotels:      { ...DEFAULT_FILTERS },
     attractions: { ...DEFAULT_FILTERS },
   });
-  const [visibleCount, setVisibleCount] = useState<Record<string, number>>({
-    restaurants: PAGE_SIZE,
-    hotels: PAGE_SIZE,
-    attractions: PAGE_SIZE,
+  const [pageByTab, setPageByTab] = useState<Record<string, number>>({
+    restaurants: 0,
+    hotels: 0,
+    attractions: 0,
   });
 
   const { data, isLoading, isError } = useQuery<RecommendationsData>({
     queryKey: ['recommendations', destination],
     queryFn: async () => {
       const res = await fetch(
-        `/api/recommendations?destination=${encodeURIComponent(destination)}&limit=40`,
+        `/api/recommendations?destination=${encodeURIComponent(destination)}&limit=60`,
       );
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
@@ -263,14 +263,14 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
   const filters = filtersByTab[activeTab] ?? DEFAULT_FILTERS;
   const allPlaces: PlaceSearchResult[] = data?.[activeTab] ?? [];
   const filteredPlaces = useMemo(() => applyFilters(allPlaces, filters), [allPlaces, filters]);
-  const currentVisible = visibleCount[activeTab] ?? PAGE_SIZE;
-  const visiblePlaces = filteredPlaces.slice(0, currentVisible);
-  const hasMore = filteredPlaces.length > currentVisible;
+  const currentPage = pageByTab[activeTab] ?? 0;
+  const totalPages = Math.ceil(filteredPlaces.length / PAGE_SIZE);
+  const visiblePlaces = filteredPlaces.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
   const activeFiltersCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   function handleTabChange(key: typeof activeTab) {
     setActiveTab(key);
-    // Cada aba mantém seus próprios filtros — sem reset
+    setPageByTab((p) => ({ ...p, [key]: 0 }));
   }
 
   // Vincula a chave da aba explicitamente para que closures obsoletas ou
@@ -278,15 +278,12 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
   function makeFilterChangeHandler(tabKey: typeof activeTab) {
     return (f: PlacesFilters) => {
       setFiltersByTab((prev) => ({ ...prev, [tabKey]: { ...f } }));
-      setVisibleCount((v) => ({ ...v, [tabKey]: PAGE_SIZE }));
+      setPageByTab((p) => ({ ...p, [tabKey]: 0 }));
     };
   }
 
-  function loadMore() {
-    setVisibleCount((v) => ({
-      ...v,
-      [activeTab]: (v[activeTab] ?? PAGE_SIZE) + PAGE_SIZE,
-    }));
+  function goToPage(page: number) {
+    setPageByTab((p) => ({ ...p, [activeTab]: page }));
   }
 
   return (
@@ -368,20 +365,51 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
                 />
               ))}
 
-              {hasMore && (
-                <button
-                  onClick={loadMore}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/40 transition-all"
-                >
-                  <ChevronDown className="w-4 h-4" />
-                  Ver mais {filteredPlaces.length - currentVisible} lugares
-                </button>
-              )}
+              {/* Paginação */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => goToPage(Math.max(0, currentPage - 1))}
+                    disabled={currentPage === 0}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                      currentPage === 0
+                        ? 'opacity-40 cursor-not-allowed bg-muted/30'
+                        : 'hover:bg-muted bg-muted/60 text-foreground'
+                    }`}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Anterior
+                  </button>
 
-              {!hasMore && filteredPlaces.length > PAGE_SIZE && (
-                <p className="text-center text-xs text-muted-foreground py-2">
-                  {filteredPlaces.length} lugares encontrados
-                </p>
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => goToPage(i)}
+                        className={`w-8 h-8 rounded-lg font-semibold text-xs transition-all ${
+                          currentPage === i
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'hover:bg-muted bg-muted/60 text-foreground'
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => goToPage(Math.min(totalPages - 1, currentPage + 1))}
+                    disabled={currentPage === totalPages - 1}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                      currentPage === totalPages - 1
+                        ? 'opacity-40 cursor-not-allowed bg-muted/30'
+                        : 'hover:bg-muted bg-muted/60 text-foreground'
+                    }`}
+                  >
+                    Próxima
+                    <ChevronLeft className="w-4 h-4 rotate-180" />
+                  </button>
+                </div>
               )}
             </>
           )}

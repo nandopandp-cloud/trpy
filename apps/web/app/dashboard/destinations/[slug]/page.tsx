@@ -8,7 +8,7 @@ import {
   ArrowLeft, MapPin, Plus, Share2, Star,
   Globe, Calendar, Coins, Languages, Compass,
   Utensils, Hotel, Landmark, Youtube, Map,
-  ChevronRight, Clock, Building2, ChevronDown,
+  ChevronRight, ChevronLeft, Clock, Building2,
 } from 'lucide-react';
 import { PlacesFilter, applyFilters, DEFAULT_FILTERS, type PlacesFilters } from '@/components/integrations/google/places-filter';
 import { useQuery } from '@tanstack/react-query';
@@ -294,10 +294,10 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
     hotels:      { ...DEFAULT_FILTERS },
     attractions: { ...DEFAULT_FILTERS },
   });
-  const [visibleCount, setVisibleCount] = useState<Record<string, number>>({
-    restaurants: PAGE_SIZE,
-    hotels: PAGE_SIZE,
-    attractions: PAGE_SIZE,
+  const [pageByTab, setPageByTab] = useState<Record<string, number>>({
+    restaurants: 0,
+    hotels: 0,
+    attractions: 0,
   });
 
   const handleShare = useCallback(() => {
@@ -337,7 +337,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
   }>({
     queryKey: ['recommendations', destination],
     queryFn: async () => {
-      const res = await fetch(`/api/recommendations?destination=${encodeURIComponent(destination)}&limit=40`);
+      const res = await fetch(`/api/recommendations?destination=${encodeURIComponent(destination)}&limit=60`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       return json.data;
@@ -368,13 +368,13 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
     () => applyFilters(allCurrentPlaces, placeFilters),
     [allCurrentPlaces, placeFilters],
   );
-  const currentVisible = visibleCount[placeTab] ?? PAGE_SIZE;
-  const visiblePlaces = filteredPlaces.slice(0, currentVisible);
-  const hasMore = filteredPlaces.length > currentVisible;
+  const currentPage = pageByTab[placeTab] ?? 0;
+  const totalPages = Math.ceil(filteredPlaces.length / PAGE_SIZE);
+  const visiblePlaces = filteredPlaces.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   function handlePlaceTabChange(key: PlaceTab) {
     setPlaceTab(key);
-    // Cada aba mantém seus próprios filtros — sem reset
+    setPageByTab((p) => ({ ...p, [key]: 0 }));
   }
 
   // Vincula a chave da aba explicitamente para que closures obsoletas ou
@@ -382,12 +382,12 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
   function makePlaceFilterHandler(tabKey: PlaceTab) {
     return (f: PlacesFilters) => {
       setFiltersByTab((prev) => ({ ...prev, [tabKey]: { ...f } }));
-      setVisibleCount((v) => ({ ...v, [tabKey]: PAGE_SIZE }));
+      setPageByTab((p) => ({ ...p, [tabKey]: 0 }));
     };
   }
 
-  function loadMore() {
-    setVisibleCount((v) => ({ ...v, [placeTab]: (v[placeTab] ?? PAGE_SIZE) + PAGE_SIZE }));
+  function goToPage(page: number) {
+    setPageByTab((p) => ({ ...p, [placeTab]: page }));
   }
 
   return (
@@ -765,21 +765,54 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                         />
                       ))}
 
-                      {/* Load more */}
-                      {hasMore && (
-                        <button
-                          onClick={loadMore}
-                          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/40 transition-all"
-                        >
-                          <ChevronDown className="w-4 h-4" />
-                          Ver mais {filteredPlaces.length - currentVisible} lugares
-                        </button>
-                      )}
+                      {/* Paginação */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-3 pt-2">
+                          <button
+                            onClick={() => goToPage(Math.max(0, currentPage - 1))}
+                            disabled={currentPage === 0}
+                            className={cn(
+                              'flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all',
+                              currentPage === 0
+                                ? 'opacity-40 cursor-not-allowed bg-muted/30'
+                                : 'hover:bg-muted bg-muted/60 text-foreground'
+                            )}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            Anterior
+                          </button>
 
-                      {!hasMore && filteredPlaces.length > PAGE_SIZE && (
-                        <p className="text-center text-xs text-muted-foreground py-2">
-                          {filteredPlaces.length} lugares encontrados
-                        </p>
+                          <div className="flex items-center gap-1.5">
+                            {Array.from({ length: totalPages }).map((_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => goToPage(i)}
+                                className={cn(
+                                  'w-8 h-8 rounded-lg font-semibold text-xs transition-all',
+                                  currentPage === i
+                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                    : 'hover:bg-muted bg-muted/60 text-foreground'
+                                )}
+                              >
+                                {i + 1}
+                              </button>
+                            ))}
+                          </div>
+
+                          <button
+                            onClick={() => goToPage(Math.min(totalPages - 1, currentPage + 1))}
+                            disabled={currentPage === totalPages - 1}
+                            className={cn(
+                              'flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all',
+                              currentPage === totalPages - 1
+                                ? 'opacity-40 cursor-not-allowed bg-muted/30'
+                                : 'hover:bg-muted bg-muted/60 text-foreground'
+                            )}
+                          >
+                            Próxima
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
                     </>
                   )}

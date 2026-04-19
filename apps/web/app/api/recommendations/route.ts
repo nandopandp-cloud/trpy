@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const destination = req.nextUrl.searchParams.get('destination');
     const type = req.nextUrl.searchParams.get('type') as PlaceType | null;
     const limitParam = req.nextUrl.searchParams.get('limit');
-    const limit = limitParam ? Math.min(parseInt(limitParam, 10), 60) : 40;
+    const limit = limitParam ? Math.min(parseInt(limitParam, 10), 60) : 60;
 
     if (!destination) return err('destination é obrigatório', 400);
     if (type && !VALID_TYPES.includes(type)) return err('type inválido', 400);
