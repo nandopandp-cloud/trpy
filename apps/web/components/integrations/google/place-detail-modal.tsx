@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Star, MapPin, Clock, Phone, Globe, ChevronLeft, ChevronRight,
   ExternalLink, Navigation, Share2, Building2, Loader2, DollarSign,
-  ChevronDown, SlidersHorizontal, Check, Pencil, Plus,
+  ChevronDown, SlidersHorizontal, Check, Pencil, Plus, BedDouble,
 } from 'lucide-react';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { GoogleMapView } from './google-map-view';
@@ -526,6 +526,131 @@ function ReviewsList({
   );
 }
 
+// ─── Booking Hub ─────────────────────────────────────────────────────────────
+
+const HOTEL_TYPES = new Set(['lodging', 'hotel', 'motel', 'resort', 'hostel', 'guest_house']);
+
+function isHotel(types?: string[]) {
+  return types?.some((t) => HOTEL_TYPES.has(t)) ?? false;
+}
+
+const PRICE_RANGE_LABEL: Record<number, string> = {
+  1: 'Econômico',
+  2: 'Moderado',
+  3: 'Sofisticado',
+  4: 'Luxo',
+};
+
+interface OTA {
+  id: string;
+  name: string;
+  color: string;
+  textColor: string;
+  buildUrl: (name: string, city: string) => string;
+}
+
+const OTAS: OTA[] = [
+  {
+    id: 'booking',
+    name: 'Booking.com',
+    color: '#003580',
+    textColor: '#fff',
+    buildUrl: (name, city) =>
+      `https://www.booking.com/search.html?ss=${encodeURIComponent(`${name} ${city}`)}`,
+  },
+  {
+    id: 'hotels',
+    name: 'Hotels.com',
+    color: '#d11f26',
+    textColor: '#fff',
+    buildUrl: (name, city) =>
+      `https://www.hotels.com/search.do?q-destination=${encodeURIComponent(`${name} ${city}`)}`,
+  },
+  {
+    id: 'expedia',
+    name: 'Expedia',
+    color: '#fbcc33',
+    textColor: '#000',
+    buildUrl: (name, city) =>
+      `https://www.expedia.com/Hotel-Search?destination=${encodeURIComponent(`${name} ${city}`)}`,
+  },
+  {
+    id: 'airbnb',
+    name: 'Airbnb',
+    color: '#ff385c',
+    textColor: '#fff',
+    buildUrl: (name, city) =>
+      `https://www.airbnb.com/s/${encodeURIComponent(`${name} ${city}`)}/homes`,
+  },
+  {
+    id: 'google',
+    name: 'Google Hotels',
+    color: '#4285f4',
+    textColor: '#fff',
+    buildUrl: (name, city) =>
+      `https://www.google.com/travel/hotels/entity/${encodeURIComponent(`${name} ${city}`)}`,
+  },
+];
+
+function BookingHub({
+  place,
+}: {
+  place: PlaceDetails;
+}) {
+  // Extrai cidade do endereço (último componente antes do país)
+  const city = place.formatted_address?.split(',').slice(-2, -1)[0]?.trim() ?? '';
+  const priceLabel = place.price_level != null ? PRICE_RANGE_LABEL[place.price_level] : null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <BedDouble className="w-3.5 h-3.5" />
+          Onde reservar
+        </h3>
+        {priceLabel && (
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            {PRICE[place.price_level!]} · {priceLabel}
+          </span>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-muted/30 overflow-hidden divide-y divide-border">
+        {OTAS.map((ota) => {
+          const href = ota.buildUrl(place.name, city);
+          return (
+            <a
+              key={ota.id}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between px-4 py-3 hover:bg-muted/60 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <span
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black shrink-0"
+                  style={{ background: ota.color, color: ota.textColor }}
+                >
+                  {ota.name[0]}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{ota.name}</p>
+                  <p className="text-[11px] text-muted-foreground">Buscar disponibilidade</p>
+                </div>
+              </div>
+              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+            </a>
+          );
+        })}
+      </div>
+
+      <p className="text-[10px] text-muted-foreground text-center">
+        Os preços variam por data. Compare antes de reservar.
+      </p>
+    </div>
+  );
+}
+
 // ─── Add to Trip picker ───────────────────────────────────────────────────────
 
 interface TripDay { id: string; dayNumber: number; date: string; title?: string | null }
@@ -874,6 +999,11 @@ export function PlaceDetailModal({
                   <p className="text-[10px] text-muted-foreground mt-0.5">Faixa de preço</p>
                 </div>
               </div>
+            )}
+
+            {/* Booking hub — exibido somente para hospedagens */}
+            {place && isHotel(place.types) && (
+              <BookingHub place={place} />
             )}
 
             {/* Opening hours (collapsible) */}
