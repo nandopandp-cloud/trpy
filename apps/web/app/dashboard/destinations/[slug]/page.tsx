@@ -381,7 +381,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
   }
 
   function handlePlaceFiltersChange(f: PlacesFilters) {
-    setFiltersByTab((prev) => ({ ...prev, [placeTab]: f }));
+    setFiltersByTab((prev) => ({ ...prev, [placeTab]: { ...f } }));
     setVisibleCount((v) => ({ ...v, [placeTab]: PAGE_SIZE }));
   }
 
@@ -707,16 +707,6 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                 })}
               </div>
 
-              {/* Filter bar */}
-              {!placesLoading && !placesError && allCurrentPlaces.length > 0 && (
-                <PlacesFilter
-                  filters={placeFilters}
-                  onChange={handlePlaceFiltersChange}
-                  totalCount={allCurrentPlaces.length}
-                  filteredCount={filteredPlaces.length}
-                />
-              )}
-
               {/* Content */}
               {placesLoading && <CardSkeleton count={5} />}
               {placesError && (
@@ -736,6 +726,15 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                     transition={{ duration: 0.15 }}
                     className="space-y-2"
                   >
+                    {/* Filter bar — inside keyed block so it always matches the active tab */}
+                    {allCurrentPlaces.length > 0 && (
+                      <PlacesFilter
+                        filters={placeFilters}
+                        onChange={handlePlaceFiltersChange}
+                        totalCount={allCurrentPlaces.length}
+                        filteredCount={filteredPlaces.length}
+                      />
+                    )}
                     {filteredPlaces.length === 0 ? (
                       allCurrentPlaces.length === 0 ? (
                         <EmptyState
@@ -750,7 +749,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                             <p className="text-sm font-medium text-foreground">Nenhum lugar com esses filtros</p>
                             <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros para ver mais resultados.</p>
                             <button
-                              onClick={() => handlePlaceFiltersChange(DEFAULT_FILTERS)}
+                              onClick={() => handlePlaceFiltersChange({ ...DEFAULT_FILTERS })}
                               className="mt-2 text-xs font-semibold text-primary hover:underline"
                             >
                               Limpar filtros

@@ -280,7 +280,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
   }
 
   function handleFiltersChange(f: PlacesFilters) {
-    setFiltersByTab((prev) => ({ ...prev, [activeTab]: f }));
+    setFiltersByTab((prev) => ({ ...prev, [activeTab]: { ...f } }));
     setVisibleCount((v) => ({ ...v, [activeTab]: PAGE_SIZE }));
   }
 
@@ -320,16 +320,6 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
         })}
       </div>
 
-      {/* Filter bar — only shown when data is loaded */}
-      {!isLoading && !isError && allPlaces.length > 0 && (
-        <PlacesFilter
-          filters={filters}
-          onChange={handleFiltersChange}
-          totalCount={allPlaces.length}
-          filteredCount={filteredPlaces.length}
-        />
-      )}
-
       {/* Content */}
       {isLoading && <LoadingSkeleton />}
 
@@ -352,13 +342,23 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
             transition={{ duration: 0.15 }}
             className="space-y-3"
           >
+            {/* Filter bar — inside keyed block so it always matches the active tab */}
+            {allPlaces.length > 0 && (
+              <PlacesFilter
+                filters={filters}
+                onChange={handleFiltersChange}
+                totalCount={allPlaces.length}
+                filteredCount={filteredPlaces.length}
+              />
+            )}
+
             {filteredPlaces.length === 0 ? (
               <EmptyState
                 tab={tab}
                 destination={destination}
                 locale={locale}
                 hasFilters={activeFiltersCount > 0}
-                onReset={() => handleFiltersChange(DEFAULT_FILTERS)}
+                onReset={() => handleFiltersChange({ ...DEFAULT_FILTERS })}
               />
             ) : (
               <>
@@ -379,7 +379,6 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
                   />
                 ))}
 
-                {/* Load more */}
                 {hasMore && (
                   <motion.button
                     initial={{ opacity: 0 }}
@@ -392,7 +391,6 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
                   </motion.button>
                 )}
 
-                {/* End of results indicator */}
                 {!hasMore && filteredPlaces.length > PAGE_SIZE && (
                   <p className="text-center text-xs text-muted-foreground py-2">
                     {filteredPlaces.length} lugares encontrados

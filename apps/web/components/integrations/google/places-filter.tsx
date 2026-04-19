@@ -157,7 +157,7 @@ export function PlacesFilter({
   }
 
   function reset() {
-    onChange(DEFAULT_FILTERS);
+    onChange({ ...DEFAULT_FILTERS });
     setOpen(false);
   }
 
