@@ -175,25 +175,198 @@ function TiltCard({ children, className, onClick }: { children: React.ReactNode;
 
 /* ── Data ─────────────────────────────────────────────── */
 
-const TRENDING_POOL = [
-  { name: 'Bali', country: 'Indonésia', emoji: '🌊', gradient: 'from-emerald-500 to-teal-600', tag: 'Natureza', rating: 4.9, query: 'Bali travel landscape' },
-  { name: 'Paris', country: 'França', emoji: '🗼', gradient: 'from-sky-500 to-indigo-600', tag: 'Cultura', rating: 4.8, query: 'Paris city skyline' },
-  { name: 'Patagônia', country: 'Argentina', emoji: '🏔️', gradient: 'from-slate-500 to-slate-700', tag: 'Aventura', rating: 4.9, query: 'Patagonia mountains landscape' },
-  { name: 'Tóquio', country: 'Japão', emoji: '🎌', gradient: 'from-rose-500 to-pink-600', tag: 'Urbano', rating: 4.8, query: 'Tokyo city night' },
-  { name: 'Santorini', country: 'Grécia', emoji: '🏝️', gradient: 'from-blue-500 to-cyan-600', tag: 'Romance', rating: 4.7, query: 'Santorini Greece blue domes' },
-  { name: 'Maldivas', country: 'Maldivas', emoji: '🏝️', gradient: 'from-cyan-500 to-blue-600', tag: 'Praia', rating: 4.9, query: 'Maldives resort tropical' },
-  { name: 'Barcelona', country: 'Espanha', emoji: '🎨', gradient: 'from-red-500 to-yellow-500', tag: 'Arquitetura', rating: 4.8, query: 'Barcelona Gaudi city' },
-  { name: 'Marrocos', country: 'Marrocos', emoji: '🕌', gradient: 'from-amber-600 to-orange-700', tag: 'Cultura', rating: 4.7, query: 'Morocco medina desert' },
-  { name: 'Islândia', country: 'Islândia', emoji: '🌋', gradient: 'from-indigo-600 to-violet-700', tag: 'Natureza', rating: 4.9, query: 'Iceland waterfall glacier' },
-  { name: 'Dubai', country: 'Emirados', emoji: '🏙️', gradient: 'from-amber-400 to-yellow-600', tag: 'Luxo', rating: 4.6, query: 'Dubai skyline desert' },
-  { name: 'Nova York', country: 'EUA', emoji: '🗽', gradient: 'from-sky-600 to-blue-700', tag: 'Urbano', rating: 4.8, query: 'New York City lights' },
-  { name: 'Tailândia', country: 'Tailândia', emoji: '🛕', gradient: 'from-orange-500 to-red-600', tag: 'Aventura', rating: 4.7, query: 'Thailand temple beach' },
-  { name: 'Praga', country: 'República Tcheca', emoji: '🏰', gradient: 'from-red-600 to-rose-700', tag: 'História', rating: 4.8, query: 'Prague castle old town' },
+// Destinos em alta — curadoria ampla com Brasil e o mundo.
+// Cada item tem uma `region` para permitir amostragem balanceada
+// (não queremos encher a tela só de destinos internacionais nem só de brasileiros).
+
+type TrendingRegion = 'BR_NORDESTE' | 'BR_SUL' | 'BR_SUDESTE' | 'BR_NORTE' | 'BR_CENTRO_OESTE' |
+  'AMERICAS' | 'EUROPA' | 'ASIA' | 'AFRICA' | 'OCEANIA' | 'ORIENTE_MEDIO';
+
+interface TrendingEntry {
+  name: string;
+  country: string;
+  region: TrendingRegion;
+  emoji: string;
+  gradient: string;
+  tag: string;
+  rating: number;
+  query: string;
+}
+
+const TRENDING_POOL: TrendingEntry[] = [
+  // ─── BRASIL — Nordeste ────────────────────────────────────────────────
+  { name: 'Fernando de Noronha', country: 'Brasil', region: 'BR_NORDESTE', emoji: '🐬', gradient: 'from-cyan-500 to-blue-600', tag: 'Praia', rating: 4.9, query: 'Fernando de Noronha beach Brazil' },
+  { name: 'Jericoacoara', country: 'Brasil', region: 'BR_NORDESTE', emoji: '🏖️', gradient: 'from-amber-400 to-orange-500', tag: 'Praia', rating: 4.8, query: 'Jericoacoara Ceara dunes beach' },
+  { name: 'Porto de Galinhas', country: 'Brasil', region: 'BR_NORDESTE', emoji: '🐠', gradient: 'from-sky-400 to-teal-500', tag: 'Praia', rating: 4.7, query: 'Porto de Galinhas Pernambuco natural pools' },
+  { name: 'Chapada Diamantina', country: 'Brasil', region: 'BR_NORDESTE', emoji: '🏞️', gradient: 'from-emerald-600 to-teal-700', tag: 'Aventura', rating: 4.9, query: 'Chapada Diamantina Bahia waterfall' },
+  { name: 'Salvador', country: 'Brasil', region: 'BR_NORDESTE', emoji: '🎭', gradient: 'from-amber-500 to-red-600', tag: 'Cultura', rating: 4.6, query: 'Salvador Bahia Pelourinho colonial' },
+  { name: 'Lençóis Maranhenses', country: 'Brasil', region: 'BR_NORDESTE', emoji: '🏜️', gradient: 'from-sky-300 to-amber-200', tag: 'Natureza', rating: 4.9, query: 'Lencois Maranhenses dunes lagoons' },
+  { name: 'Maragogi', country: 'Brasil', region: 'BR_NORDESTE', emoji: '🤿', gradient: 'from-teal-400 to-cyan-600', tag: 'Praia', rating: 4.8, query: 'Maragogi Alagoas caribbean beach' },
+  { name: 'Pipa', country: 'Brasil', region: 'BR_NORDESTE', emoji: '🐢', gradient: 'from-orange-400 to-red-500', tag: 'Praia', rating: 4.7, query: 'Praia da Pipa Rio Grande do Norte cliffs' },
+
+  // ─── BRASIL — Sul ─────────────────────────────────────────────────────
+  { name: 'Florianópolis', country: 'Brasil', region: 'BR_SUL', emoji: '🏄', gradient: 'from-blue-500 to-indigo-600', tag: 'Praia', rating: 4.7, query: 'Florianopolis Santa Catarina island beach' },
+  { name: 'Gramado', country: 'Brasil', region: 'BR_SUL', emoji: '🌲', gradient: 'from-emerald-600 to-green-800', tag: 'Romance', rating: 4.8, query: 'Gramado Rio Grande do Sul winter' },
+  { name: 'Bombinhas', country: 'Brasil', region: 'BR_SUL', emoji: '🐟', gradient: 'from-teal-500 to-blue-600', tag: 'Praia', rating: 4.7, query: 'Bombinhas Santa Catarina diving beach' },
+  { name: 'Foz do Iguaçu', country: 'Brasil', region: 'BR_SUL', emoji: '💦', gradient: 'from-emerald-500 to-teal-700', tag: 'Natureza', rating: 4.9, query: 'Iguaçu falls Brazil Parana' },
+  { name: 'Cambará do Sul', country: 'Brasil', region: 'BR_SUL', emoji: '🏔️', gradient: 'from-slate-500 to-emerald-700', tag: 'Aventura', rating: 4.8, query: 'Cambara do Sul canyons Itaimbezinho' },
+
+  // ─── BRASIL — Sudeste ─────────────────────────────────────────────────
+  { name: 'Rio de Janeiro', country: 'Brasil', region: 'BR_SUDESTE', emoji: '🌅', gradient: 'from-amber-400 to-rose-600', tag: 'Urbano', rating: 4.8, query: 'Rio de Janeiro Christ Redeemer beach' },
+  { name: 'Paraty', country: 'Brasil', region: 'BR_SUDESTE', emoji: '⛵', gradient: 'from-indigo-500 to-blue-700', tag: 'História', rating: 4.8, query: 'Paraty colonial town boats' },
+  { name: 'Ilhabela', country: 'Brasil', region: 'BR_SUDESTE', emoji: '🌴', gradient: 'from-emerald-400 to-teal-600', tag: 'Praia', rating: 4.7, query: 'Ilhabela Sao Paulo beach forest' },
+  { name: 'Ouro Preto', country: 'Brasil', region: 'BR_SUDESTE', emoji: '⛪', gradient: 'from-amber-600 to-yellow-700', tag: 'História', rating: 4.8, query: 'Ouro Preto Minas Gerais colonial' },
+  { name: 'Campos do Jordão', country: 'Brasil', region: 'BR_SUDESTE', emoji: '🎿', gradient: 'from-slate-400 to-indigo-600', tag: 'Romance', rating: 4.6, query: 'Campos do Jordao mountain winter' },
+  { name: 'Ilha Grande', country: 'Brasil', region: 'BR_SUDESTE', emoji: '🏝️', gradient: 'from-teal-500 to-emerald-700', tag: 'Praia', rating: 4.8, query: 'Ilha Grande Angra dos Reis Brazil' },
+
+  // ─── BRASIL — Norte ───────────────────────────────────────────────────
+  { name: 'Manaus', country: 'Brasil', region: 'BR_NORTE', emoji: '🌿', gradient: 'from-green-600 to-emerald-800', tag: 'Natureza', rating: 4.6, query: 'Manaus Amazon rainforest meeting waters' },
+  { name: 'Alter do Chão', country: 'Brasil', region: 'BR_NORTE', emoji: '🏞️', gradient: 'from-sky-400 to-teal-500', tag: 'Natureza', rating: 4.8, query: 'Alter do Chao Para beach river' },
+  { name: 'Jalapão', country: 'Brasil', region: 'BR_NORTE', emoji: '💧', gradient: 'from-amber-500 to-orange-600', tag: 'Aventura', rating: 4.9, query: 'Jalapao Tocantins dunes waterfall' },
+
+  // ─── BRASIL — Centro-Oeste ────────────────────────────────────────────
+  { name: 'Bonito', country: 'Brasil', region: 'BR_CENTRO_OESTE', emoji: '🐟', gradient: 'from-cyan-400 to-teal-600', tag: 'Natureza', rating: 4.9, query: 'Bonito Mato Grosso do Sul crystal river' },
+  { name: 'Pantanal', country: 'Brasil', region: 'BR_CENTRO_OESTE', emoji: '🦜', gradient: 'from-emerald-600 to-green-800', tag: 'Natureza', rating: 4.8, query: 'Pantanal wetlands wildlife Brazil' },
+  { name: 'Chapada dos Veadeiros', country: 'Brasil', region: 'BR_CENTRO_OESTE', emoji: '🏔️', gradient: 'from-amber-500 to-red-700', tag: 'Aventura', rating: 4.8, query: 'Chapada dos Veadeiros Goias waterfall' },
+
+  // ─── AMÉRICAS (fora do Brasil) ────────────────────────────────────────
+  { name: 'Patagônia', country: 'Argentina', region: 'AMERICAS', emoji: '🏔️', gradient: 'from-slate-500 to-slate-700', tag: 'Aventura', rating: 4.9, query: 'Patagonia mountains landscape' },
+  { name: 'Buenos Aires', country: 'Argentina', region: 'AMERICAS', emoji: '💃', gradient: 'from-sky-500 to-blue-700', tag: 'Cultura', rating: 4.7, query: 'Buenos Aires tango architecture' },
+  { name: 'Cusco', country: 'Peru', region: 'AMERICAS', emoji: '🏛️', gradient: 'from-amber-600 to-red-700', tag: 'História', rating: 4.9, query: 'Cusco Machu Picchu Peru' },
+  { name: 'Nova York', country: 'EUA', region: 'AMERICAS', emoji: '🗽', gradient: 'from-sky-600 to-blue-700', tag: 'Urbano', rating: 4.8, query: 'New York City lights' },
+  { name: 'Cidade do México', country: 'México', region: 'AMERICAS', emoji: '🌵', gradient: 'from-rose-500 to-amber-600', tag: 'Cultura', rating: 4.7, query: 'Mexico City cathedral colorful' },
+  { name: 'Cartagena', country: 'Colômbia', region: 'AMERICAS', emoji: '🌺', gradient: 'from-pink-500 to-orange-500', tag: 'Romance', rating: 4.8, query: 'Cartagena Colombia colonial colorful' },
+  { name: 'Havana', country: 'Cuba', region: 'AMERICAS', emoji: '🚗', gradient: 'from-amber-500 to-red-600', tag: 'Cultura', rating: 4.7, query: 'Havana Cuba classic cars colorful' },
+  { name: 'Banff', country: 'Canadá', region: 'AMERICAS', emoji: '🏔️', gradient: 'from-teal-500 to-blue-700', tag: 'Natureza', rating: 4.9, query: 'Banff Canada lake mountains' },
+
+  // ─── EUROPA ────────────────────────────────────────────────────────────
+  { name: 'Paris', country: 'França', region: 'EUROPA', emoji: '🗼', gradient: 'from-sky-500 to-indigo-600', tag: 'Cultura', rating: 4.8, query: 'Paris city skyline' },
+  { name: 'Santorini', country: 'Grécia', region: 'EUROPA', emoji: '🏝️', gradient: 'from-blue-500 to-cyan-600', tag: 'Romance', rating: 4.7, query: 'Santorini Greece blue domes' },
+  { name: 'Barcelona', country: 'Espanha', region: 'EUROPA', emoji: '🎨', gradient: 'from-red-500 to-yellow-500', tag: 'Arquitetura', rating: 4.8, query: 'Barcelona Gaudi city' },
+  { name: 'Islândia', country: 'Islândia', region: 'EUROPA', emoji: '🌋', gradient: 'from-indigo-600 to-violet-700', tag: 'Natureza', rating: 4.9, query: 'Iceland waterfall glacier' },
+  { name: 'Praga', country: 'República Tcheca', region: 'EUROPA', emoji: '🏰', gradient: 'from-red-600 to-rose-700', tag: 'História', rating: 4.8, query: 'Prague castle old town' },
+  { name: 'Lisboa', country: 'Portugal', region: 'EUROPA', emoji: '🚋', gradient: 'from-amber-400 to-orange-600', tag: 'Cultura', rating: 4.7, query: 'Lisbon Portugal tram tiles' },
+  { name: 'Porto', country: 'Portugal', region: 'EUROPA', emoji: '🍷', gradient: 'from-rose-500 to-red-700', tag: 'Gastronomia', rating: 4.8, query: 'Porto Portugal Douro wine' },
+  { name: 'Roma', country: 'Itália', region: 'EUROPA', emoji: '🏛️', gradient: 'from-amber-600 to-red-700', tag: 'História', rating: 4.8, query: 'Rome Colosseum ancient' },
+  { name: 'Amalfi', country: 'Itália', region: 'EUROPA', emoji: '🍋', gradient: 'from-amber-400 to-blue-500', tag: 'Romance', rating: 4.9, query: 'Amalfi coast Italy cliffs' },
+  { name: 'Amsterdã', country: 'Países Baixos', region: 'EUROPA', emoji: '🚲', gradient: 'from-orange-500 to-red-600', tag: 'Urbano', rating: 4.7, query: 'Amsterdam canals Netherlands' },
+  { name: 'Dubrovnik', country: 'Croácia', region: 'EUROPA', emoji: '🏰', gradient: 'from-orange-500 to-red-700', tag: 'História', rating: 4.8, query: 'Dubrovnik Croatia old city walls' },
+  { name: 'Edimburgo', country: 'Escócia', region: 'EUROPA', emoji: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', gradient: 'from-slate-600 to-indigo-800', tag: 'História', rating: 4.7, query: 'Edinburgh Scotland castle' },
+
+  // ─── ÁSIA ──────────────────────────────────────────────────────────────
+  { name: 'Bali', country: 'Indonésia', region: 'ASIA', emoji: '🌊', gradient: 'from-emerald-500 to-teal-600', tag: 'Natureza', rating: 4.9, query: 'Bali travel landscape' },
+  { name: 'Tóquio', country: 'Japão', region: 'ASIA', emoji: '🎌', gradient: 'from-rose-500 to-pink-600', tag: 'Urbano', rating: 4.8, query: 'Tokyo city night' },
+  { name: 'Kyoto', country: 'Japão', region: 'ASIA', emoji: '⛩️', gradient: 'from-pink-500 to-red-600', tag: 'Cultura', rating: 4.9, query: 'Kyoto temple cherry blossom' },
+  { name: 'Tailândia', country: 'Tailândia', region: 'ASIA', emoji: '🛕', gradient: 'from-orange-500 to-red-600', tag: 'Aventura', rating: 4.7, query: 'Thailand temple beach' },
+  { name: 'Vietnã', country: 'Vietnã', region: 'ASIA', emoji: '🛶', gradient: 'from-emerald-500 to-green-700', tag: 'Natureza', rating: 4.8, query: 'Ha Long Bay Vietnam boat' },
+  { name: 'Seul', country: 'Coreia do Sul', region: 'ASIA', emoji: '🏙️', gradient: 'from-indigo-500 to-fuchsia-700', tag: 'Urbano', rating: 4.7, query: 'Seoul South Korea night' },
+  { name: 'Singapura', country: 'Singapura', region: 'ASIA', emoji: '🌆', gradient: 'from-teal-500 to-blue-700', tag: 'Urbano', rating: 4.7, query: 'Singapore skyline gardens' },
+  { name: 'Maldivas', country: 'Maldivas', region: 'ASIA', emoji: '🏝️', gradient: 'from-cyan-500 to-blue-600', tag: 'Praia', rating: 4.9, query: 'Maldives resort tropical' },
+  { name: 'Nepal', country: 'Nepal', region: 'ASIA', emoji: '🏔️', gradient: 'from-slate-500 to-indigo-700', tag: 'Aventura', rating: 4.8, query: 'Nepal Himalaya mountains' },
+
+  // ─── ÁFRICA ────────────────────────────────────────────────────────────
+  { name: 'Marrocos', country: 'Marrocos', region: 'AFRICA', emoji: '🕌', gradient: 'from-amber-600 to-orange-700', tag: 'Cultura', rating: 4.7, query: 'Morocco medina desert' },
+  { name: 'Cidade do Cabo', country: 'África do Sul', region: 'AFRICA', emoji: '🦁', gradient: 'from-amber-500 to-red-700', tag: 'Aventura', rating: 4.8, query: 'Cape Town Table Mountain' },
+  { name: 'Zanzibar', country: 'Tanzânia', region: 'AFRICA', emoji: '🐚', gradient: 'from-teal-400 to-cyan-600', tag: 'Praia', rating: 4.7, query: 'Zanzibar beach Tanzania' },
+  { name: 'Serengeti', country: 'Tanzânia', region: 'AFRICA', emoji: '🦒', gradient: 'from-amber-500 to-orange-700', tag: 'Aventura', rating: 4.9, query: 'Serengeti safari wildlife' },
+  { name: 'Pirâmides', country: 'Egito', region: 'AFRICA', emoji: '🐪', gradient: 'from-amber-400 to-yellow-700', tag: 'História', rating: 4.8, query: 'Egypt pyramids Giza' },
+
+  // ─── OCEANIA ───────────────────────────────────────────────────────────
+  { name: 'Sydney', country: 'Austrália', region: 'OCEANIA', emoji: '🦘', gradient: 'from-blue-500 to-indigo-700', tag: 'Urbano', rating: 4.8, query: 'Sydney opera house harbour' },
+  { name: 'Queenstown', country: 'Nova Zelândia', region: 'OCEANIA', emoji: '🪂', gradient: 'from-teal-600 to-indigo-800', tag: 'Aventura', rating: 4.9, query: 'Queenstown New Zealand mountains lake' },
+  { name: 'Bora Bora', country: 'Polinésia', region: 'OCEANIA', emoji: '🏝️', gradient: 'from-cyan-400 to-blue-700', tag: 'Praia', rating: 4.9, query: 'Bora Bora overwater bungalows' },
+
+  // ─── ORIENTE MÉDIO ────────────────────────────────────────────────────
+  { name: 'Dubai', country: 'Emirados', region: 'ORIENTE_MEDIO', emoji: '🏙️', gradient: 'from-amber-400 to-yellow-600', tag: 'Luxo', rating: 4.6, query: 'Dubai skyline desert' },
+  { name: 'Petra', country: 'Jordânia', region: 'ORIENTE_MEDIO', emoji: '🏜️', gradient: 'from-rose-600 to-amber-700', tag: 'História', rating: 4.9, query: 'Petra Jordan ancient city' },
+  { name: 'Capadócia', country: 'Turquia', region: 'ORIENTE_MEDIO', emoji: '🎈', gradient: 'from-rose-500 to-amber-600', tag: 'Aventura', rating: 4.9, query: 'Cappadocia hot air balloons' },
+  { name: 'Istambul', country: 'Turquia', region: 'ORIENTE_MEDIO', emoji: '🕌', gradient: 'from-indigo-500 to-rose-600', tag: 'Cultura', rating: 4.8, query: 'Istanbul Turkey mosque bosphorus' },
 ];
 
-function getRandomTrending(): typeof TRENDING_POOL {
-  const shuffled = [...TRENDING_POOL].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 12);
+/**
+ * Amostragem balanceada de destinos "Em alta".
+ *
+ * Regras para garantir diversidade real:
+ * 1. Entre 4 e 5 dos 12 slots são reservados para destinos brasileiros,
+ *    tentando cobrir regiões distintas (não mostrar 4 praias do NE por exemplo).
+ * 2. O restante vem de continentes/regiões variados — evitamos mais de 2
+ *    destinos do mesmo continente.
+ * 3. Dentro das cotas, a ordem é embaralhada para que a cada refresh o
+ *    usuário veja destinos diferentes.
+ */
+function getRandomTrending(): TrendingEntry[] {
+  const BR_REGIONS: TrendingRegion[] = ['BR_NORDESTE', 'BR_SUL', 'BR_SUDESTE', 'BR_NORTE', 'BR_CENTRO_OESTE'];
+  const WORLD_REGIONS: TrendingRegion[] = ['AMERICAS', 'EUROPA', 'ASIA', 'AFRICA', 'OCEANIA', 'ORIENTE_MEDIO'];
+
+  const TOTAL = 12;
+  const BR_QUOTA = 4 + Math.floor(Math.random() * 2); // 4 ou 5
+  const WORLD_QUOTA = TOTAL - BR_QUOTA;
+
+  function shuffle<T>(arr: T[]): T[] {
+    const out = [...arr];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
+  // Agrupa destinos por região e embaralha dentro de cada grupo
+  const byRegion = new Map<TrendingRegion, TrendingEntry[]>();
+  for (const entry of TRENDING_POOL) {
+    if (!byRegion.has(entry.region)) byRegion.set(entry.region, []);
+    byRegion.get(entry.region)!.push(entry);
+  }
+  byRegion.forEach((entries, region) => {
+    byRegion.set(region, shuffle(entries));
+  });
+
+  // Faz round-robin entre regiões para garantir diversidade geográfica
+  function pickFromRegions(regions: TrendingRegion[], count: number): TrendingEntry[] {
+    const picked: TrendingEntry[] = [];
+    const shuffledRegions = shuffle(regions);
+    let i = 0;
+    // Máximo de 2 destinos por região para não saturar
+    const perRegionCap = Math.max(1, Math.ceil(count / shuffledRegions.length) + 1);
+    const countByRegion = new Map<TrendingRegion, number>();
+
+    while (picked.length < count && i < shuffledRegions.length * perRegionCap) {
+      const region = shuffledRegions[i % shuffledRegions.length];
+      const used = countByRegion.get(region) ?? 0;
+      if (used < perRegionCap) {
+        const pool = byRegion.get(region) ?? [];
+        if (pool[used]) {
+          picked.push(pool[used]);
+          countByRegion.set(region, used + 1);
+        }
+      }
+      i++;
+    }
+    return picked;
+  }
+
+  const brPicks = pickFromRegions(BR_REGIONS, BR_QUOTA);
+  const worldPicks = pickFromRegions(WORLD_REGIONS, WORLD_QUOTA);
+
+  // Intercala Brasil e mundo para o usuário ver mix logo no topo
+  const result: TrendingEntry[] = [];
+  const maxLen = Math.max(brPicks.length, worldPicks.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (brPicks[i]) result.push(brPicks[i]);
+    if (worldPicks[i]) result.push(worldPicks[i]);
+  }
+
+  // Garante 12 itens caso alguma cota não tenha preenchido
+  if (result.length < TOTAL) {
+    const used = new Set(result.map((r) => r.name));
+    const remaining = shuffle(TRENDING_POOL.filter((e) => !used.has(e.name)));
+    for (const extra of remaining) {
+      if (result.length >= TOTAL) break;
+      result.push(extra);
+    }
+  }
+
+  return result.slice(0, TOTAL);
 }
 
 const CATEGORIES = [
