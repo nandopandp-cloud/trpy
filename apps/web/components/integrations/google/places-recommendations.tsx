@@ -53,13 +53,11 @@ function PlaceCard({
   favoriteType,
   locale,
   onOpen,
-  index,
 }: {
   place: PlaceSearchResult;
   favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
   locale: Locale;
   onOpen: () => void;
-  index: number;
 }) {
   const photo = place.photos?.[0];
   const photoUrl = photo
@@ -67,11 +65,7 @@ function PlaceCard({
     : null;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.18, delay: Math.min(index * 0.04, 0.3) }}
+    <div
       onClick={onOpen}
       className="flex gap-3 p-3 rounded-2xl bg-muted/50 border border-border hover:border-primary/40 hover:bg-muted/70 transition-all cursor-pointer group"
     >
@@ -153,7 +147,7 @@ function PlaceCard({
           {t(locale as any, 'places.details' as any)} <ChevronRight className="w-3 h-3" />
         </span>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -337,73 +331,61 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
       )}
 
       {!isLoading && !isError && (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -8 }}
-            transition={{ duration: 0.15 }}
-            className="space-y-3"
-          >
-            {/* Barra de filtros — dentro do bloco com key para sempre acompanhar a aba ativa */}
-            {allPlaces.length > 0 && (
-              <PlacesFilter
-                filters={filters}
-                onChange={makeFilterChangeHandler(activeTab)}
-                totalCount={allPlaces.length}
-                filteredCount={filteredPlaces.length}
-              />
-            )}
+        <div key={activeTab} className="space-y-3">
+          {/* Barra de filtros — aparece sempre que houver lugares na aba */}
+          {allPlaces.length > 0 && (
+            <PlacesFilter
+              filters={filters}
+              onChange={makeFilterChangeHandler(activeTab)}
+              totalCount={allPlaces.length}
+              filteredCount={filteredPlaces.length}
+            />
+          )}
 
-            {filteredPlaces.length === 0 ? (
-              <EmptyState
-                tab={tab}
-                destination={destination}
-                locale={locale}
-                hasFilters={activeFiltersCount > 0}
-                onReset={() => makeFilterChangeHandler(activeTab)({ ...DEFAULT_FILTERS })}
-              />
-            ) : (
-              <>
-                {visiblePlaces.map((place, i) => (
-                  <PlaceCard
-                    key={place.place_id}
-                    place={place}
-                    favoriteType={tab.favoriteType}
-                    locale={locale}
-                    index={i}
-                    onOpen={() =>
-                      setSelectedPlace({
-                        placeId: place.place_id,
-                        name: place.name,
-                        favoriteType: tab.favoriteType,
-                      })
-                    }
-                  />
-                ))}
+          {filteredPlaces.length === 0 ? (
+            <EmptyState
+              tab={tab}
+              destination={destination}
+              locale={locale}
+              hasFilters={activeFiltersCount > 0}
+              onReset={() => makeFilterChangeHandler(activeTab)({ ...DEFAULT_FILTERS })}
+            />
+          ) : (
+            <>
+              {visiblePlaces.map((place) => (
+                <PlaceCard
+                  key={place.place_id}
+                  place={place}
+                  favoriteType={tab.favoriteType}
+                  locale={locale}
+                  onOpen={() =>
+                    setSelectedPlace({
+                      placeId: place.place_id,
+                      name: place.name,
+                      favoriteType: tab.favoriteType,
+                    })
+                  }
+                />
+              ))}
 
-                {hasMore && (
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    onClick={loadMore}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/40 transition-all"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                    Ver mais {filteredPlaces.length - currentVisible} lugares
-                  </motion.button>
-                )}
+              {hasMore && (
+                <button
+                  onClick={loadMore}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/40 transition-all"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  Ver mais {filteredPlaces.length - currentVisible} lugares
+                </button>
+              )}
 
-                {!hasMore && filteredPlaces.length > PAGE_SIZE && (
-                  <p className="text-center text-xs text-muted-foreground py-2">
-                    {filteredPlaces.length} lugares encontrados
-                  </p>
-                )}
-              </>
-            )}
-          </motion.div>
-        </AnimatePresence>
+              {!hasMore && filteredPlaces.length > PAGE_SIZE && (
+                <p className="text-center text-xs text-muted-foreground py-2">
+                  {filteredPlaces.length} lugares encontrados
+                </p>
+              )}
+            </>
+          )}
+        </div>
       )}
 
       {/* Place detail modal */}

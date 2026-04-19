@@ -175,10 +175,7 @@ function PlaceCard({ place, favoriteType, onOpen }: {
   const photoUrl = photo ? `/api/place-photo?ref=${photo.photo_reference}&maxwidth=400` : null;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       onClick={onOpen}
       className="group flex gap-3 p-3 rounded-2xl bg-card border border-border hover:border-primary/40 hover:bg-muted/40 transition-all duration-200 cursor-pointer"
     >
@@ -243,7 +240,7 @@ function PlaceCard({ place, favoriteType, onOpen }: {
           Ver detalhes <ChevronRight className="w-3 h-3" />
         </span>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -721,83 +718,72 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                 />
               )}
               {!placesLoading && !placesError && (
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={placeTab}
-                    initial={{ opacity: 0, x: 8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -8 }}
-                    transition={{ duration: 0.15 }}
-                    className="space-y-2"
-                  >
-                    {/* Barra de filtros — dentro do bloco com key para sempre acompanhar a aba ativa */}
-                    {allCurrentPlaces.length > 0 && (
-                      <PlacesFilter
-                        filters={placeFilters}
-                        onChange={makePlaceFilterHandler(placeTab)}
-                        totalCount={allCurrentPlaces.length}
-                        filteredCount={filteredPlaces.length}
+                <div key={placeTab} className="space-y-2">
+                  {/* Barra de filtros — aparece sempre que houver lugares */}
+                  {allCurrentPlaces.length > 0 && (
+                    <PlacesFilter
+                      filters={placeFilters}
+                      onChange={makePlaceFilterHandler(placeTab)}
+                      totalCount={allCurrentPlaces.length}
+                      filteredCount={filteredPlaces.length}
+                    />
+                  )}
+                  {filteredPlaces.length === 0 ? (
+                    allCurrentPlaces.length === 0 ? (
+                      <EmptyState
+                        icon={currentPlaceTabMeta.icon}
+                        title={`Nenhum resultado para ${currentPlaceTabMeta.label.toLowerCase()}`}
+                        subtitle="Explore outras categorias ou tente outro destino."
                       />
-                    )}
-                    {filteredPlaces.length === 0 ? (
-                      allCurrentPlaces.length === 0 ? (
-                        <EmptyState
-                          icon={currentPlaceTabMeta.icon}
-                          title={`Nenhum resultado para ${currentPlaceTabMeta.label.toLowerCase()}`}
-                          subtitle="Explore outras categorias ou tente outro destino."
-                        />
-                      ) : (
-                        <div className="rounded-2xl border border-dashed border-border p-8 text-center space-y-3">
-                          <currentPlaceTabMeta.icon className="w-8 h-8 text-muted-foreground/40 mx-auto" />
-                          <div>
-                            <p className="text-sm font-medium text-foreground">Nenhum lugar com esses filtros</p>
-                            <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros para ver mais resultados.</p>
-                            <button
-                              onClick={() => makePlaceFilterHandler(placeTab)({ ...DEFAULT_FILTERS })}
-                              className="mt-2 text-xs font-semibold text-primary hover:underline"
-                            >
-                              Limpar filtros
-                            </button>
-                          </div>
-                        </div>
-                      )
                     ) : (
-                      <>
-                        {visiblePlaces.map(place => (
-                          <PlaceCard
-                            key={place.place_id}
-                            place={place}
-                            favoriteType={currentPlaceTabMeta.favoriteType}
-                            onOpen={() => setSelectedPlace({
-                              placeId: place.place_id,
-                              name: place.name,
-                              favoriteType: currentPlaceTabMeta.favoriteType,
-                            })}
-                          />
-                        ))}
-
-                        {/* Load more */}
-                        {hasMore && (
-                          <motion.button
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            onClick={loadMore}
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/40 transition-all"
+                      <div className="rounded-2xl border border-dashed border-border p-8 text-center space-y-3">
+                        <currentPlaceTabMeta.icon className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Nenhum lugar com esses filtros</p>
+                          <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros para ver mais resultados.</p>
+                          <button
+                            onClick={() => makePlaceFilterHandler(placeTab)({ ...DEFAULT_FILTERS })}
+                            className="mt-2 text-xs font-semibold text-primary hover:underline"
                           >
-                            <ChevronDown className="w-4 h-4" />
-                            Ver mais {filteredPlaces.length - currentVisible} lugares
-                          </motion.button>
-                        )}
+                            Limpar filtros
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    <>
+                      {visiblePlaces.map(place => (
+                        <PlaceCard
+                          key={place.place_id}
+                          place={place}
+                          favoriteType={currentPlaceTabMeta.favoriteType}
+                          onOpen={() => setSelectedPlace({
+                            placeId: place.place_id,
+                            name: place.name,
+                            favoriteType: currentPlaceTabMeta.favoriteType,
+                          })}
+                        />
+                      ))}
 
-                        {!hasMore && filteredPlaces.length > PAGE_SIZE && (
-                          <p className="text-center text-xs text-muted-foreground py-2">
-                            {filteredPlaces.length} lugares encontrados
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
+                      {/* Load more */}
+                      {hasMore && (
+                        <button
+                          onClick={loadMore}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/40 transition-all"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                          Ver mais {filteredPlaces.length - currentVisible} lugares
+                        </button>
+                      )}
+
+                      {!hasMore && filteredPlaces.length > PAGE_SIZE && (
+                        <p className="text-center text-xs text-muted-foreground py-2">
+                          {filteredPlaces.length} lugares encontrados
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
               )}
             </motion.div>
           )}
