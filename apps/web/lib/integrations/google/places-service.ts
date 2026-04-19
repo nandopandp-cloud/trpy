@@ -230,11 +230,31 @@ export async function searchPlacesByTypeWithLimit(
     }),
   );
 
-  // Ordena por rating descendente para colocar os melhores primeiro,
-  // mas preserva diversidade pois vieram de queries distintas
-  results.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  // Diversidade máxima: intercala lugares com e sem rating para que hotéis/
+  // restaurantes mais baratos, pouco avaliados ou sem metadados também apareçam
+  // dentro do limite — não apenas os mais bem avaliados.
+  const rated = results
+    .filter((r) => r.rating != null)
+    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  const unrated = results.filter((r) => r.rating == null);
 
-  return { results: results.slice(0, limit) };
+  const interleaved: PlaceSearchResult[] = [];
+  const total = rated.length + unrated.length;
+  // Proporção 3:1 (rated:unrated) — prioriza qualidade mas garante presença
+  // de opções sem metadados.
+  let ri = 0;
+  let ui = 0;
+  for (let i = 0; i < total; i++) {
+    if (i % 4 === 3 && ui < unrated.length) {
+      interleaved.push(unrated[ui++]);
+    } else if (ri < rated.length) {
+      interleaved.push(rated[ri++]);
+    } else if (ui < unrated.length) {
+      interleaved.push(unrated[ui++]);
+    }
+  }
+
+  return { results: interleaved.slice(0, limit) };
 }
 
 export async function autocomplete(

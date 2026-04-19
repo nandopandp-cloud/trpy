@@ -50,19 +50,22 @@ export function applyFilters(
 
   let result = [...places];
 
+  // Filtros inclusivos: quando o Google não retorna o campo (rating, price_level,
+  // opening_hours), não excluímos o lugar — preservamos diversidade e evitamos
+  // resultados vazios por falta de metadados.
   if (filters.minRating != null)
-    result = result.filter((p) => p.rating != null && p.rating >= filters.minRating!);
+    result = result.filter((p) => p.rating == null || p.rating >= filters.minRating!);
   if (filters.maxRating != null)
-    result = result.filter((p) => p.rating != null && p.rating <= filters.maxRating!);
+    result = result.filter((p) => p.rating == null || p.rating <= filters.maxRating!);
   if (filters.minPrice != null)
-    result = result.filter((p) => p.price_level != null && p.price_level >= filters.minPrice!);
+    result = result.filter((p) => p.price_level == null || p.price_level >= filters.minPrice!);
   if (filters.maxPrice != null)
-    result = result.filter((p) => p.price_level != null && p.price_level <= filters.maxPrice!);
+    result = result.filter((p) => p.price_level == null || p.price_level <= filters.maxPrice!);
   if (filters.openNow === true)
-    result = result.filter((p) => p.opening_hours?.open_now === true);
+    result = result.filter((p) => p.opening_hours?.open_now !== false);
   if (filters.minReviews != null)
     result = result.filter(
-      (p) => p.user_ratings_total != null && p.user_ratings_total >= filters.minReviews!,
+      (p) => p.user_ratings_total == null || p.user_ratings_total >= filters.minReviews!,
     );
 
   return result;
