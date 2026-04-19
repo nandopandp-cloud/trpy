@@ -377,11 +377,11 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
 
   function handlePlaceTabChange(key: PlaceTab) {
     setPlaceTab(key);
-    // Each tab keeps its own filters — no reset
+    // Cada aba mantém seus próprios filtros — sem reset
   }
 
-  // Bind the tab key explicitly so stale-closure/race conditions cannot
-  // write one tab's filters into another tab's slot.
+  // Vincula a chave da aba explicitamente para que closures obsoletas ou
+  // condições de corrida não escrevam o filtro de uma aba no slot de outra.
   function makePlaceFilterHandler(tabKey: PlaceTab) {
     return (f: PlacesFilters) => {
       setFiltersByTab((prev) => ({ ...prev, [tabKey]: { ...f } }));
@@ -730,7 +730,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                     transition={{ duration: 0.15 }}
                     className="space-y-2"
                   >
-                    {/* Filter bar — inside keyed block so it always matches the active tab */}
+                    {/* Barra de filtros — dentro do bloco com key para sempre acompanhar a aba ativa */}
                     {allCurrentPlaces.length > 0 && (
                       <PlacesFilter
                         filters={placeFilters}

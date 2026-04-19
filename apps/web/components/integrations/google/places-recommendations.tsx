@@ -276,11 +276,11 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
 
   function handleTabChange(key: typeof activeTab) {
     setActiveTab(key);
-    // Each tab keeps its own filters — no reset needed
+    // Cada aba mantém seus próprios filtros — sem reset
   }
 
-  // Bind the tab key explicitly so stale-closure/race conditions cannot
-  // write one tab's filters into another tab's slot.
+  // Vincula a chave da aba explicitamente para que closures obsoletas ou
+  // condições de corrida não escrevam o filtro de uma aba no slot de outra.
   function makeFilterChangeHandler(tabKey: typeof activeTab) {
     return (f: PlacesFilters) => {
       setFiltersByTab((prev) => ({ ...prev, [tabKey]: { ...f } }));
@@ -346,7 +346,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
             transition={{ duration: 0.15 }}
             className="space-y-3"
           >
-            {/* Filter bar — inside keyed block so it always matches the active tab */}
+            {/* Barra de filtros — dentro do bloco com key para sempre acompanhar a aba ativa */}
             {allPlaces.length > 0 && (
               <PlacesFilter
                 filters={filters}
