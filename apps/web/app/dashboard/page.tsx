@@ -388,10 +388,10 @@ export default function DashboardPage() {
           variants={stagger.container}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-max lg:auto-rows-[minmax(180px,auto)]"
+          className="grid grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-3 lg:h-[420px]"
         >
           {/* ── Card 1: Próxima Viagem — full-width mobile, 2×2 desktop ── */}
-          <motion.div variants={stagger.item} className="col-span-2 lg:row-span-2">
+          <motion.div variants={stagger.item} className="col-span-2 lg:row-span-2 lg:h-full">
           <TiltCard className="h-full p-5 flex flex-col justify-between">
             {/* ── Destination photo as elegant background ── */}
             {tripPhoto && (
@@ -498,7 +498,7 @@ export default function DashboardPage() {
 
         {/* ── Card 2: Budget Gauge (hidden if no trips) ── */}
         {trips.length > 0 && (
-          <motion.div variants={stagger.item} className="col-span-1 row-span-1">
+          <motion.div variants={stagger.item} className="col-span-1 row-span-1 lg:h-full">
             <TiltCard className="h-full p-4 flex flex-col">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -524,7 +524,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── Card 3: Total Trips ── */}
-        <motion.div variants={stagger.item} className="col-span-1 row-span-1">
+        <motion.div variants={stagger.item} className="col-span-1 row-span-1 lg:h-full">
           <TiltCard className="h-full p-4 flex flex-col">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center">
@@ -554,7 +554,7 @@ export default function DashboardPage() {
 
         {/* ── Card 4: Gastos (hidden if no trips) — span 1 col on mobile, 2 on desktop ── */}
         {trips.length > 0 && (
-          <motion.div variants={stagger.item} className="col-span-2 lg:col-span-2 row-span-1">
+          <motion.div variants={stagger.item} className="col-span-2 lg:col-span-2 row-span-1 lg:h-full">
             <TiltCard className="h-full p-5">
               {/* Header */}
               <div className="flex items-center gap-2 mb-4">
