@@ -380,9 +380,13 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
     // Each tab keeps its own filters — no reset
   }
 
-  function handlePlaceFiltersChange(f: PlacesFilters) {
-    setFiltersByTab((prev) => ({ ...prev, [placeTab]: { ...f } }));
-    setVisibleCount((v) => ({ ...v, [placeTab]: PAGE_SIZE }));
+  // Bind the tab key explicitly so stale-closure/race conditions cannot
+  // write one tab's filters into another tab's slot.
+  function makePlaceFilterHandler(tabKey: PlaceTab) {
+    return (f: PlacesFilters) => {
+      setFiltersByTab((prev) => ({ ...prev, [tabKey]: { ...f } }));
+      setVisibleCount((v) => ({ ...v, [tabKey]: PAGE_SIZE }));
+    };
   }
 
   function loadMore() {
@@ -730,7 +734,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                     {allCurrentPlaces.length > 0 && (
                       <PlacesFilter
                         filters={placeFilters}
-                        onChange={handlePlaceFiltersChange}
+                        onChange={makePlaceFilterHandler(placeTab)}
                         totalCount={allCurrentPlaces.length}
                         filteredCount={filteredPlaces.length}
                       />
@@ -749,7 +753,7 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                             <p className="text-sm font-medium text-foreground">Nenhum lugar com esses filtros</p>
                             <p className="text-xs text-muted-foreground mt-1">Tente ajustar os filtros para ver mais resultados.</p>
                             <button
-                              onClick={() => handlePlaceFiltersChange({ ...DEFAULT_FILTERS })}
+                              onClick={() => makePlaceFilterHandler(placeTab)({ ...DEFAULT_FILTERS })}
                               className="mt-2 text-xs font-semibold text-primary hover:underline"
                             >
                               Limpar filtros

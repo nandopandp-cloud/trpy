@@ -279,9 +279,13 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
     // Each tab keeps its own filters — no reset needed
   }
 
-  function handleFiltersChange(f: PlacesFilters) {
-    setFiltersByTab((prev) => ({ ...prev, [activeTab]: { ...f } }));
-    setVisibleCount((v) => ({ ...v, [activeTab]: PAGE_SIZE }));
+  // Bind the tab key explicitly so stale-closure/race conditions cannot
+  // write one tab's filters into another tab's slot.
+  function makeFilterChangeHandler(tabKey: typeof activeTab) {
+    return (f: PlacesFilters) => {
+      setFiltersByTab((prev) => ({ ...prev, [tabKey]: { ...f } }));
+      setVisibleCount((v) => ({ ...v, [tabKey]: PAGE_SIZE }));
+    };
   }
 
   function loadMore() {
@@ -346,7 +350,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
             {allPlaces.length > 0 && (
               <PlacesFilter
                 filters={filters}
-                onChange={handleFiltersChange}
+                onChange={makeFilterChangeHandler(activeTab)}
                 totalCount={allPlaces.length}
                 filteredCount={filteredPlaces.length}
               />
@@ -358,7 +362,7 @@ export function PlacesRecommendations({ destination }: { destination: string }) 
                 destination={destination}
                 locale={locale}
                 hasFilters={activeFiltersCount > 0}
-                onReset={() => handleFiltersChange({ ...DEFAULT_FILTERS })}
+                onReset={() => makeFilterChangeHandler(activeTab)({ ...DEFAULT_FILTERS })}
               />
             ) : (
               <>

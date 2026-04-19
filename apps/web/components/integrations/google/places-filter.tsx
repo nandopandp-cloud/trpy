@@ -43,8 +43,11 @@ export function countActiveFilters(f: PlacesFilters): number {
 
 export function applyFilters(
   places: PlaceSearchResult[],
-  filters: PlacesFilters,
+  filters: PlacesFilters | null | undefined,
 ): PlaceSearchResult[] {
+  if (!Array.isArray(places)) return [];
+  if (!filters) return [...places];
+
   let result = [...places];
 
   if (filters.minRating != null)
