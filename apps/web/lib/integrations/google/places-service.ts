@@ -111,29 +111,50 @@ export async function searchPlaces(
   return (data.results as PlaceSearchResult[]).slice(0, 20);
 }
 
-const TYPE_QUERY: Record<string, string> = {
-  restaurant:        'melhores restaurantes',
-  lodging:           'melhores hotéis',
-  tourist_attraction:'principais atrações turísticas',
-  museum:            'museus',
+// Múltiplas queries por tipo — garante diversidade de resultados (preço, bairro, estilo)
+const TYPE_QUERIES: Record<string, string[]> = {
+  restaurant: [
+    'restaurantes',
+    'restaurantes baratos',
+    'restaurantes bairros locais',
+    'cafés e bistrôs',
+    'comida de rua e mercados',
+  ],
+  lodging: [
+    'hotéis',
+    'pousadas e hostels',
+    'hotéis boutique',
+    'apart-hotéis e residências',
+  ],
+  tourist_attraction: [
+    'atrações turísticas',
+    'parques e jardins',
+    'museus e galerias',
+    'pontos históricos',
+    'vida noturna e entretenimento',
+  ],
+  museum: [
+    'museus',
+    'galerias de arte',
+    'centros culturais',
+  ],
 };
 
-export async function searchPlacesByType(
+async function fetchOnePage(
+  query: string,
   location: string,
   type: 'restaurant' | 'lodging' | 'tourist_attraction' | 'museum',
   pageToken?: string,
 ): Promise<PlaceSearchPage> {
   const key = getApiKey();
-  const queryTerm = TYPE_QUERY[type] ?? type;
 
   let url: string;
   if (pageToken) {
-    // Next-page requests only need pagetoken + key
     const params = new URLSearchParams({ pagetoken: pageToken, key });
     url = `${BASE_URL}/place/textsearch/json?${params}`;
   } else {
     const params = new URLSearchParams({
-      query: `${queryTerm} em ${location}`,
+      query: `${query} em ${location}`,
       language: 'pt-BR',
       key,
     });
@@ -143,7 +164,10 @@ export async function searchPlacesByType(
     url = `${BASE_URL}/place/textsearch/json?${params}`;
   }
 
-  const res = await fetch(url, { next: { revalidate: 1800 } });
+  // Não cachear pagetoken — tokens expiram em 2 minutos e não são reutilizáveis
+  const res = await fetch(url, {
+    next: { revalidate: pageToken ? 0 : 1800 },
+  });
   const data = await res.json();
 
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
@@ -156,31 +180,61 @@ export async function searchPlacesByType(
   };
 }
 
-/** Fetches up to `limit` places by paginating through Google's next_page_token. */
+// Mantida para compatibilidade com chamadas externas existentes
+export async function searchPlacesByType(
+  location: string,
+  type: 'restaurant' | 'lodging' | 'tourist_attraction' | 'museum',
+  pageToken?: string,
+): Promise<PlaceSearchPage> {
+  const queries = TYPE_QUERIES[type] ?? [type];
+  return fetchOnePage(queries[0], location, type, pageToken);
+}
+
+/**
+ * Busca até `limit` lugares com diversidade real:
+ * executa várias queries diferentes em paralelo e pagina cada uma,
+ * depois mescla e deduplica por place_id.
+ */
 export async function searchPlacesByTypeWithLimit(
   location: string,
   type: 'restaurant' | 'lodging' | 'tourist_attraction' | 'museum',
   limit = 60,
-): Promise<{ results: PlaceSearchResult[]; nextPageToken?: string }> {
+): Promise<{ results: PlaceSearchResult[] }> {
+  const queries = TYPE_QUERIES[type] ?? [type];
+  const seen = new Set<string>();
   const results: PlaceSearchResult[] = [];
-  let pageToken: string | undefined;
 
-  // Google Text Search returns up to 20 results per page, max 3 pages (60 total)
-  for (let page = 0; page < 3 && results.length < limit; page++) {
-    if (page > 0) {
-      // Google requires a short delay before using next_page_token
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-    const page_data = await searchPlacesByType(location, type, pageToken);
-    results.push(...page_data.results);
-    pageToken = page_data.nextPageToken;
-    if (!pageToken) break;
-  }
+  // Busca as queries em paralelo — cada uma retorna até 3 páginas (60 resultados)
+  await Promise.all(
+    queries.map(async (query) => {
+      let pageToken: string | undefined;
 
-  return {
-    results: results.slice(0, limit),
-    nextPageToken: results.length >= limit ? pageToken : undefined,
-  };
+      for (let page = 0; page < 3; page++) {
+        if (page > 0) {
+          // Google exige pausa antes de usar o next_page_token
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+
+        const pageData = await fetchOnePage(query, location, type, pageToken);
+
+        for (const place of pageData.results) {
+          if (!seen.has(place.place_id)) {
+            seen.add(place.place_id);
+            results.push(place);
+          }
+        }
+
+        pageToken = pageData.nextPageToken;
+        if (!pageToken) break;
+      }
+    }),
+  );
+
+  // Ordena por rating descendente para colocar os melhores primeiro,
+  // mas preserva diversidade pois vieram de queries distintas
+  results.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+
+  return { results: results.slice(0, limit) };
 }
 
 export async function autocomplete(
