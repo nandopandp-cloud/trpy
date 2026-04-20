@@ -151,36 +151,93 @@ const RING_GRADIENTS: Record<string, string> = {
   trip: 'from-indigo-500 via-violet-500 to-purple-600',
 };
 
-/* ── Hook: destination photo ──────────────────────────── */
+/* ── Batch photo cache ────────────────────────────────── */
+// Mapa global destination → url. Preenchido de uma vez no TripStories pai.
+// Um contador de versão notifica os bubbles quando o cache é atualizado.
 
-// Cache em memória para evitar re-fetch entre remounts na mesma sessão.
 const photoCache = new Map<string, string>();
+let cacheVersion = 0;
+const cacheListeners = new Set<() => void>();
 
-function useDestinationPhoto(destination: string, initial?: string | null) {
+function notifyPhotoCache() {
+  cacheVersion++;
+  cacheListeners.forEach(fn => fn());
+}
+
+function useDestinationPhoto(destination: string, initial?: string | null): string | null {
   const [photo, setPhoto] = useState<string | null>(() => {
     if (initial) return initial;
     return photoCache.get(destination) ?? null;
   });
 
+  // Escuta notificações do batch — quando o cache é populado, atualiza o estado.
   useEffect(() => {
-    if (!destination || initial) return;
-    // Cache hit
-    const cached = photoCache.get(destination);
-    if (cached) { setPhoto(cached); return; }
+    if (initial) return;
+    const sync = () => {
+      const cached = photoCache.get(destination);
+      if (cached) setPhoto(cached);
+    };
+    sync(); // lê imediatamente (pode já estar no cache)
+    cacheListeners.add(sync);
+    return () => { cacheListeners.delete(sync); };
+  }, [destination, initial]);
 
+  // Fallback individual — caso o batch não cubra este destino.
+  useEffect(() => {
+    if (initial || photoCache.has(destination)) return;
+    let cancelled = false;
     fetch(`/api/destination-photo?q=${encodeURIComponent(destination)}`)
       .then(r => r.json())
       .then(d => {
+        if (cancelled) return;
         const url = d.success && d.data?.photoUrl ? (d.data.photoUrl as string) : null;
-        if (url) {
-          photoCache.set(destination, url);
-          setPhoto(url);
-        }
+        if (url) { photoCache.set(destination, url); notifyPhotoCache(); }
       })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, [destination, initial]);
 
   return photo;
+}
+
+// Pré-carrega fotos de todos os destinos de uma vez via endpoint batch.
+function usePhotoBatch(destinations: string[]) {
+  const key = destinations.slice().sort().join('|');
+
+  useEffect(() => {
+    if (destinations.length === 0) return;
+    const missing = destinations.filter(d => !photoCache.has(d));
+    if (missing.length === 0) return;
+
+    // Divide em lotes de 20 (limite do endpoint)
+    const chunks: string[][] = [];
+    for (let i = 0; i < missing.length; i += 20) {
+      chunks.push(missing.slice(i, i + 20));
+    }
+
+    let cancelled = false;
+    Promise.all(
+      chunks.map(chunk =>
+        fetch('/api/destination-photo/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ destinations: chunk }),
+        })
+          .then(r => r.json())
+          .then(d => {
+            if (cancelled || !d.success) return;
+            const map = d.data as Record<string, string | null>;
+            Object.entries(map).forEach(([dest, url]) => {
+              if (url) photoCache.set(dest, url);
+            });
+          })
+          .catch(() => {}),
+      ),
+    ).then(() => { if (!cancelled) notifyPhotoCache(); });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 }
 
 /* ── Hook: YouTube videos ─────────────────────────────── */
@@ -1133,6 +1190,13 @@ export function TripStories({ trips = [] }: TripStoriesProps) {
 
   // 16 destinos aleatórios renovados a cada 12h
   const suggestions = useSuggestions(16);
+
+  // Pré-carrega fotos de todos os destinos (trips + suggestions) de uma vez.
+  const allDestinations = [
+    ...trips.map(t => t.destination),
+    ...suggestions.map(s => s.destination),
+  ].filter(Boolean);
+  usePhotoBatch(allDestinations);
 
   // Build story items (excluding "create" from viewer)
   const userStories: StoryItem[] = trips.map((trip, i) => ({
