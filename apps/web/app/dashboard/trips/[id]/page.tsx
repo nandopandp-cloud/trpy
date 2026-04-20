@@ -7,7 +7,7 @@ import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   ArrowLeft, Edit2, MapPin, Calendar, Wallet, Plus, Trash2, Loader2,
-  Share2, MoreVertical, Youtube, Image as ImageIcon, Map, Compass,
+  Share2, MoreVertical, Youtube, Image as ImageIcon, Compass,
   Camera, Palette, Upload, X, Check, RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -27,18 +27,12 @@ import { TripShareModal } from '@/components/trips/trip-share-modal';
 import { Button } from '@/components/ui/button';
 import { DashboardSkeleton } from '@/components/ui/skeletons';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
-import type { MapMarker } from '@/components/integrations/google/google-map-view';
-
 const YouTubeGallery = dynamic(() => import('@/components/integrations/youtube/youtube-gallery').then(m => m.YouTubeGallery), {
   loading: () => <div className="h-64 rounded-2xl bg-muted animate-pulse" />,
   ssr: false,
 });
 const InspirationGallery = dynamic(() => import('@/components/trips/inspiration-gallery').then(m => m.InspirationGallery), {
   loading: () => <div className="h-64 rounded-2xl bg-muted animate-pulse" />,
-  ssr: false,
-});
-const GoogleMapView = dynamic(() => import('@/components/integrations/google/google-map-view').then(m => m.GoogleMapView), {
-  loading: () => <div className="h-96 rounded-2xl bg-muted animate-pulse" />,
   ssr: false,
 });
 const PlacesRecommendations = dynamic(() => import('@/components/integrations/google/places-recommendations').then(m => m.PlacesRecommendations), {
@@ -65,7 +59,6 @@ const PRESET_GRADIENTS = [
 const TABS_BASE = [
   { id: 'itinerary', labelKey: 'tab.itinerary' },
   { id: 'budget',    labelKey: 'tab.budget' },
-  { id: 'map',       labelKey: 'tab.map' },
   { id: 'discover',  labelKey: 'tab.discover' },
   { id: 'videos',    labelKey: 'tab.videos' },
   { id: 'inspo',     labelKey: 'tab.inspo' },
@@ -577,16 +570,6 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
     ? (coverImage?.replace('gradient:', '') ?? gradientFallback)
     : null;
 
-  // If "Mapa" tab becomes unavailable while selected, fall back to itinerary
-  const hasCoords = trip?.itineraryDays?.some((d: any) =>
-    d.items?.some((item: any) => item.latitude != null && item.longitude != null)
-  ) ?? false;
-  useEffect(() => {
-    if (!hasCoords && activeTab === 'map') {
-      setActiveTab('itinerary');
-    }
-  }, [hasCoords, activeTab]);
-
   async function handleDeleteTrip() {
     setShowActions(false);
     const ok = await confirm({
@@ -634,10 +617,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
   const spent = Number(trip.totalSpent);
   const tripDays = Math.max(1, differenceInDays(new Date(trip.endDate), new Date(trip.startDate)));
 
-  // Compute visible tabs — hide "Mapa" if no coordinates exist
-  const visibleTabs: Array<{ id: TabId; labelKey: string }> = hasCoords
-    ? Array.from(TABS)
-    : Array.from(TABS).filter((t) => t.id !== 'map');
+  const visibleTabs = Array.from(TABS);
 
   return (
     <div className="min-h-screen bg-background pb-32 md:pb-8">
@@ -881,40 +861,6 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
                     onCta={() => setShowExpenseForm(true)}
                   />
                 )}
-              </div>
-            )}
-
-            {/* ── Mapa ──────────────────────────────────────────────── */}
-            {activeTab === 'map' && (
-              <div className="space-y-3">
-                {(() => {
-                  const markers: MapMarker[] = trip.itineraryDays
-                    .flatMap((d) => d.items)
-                    .filter((item) => item.latitude != null && item.longitude != null)
-                    .map((item) => ({
-                      lat: Number(item.latitude),
-                      lng: Number(item.longitude),
-                      title: item.title,
-                      type: (item.type as MapMarker['type']) ?? 'OTHER',
-                    }));
-                  return (
-                    <>
-                      {markers.length === 0 && (
-                        <div className="rounded-2xl bg-muted/50 border border-border px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
-                          <Map className="w-4 h-4 shrink-0 text-primary" />
-                          Mapa do destino: {trip.destination}
-                        </div>
-                      )}
-                      <div className="rounded-3xl overflow-hidden border border-border shadow-card">
-                        <GoogleMapView
-                          markers={markers}
-                          height="420px"
-                          defaultCenter={markers.length === 0 ? trip.destination : undefined}
-                        />
-                      </div>
-                    </>
-                  );
-                })()}
               </div>
             )}
 

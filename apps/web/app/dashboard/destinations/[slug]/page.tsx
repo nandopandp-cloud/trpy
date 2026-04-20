@@ -7,7 +7,7 @@ import { DestinationShareModal } from '@/components/destinations/destination-sha
 import {
   ArrowLeft, MapPin, Plus, Share2, Star,
   Globe, Calendar, Coins, Languages, Compass,
-  Utensils, Hotel, Landmark, Youtube, Map,
+  Utensils, Hotel, Landmark, Youtube,
   ChevronRight, ChevronLeft, Clock, Building2,
 } from 'lucide-react';
 import { PlacesFilter, applyFilters, DEFAULT_FILTERS, type PlacesFilters } from '@/components/integrations/google/places-filter';
@@ -18,10 +18,7 @@ import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
 import dynamic from 'next/dynamic';
 import { PlaceDetailModal } from '@/components/integrations/google/place-detail-modal';
 
-const GoogleMapView = dynamic(() => import('@/components/integrations/google/google-map-view').then(m => m.GoogleMapView), {
-  loading: () => <div className="h-96 rounded-2xl bg-muted animate-pulse" />,
-  ssr: false,
-});
+
 const YouTubeVideoPlayer = dynamic(() => import('@/components/integrations/youtube/youtube-video-player').then(m => m.YouTubeVideoPlayer), {
   ssr: false,
 });
@@ -86,13 +83,12 @@ const DEST_META: Record<string, { desc: string; highlights: string[]; bestTime: 
 
 const DEFAULT_META = { desc: 'Descubra o melhor que este destino tem a oferecer — restaurantes, hotéis, atrações e experiências imperdíveis.', highlights: ['Cultura', 'Gastronomia', 'Natureza', 'Aventura'], bestTime: 'Consulte', currency: 'Consulte', language: 'Consulte' };
 
-type TabKey = 'overview' | 'places' | 'videos' | 'map';
+type TabKey = 'overview' | 'places' | 'videos';
 
 const NAV_TABS: { key: TabKey; label: string; icon: typeof Compass }[] = [
   { key: 'overview', label: 'Visão geral', icon: Compass },
   { key: 'places',   label: 'Lugares',     icon: Landmark },
   { key: 'videos',   label: 'Vídeos',      icon: Youtube },
-  { key: 'map',      label: 'Mapa',        icon: Map },
 ];
 
 type PlaceTab = 'restaurants' | 'hotels' | 'attractions';
@@ -653,19 +649,6 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                 </div>
               )}
 
-              {/* Map Preview */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-foreground">Localização</h3>
-                  <button
-                    onClick={() => setActiveTab('map')}
-                    className="text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
-                  >
-                    Expandir <ChevronRight className="w-3 h-3" />
-                  </button>
-                </div>
-                <GoogleMapView markers={[]} height="200px" defaultCenter={destination} />
-              </div>
             </motion.div>
           )}
 
@@ -838,22 +821,6 @@ export default function DestinationDetailPage({ params }: { params: { slug: stri
                 </p>
               </div>
               <YouTubeGallery destination={destination} />
-            </motion.div>
-          )}
-
-          {/* ── MAP ─────────────────────────────────── */}
-          {activeTab === 'map' && (
-            <motion.div
-              key="map"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-            >
-              <p className="text-sm text-muted-foreground mb-4">
-                Mapa de <span className="font-semibold text-foreground capitalize">{destination}</span>
-              </p>
-              <GoogleMapView markers={[]} height="480px" defaultCenter={destination} />
             </motion.div>
           )}
 
