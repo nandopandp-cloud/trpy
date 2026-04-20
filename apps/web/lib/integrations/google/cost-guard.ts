@@ -80,17 +80,25 @@ async function readStatus(): Promise<StatusSnapshot> {
     return snapshot;
   }
 
-  const period = currentPeriod();
-  const rows = await prisma.apiUsage.findMany({
-    where: { provider: PROVIDER, period },
-    select: { costCents: true, killed: true },
-  });
+  try {
+    const period = currentPeriod();
+    const rows = await prisma.apiUsage.findMany({
+      where: { provider: PROVIDER, period },
+      select: { costCents: true, killed: true },
+    });
 
-  const totalCents = rows.reduce((acc, r) => acc + r.costCents, 0);
-  const killed = rows.some((r) => r.killed);
+    const totalCents = rows.reduce((acc, r) => acc + r.costCents, 0);
+    const killed = rows.some((r) => r.killed);
 
-  snapshot = { totalCents, killed, fetchedAt: now };
-  return snapshot;
+    snapshot = { totalCents, killed, fetchedAt: now };
+    return snapshot;
+  } catch {
+    // Tabela pode não existir ainda (migração pendente) ou DB inacessível.
+    // Neste caso, não bloqueamos — retornamos zero e deixamos o Google funcionar.
+    // O sistema degrada graciosamente: sem tracking até a migração ser aplicada.
+    snapshot = { totalCents: 0, killed: false, fetchedAt: now };
+    return snapshot;
+  }
 }
 
 function invalidateSnapshot() {

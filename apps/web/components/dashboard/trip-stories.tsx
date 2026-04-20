@@ -153,14 +153,30 @@ const RING_GRADIENTS: Record<string, string> = {
 
 /* ── Hook: destination photo ──────────────────────────── */
 
+// Cache em memória para evitar re-fetch entre remounts na mesma sessão.
+const photoCache = new Map<string, string>();
+
 function useDestinationPhoto(destination: string, initial?: string | null) {
-  const [photo, setPhoto] = useState<string | null>(initial ?? null);
+  const [photo, setPhoto] = useState<string | null>(() => {
+    if (initial) return initial;
+    return photoCache.get(destination) ?? null;
+  });
 
   useEffect(() => {
     if (!destination || initial) return;
+    // Cache hit
+    const cached = photoCache.get(destination);
+    if (cached) { setPhoto(cached); return; }
+
     fetch(`/api/destination-photo?q=${encodeURIComponent(destination)}`)
       .then(r => r.json())
-      .then(d => { if (d.success && d.data?.photoUrl) setPhoto(d.data.photoUrl); })
+      .then(d => {
+        const url = d.success && d.data?.photoUrl ? (d.data.photoUrl as string) : null;
+        if (url) {
+          photoCache.set(destination, url);
+          setPhoto(url);
+        }
+      })
       .catch(() => {});
   }, [destination, initial]);
 
