@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, User, LogOut, ChevronRight, X } from 'lucide-react';
+import { Settings, User, LogOut, ChevronRight, X, Search } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useState, useEffect } from 'react';
 import { useLocale, t } from '@/lib/i18n';
+import { DestinationSearchBar, DestinationSearchModal } from '@/components/search/destination-search-bar';
 
 const TITLES: Record<string, string> = {
   '/dashboard': 'page.dashboard',
@@ -237,34 +238,59 @@ export function Topbar() {
   const title = titleKey === 'Trpy' ? titleKey : t(locale, titleKey as any);
   const { data: session } = useSession();
   const user = session?.user ?? {};
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <motion.header
-      initial={{ y: -10, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-border bg-card/70 backdrop-blur-xl sticky top-0 z-10"
-    >
-      {/* Left: logo on mobile, page title on desktop */}
-      <div className="flex items-center gap-3">
-        <div className="md:hidden">
-          <Logo href="/dashboard" size="sm" hideText={true} />
-        </div>
-        <h2 className="hidden md:block font-medium text-foreground text-base tracking-tight">{title}</h2>
-      </div>
-
-      {/* Right: avatar */}
-      <div className="flex items-center gap-2">
-        {/* Desktop dropdown (hidden on mobile) */}
-        <div className="hidden md:block">
-          <DesktopUserMenu user={user} />
+    <>
+      <motion.header
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="h-16 px-4 md:px-6 flex items-center gap-3 border-b border-border bg-card/70 backdrop-blur-xl sticky top-0 z-10"
+      >
+        {/* Left: logo on mobile, page title on desktop */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="md:hidden">
+            <Logo href="/dashboard" size="sm" hideText={true} />
+          </div>
+          <h2 className="hidden md:block font-medium text-foreground text-base tracking-tight">{title}</h2>
         </div>
 
-        {/* Mobile bottom sheet (hidden on desktop) */}
-        <div id="onboarding-nav-settings" className="md:hidden">
-          <MobileUserMenu user={user} />
+        {/* Center: search bar (desktop only — inline) */}
+        <div className="hidden md:flex flex-1 max-w-md mx-auto">
+          <DestinationSearchBar
+            className="w-full"
+            placeholder="Buscar destinos, cidades, atrações..."
+          />
         </div>
-      </div>
-    </motion.header>
+
+        {/* Right: search icon (mobile) + avatar */}
+        <div className="flex items-center gap-2 ml-auto">
+          {/* Mobile search trigger */}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setSearchOpen(true)}
+            className="md:hidden w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Buscar destinos"
+          >
+            <Search className="w-4 h-4" />
+          </motion.button>
+
+          {/* Desktop dropdown (hidden on mobile) */}
+          <div className="hidden md:block">
+            <DesktopUserMenu user={user} />
+          </div>
+
+          {/* Mobile bottom sheet (hidden on desktop) */}
+          <div id="onboarding-nav-settings" className="md:hidden">
+            <MobileUserMenu user={user} />
+          </div>
+        </div>
+      </motion.header>
+
+      {/* Mobile full-screen search modal */}
+      <DestinationSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
   );
 }
