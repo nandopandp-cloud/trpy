@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const revalidate = 86400;
+export const revalidate = 604800;
 
 // GET /api/place-photo?ref=PHOTO_REFERENCE&maxwidth=400
 // Proxy que resolve a foto do Google Places no servidor,
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     status: 200,
     headers: {
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+      'Cache-Control': 'public, max-age=604800, s-maxage=604800, immutable',
     },
   });
 }

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-export const revalidate = 1800;
+export const revalidate = 21600;
 import { ok, err, handleError } from '@/lib/api';
 import { searchPlaces, searchPlacesByTypeWithLimit } from '@/lib/integrations/google/places-service';
 

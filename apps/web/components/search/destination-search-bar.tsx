@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn, toSlug } from '@/lib/utils';
 import { useDestinationSearch, type SearchResult } from '@/hooks/useDestinationSearch';
+import { useUserCountry } from '@/hooks/useUserCountry';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
@@ -289,9 +290,11 @@ export function DestinationSearchBar({
   // Posição do input na viewport — calculada dinamicamente para o portal
   const [anchorRect, setAnchorRect] = useState<DropdownRect>({ top: 0, left: 0, width: 0 });
 
+  const country = useUserCountry();
   const { query, setQuery, results, loading, error, clear } = useDestinationSearch({
-    debounce: 280,
-    minLength: 2,
+    debounce: 350,
+    minLength: 3,
+    country,
   });
 
   useEffect(() => { setMounted(true); }, []);
@@ -395,7 +398,7 @@ export function DestinationSearchBar({
           focused ? 'border-primary/50' : 'border-border',
         )}
       >
-        {loading && query.trim().length >= 2 ? (
+        {loading && query.trim().length >= 3 ? (
           <Loader2 className="w-4 h-4 shrink-0 text-primary animate-spin" />
         ) : (
           <Search className={cn(

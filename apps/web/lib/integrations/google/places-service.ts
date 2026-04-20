@@ -71,14 +71,20 @@ function getApiKey() {
 
 export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
   const key = getApiKey();
+  // Billing do Google Places Details é cobrado por combinação de "SKU" (Basic /
+  // Contact / Atmosphere). Mantemos só os campos usados pela UI para não pagar
+  // por SKUs que a gente não renderiza. Atmosphere (rating, price_level, reviews)
+  // é o mais caro — evite adicionar aqui se não for realmente usado.
   const fields = [
-    'place_id', 'name', 'formatted_address', 'formatted_phone_number',
+    'place_id', 'name', 'formatted_address',
     'website', 'rating', 'user_ratings_total', 'price_level', 'types',
     'geometry', 'photos', 'reviews', 'opening_hours', 'url',
   ].join(',');
 
   const url = `${BASE_URL}/place/details/json?place_id=${placeId}&fields=${fields}&language=pt-BR&key=${key}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  // Details são estáveis — 24h de cache corta drasticamente chamadas repetidas
+  // para o mesmo place (hero cards, modais abertos várias vezes).
+  const res = await fetch(url, { next: { revalidate: 86400 } });
   const data = await res.json();
 
   if (data.status !== 'OK') return null;
@@ -104,7 +110,9 @@ export async function searchPlaces(
   if (type) params.set('type', type);
 
   const url = `${BASE_URL}/place/textsearch/json?${params}`;
-  const res = await fetch(url, { next: { revalidate: 1800 } });
+  // Textsearch é caro — 12h de cache. Queries repetidas (hero image lookup,
+  // listagens) viram hit e deixam de bater no Google.
+  const res = await fetch(url, { next: { revalidate: 43200 } });
   const data = await res.json();
 
   if (data.status !== 'OK') return [];
@@ -164,9 +172,11 @@ async function fetchOnePage(
     url = `${BASE_URL}/place/textsearch/json?${params}`;
   }
 
-  // Não cachear pagetoken — tokens expiram em 2 minutos e não são reutilizáveis
+  // Não cachear pagetoken — tokens expiram em 2 minutos e não são reutilizáveis.
+  // Para as outras queries, 6h de cache evita requisições repetidas de
+  // exploração de mesmo destino/tipo.
   const res = await fetch(url, {
-    next: { revalidate: pageToken ? 0 : 1800 },
+    next: { revalidate: pageToken ? 0 : 21600 },
   });
   const data = await res.json();
 
@@ -265,16 +275,23 @@ export async function autocomplete(
   const params = new URLSearchParams({
     input,
     language: 'pt-BR',
+    // Restringe a cidades + regiões administrativas + países. Corta POIs/negócios
+    // irrelevantes e cai num billing mais barato (Autocomplete - per session).
+    // Para busca de atrações específicas (restaurantes etc.) usamos Text Search.
+    types: '(regions)',
     key,
   });
   if (sessionToken) params.set('sessiontoken', sessionToken);
 
   const url = `${BASE_URL}/place/autocomplete/json?${params}`;
-  const res = await fetch(url);
+  // 7 dias — predições de autocomplete para um mesmo input são essencialmente
+  // estáveis. Cache long-lived elimina queries repetidas entre usuários.
+  const res = await fetch(url, { next: { revalidate: 604800 } });
   const data = await res.json();
 
   if (data.status !== 'OK') return [];
-  return data.predictions as AutocompleteResult[];
+  // Limita a 5 — UX não se beneficia de mais, e o payload fica menor
+  return (data.predictions as AutocompleteResult[]).slice(0, 5);
 }
 
 export function getPhotoUrl(photoRef: string, maxWidth = 800): string {

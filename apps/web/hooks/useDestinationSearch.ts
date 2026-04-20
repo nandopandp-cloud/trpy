@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { AutocompleteResult } from '@/lib/integrations/google/places-service';
 
 export interface SearchResult {
   place_id: string;
@@ -12,30 +11,102 @@ export interface SearchResult {
   /** Texto completo para exibição e slug */
   description: string;
   types?: string[];
+  /** Origem do resultado — 'local' indica base in-app (sem custo de API) */
+  source?: 'local' | 'google';
 }
 
-// Cache em memória — persiste entre re-renders no mesmo ciclo de vida da tab.
-// Chave: query normalizada. Valor: resultados cacheados.
-const CACHE = new Map<string, SearchResult[]>();
-const MAX_CACHE_SIZE = 100;
+// ─── Cache com persistência em sessionStorage ────────────────────────────────
+// Além do Map em memória, replicamos em sessionStorage para que navegações
+// entre páginas (ex. detail → voltar) não refaçam as mesmas requisições.
+// TTL curto (30 min) para balancear frescor × economia.
 
-function cacheKey(q: string) {
-  return q.toLowerCase().trim();
+const SS_KEY = 'trpy:search_cache_v2';
+const CACHE_TTL_MS = 30 * 60 * 1000;
+const MAX_CACHE_SIZE = 150;
+
+interface CacheEntry { results: SearchResult[]; expiresAt: number; }
+
+const memCache = new Map<string, CacheEntry>();
+
+function loadPersistedCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = sessionStorage.getItem(SS_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as Record<string, CacheEntry>;
+    const now = Date.now();
+    for (const [k, v] of Object.entries(parsed)) {
+      if (v.expiresAt > now) memCache.set(k, v);
+    }
+  } catch { /* ignore corrupted */ }
 }
 
-function toSearchResult(r: AutocompleteResult): SearchResult {
+function persistCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    const obj: Record<string, CacheEntry> = {};
+    memCache.forEach((v, k) => { obj[k] = v; });
+    sessionStorage.setItem(SS_KEY, JSON.stringify(obj));
+  } catch { /* quota / private mode — ignore */ }
+}
+
+let cacheLoaded = false;
+
+function cacheKey(q: string, country: string | undefined) {
+  return `${q.toLowerCase().trim()}|${country ?? ''}`;
+}
+
+function cacheGet(key: string): SearchResult[] | null {
+  if (!cacheLoaded) { loadPersistedCache(); cacheLoaded = true; }
+  const hit = memCache.get(key);
+  if (!hit) return null;
+  if (Date.now() > hit.expiresAt) {
+    memCache.delete(key);
+    return null;
+  }
+  // LRU: move ao final
+  memCache.delete(key);
+  memCache.set(key, hit);
+  return hit.results;
+}
+
+function cacheSet(key: string, results: SearchResult[]) {
+  if (memCache.size >= MAX_CACHE_SIZE) {
+    const oldest = memCache.keys().next().value;
+    if (oldest) memCache.delete(oldest);
+  }
+  memCache.set(key, { results, expiresAt: Date.now() + CACHE_TTL_MS });
+  persistCache();
+}
+
+// ─── Tipos da API ────────────────────────────────────────────────────────────
+
+interface ApiResult {
+  place_id: string;
+  description: string;
+  structured_formatting: { main_text: string; secondary_text?: string };
+  types?: string[];
+  source?: 'local' | 'google';
+}
+
+function toSearchResult(r: ApiResult): SearchResult {
   return {
     place_id: r.place_id,
     main: r.structured_formatting.main_text,
     secondary: r.structured_formatting.secondary_text ?? '',
     description: r.description,
     types: r.types,
+    source: r.source,
   };
 }
+
+// ─── Hook ────────────────────────────────────────────────────────────────────
 
 interface UseDestinationSearchOptions {
   debounce?: number;
   minLength?: number;
+  /** Código ISO do país do usuário — usado para priorizar destinos locais */
+  country?: string;
 }
 
 interface UseDestinationSearchReturn {
@@ -49,33 +120,33 @@ interface UseDestinationSearchReturn {
 }
 
 export function useDestinationSearch({
-  debounce: debounceMs = 300,
-  minLength = 2,
+  debounce: debounceMs = 350,
+  minLength = 3,
+  country,
 }: UseDestinationSearchOptions = {}): UseDestinationSearchReturn {
   const [query, setQueryRaw] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // AbortController — cancela requisições pendentes quando o usuário digita mais
   const abortRef = useRef<AbortController | null>(null);
-
-  // Session token — reutilizado ao longo da sessão de busca para reduzir
-  // custo de billing no Google Places (as chamadas do mesmo session token
-  // são agrupadas e cobradas como uma única operação de Autocomplete Session).
-  const sessionTokenRef = useRef<string>(crypto.randomUUID());
+  // Session token — agrupa chamadas do Google Autocomplete em uma única
+  // operação de billing. Trocado ao completar/limpar uma busca.
+  const sessionTokenRef = useRef<string>('');
+  if (!sessionTokenRef.current && typeof crypto !== 'undefined') {
+    sessionTokenRef.current = crypto.randomUUID();
+  }
 
   const fetchSuggestions = useCallback(async (q: string) => {
-    const key = cacheKey(q);
+    const key = cacheKey(q, country);
 
-    // Hit no cache — resposta imediata, sem loader
-    if (CACHE.has(key)) {
-      setResults(CACHE.get(key)!);
+    const cached = cacheGet(key);
+    if (cached) {
+      setResults(cached);
       setLoading(false);
       return;
     }
 
-    // Cancela request anterior
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -84,34 +155,28 @@ export function useDestinationSearch({
     setError(null);
 
     try {
-      const params = new URLSearchParams({
-        q,
-        session: sessionTokenRef.current,
-      });
+      const params = new URLSearchParams({ q });
+      if (sessionTokenRef.current) params.set('session', sessionTokenRef.current);
+      if (country) params.set('country', country);
+
       const res = await fetch(`/api/places/autocomplete?${params}`, {
         signal: controller.signal,
       });
 
       if (!res.ok) throw new Error('search_failed');
 
-      const json: { results: AutocompleteResult[] } = await res.json();
+      const json: { results: ApiResult[] } = await res.json();
       const mapped = json.results.map(toSearchResult);
-
-      // Escreve no cache com limite de tamanho (LRU simples: deleta a mais antiga)
-      if (CACHE.size >= MAX_CACHE_SIZE) {
-        CACHE.delete(CACHE.keys().next().value!);
-      }
-      CACHE.set(key, mapped);
-
+      cacheSet(key, mapped);
       setResults(mapped);
     } catch (err) {
-      if ((err as Error).name === 'AbortError') return; // request cancelado — ignorar
+      if ((err as Error).name === 'AbortError') return;
       setError('Não foi possível buscar destinos.');
       setResults([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [country]);
 
   // Debounce
   useEffect(() => {
@@ -124,12 +189,17 @@ export function useDestinationSearch({
       return;
     }
 
-    setLoading(true); // feedback imediato antes do debounce
+    // Se já temos resposta em cache, nem mostra loading
+    if (cacheGet(cacheKey(trimmed, country))) {
+      setResults(cacheGet(cacheKey(trimmed, country))!);
+      return;
+    }
+
+    setLoading(true);
     const timer = setTimeout(() => fetchSuggestions(trimmed), debounceMs);
     return () => clearTimeout(timer);
-  }, [query, debounceMs, minLength, fetchSuggestions]);
+  }, [query, debounceMs, minLength, country, fetchSuggestions]);
 
-  // Limpar quando componente desmonta
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const setQuery = useCallback((q: string) => {
@@ -147,8 +217,9 @@ export function useDestinationSearch({
     setResults([]);
     setLoading(false);
     setError(null);
-    // Novo session token a cada limpeza
-    sessionTokenRef.current = crypto.randomUUID();
+    if (typeof crypto !== 'undefined') {
+      sessionTokenRef.current = crypto.randomUUID();
+    }
   }, []);
 
   return {
