@@ -3,6 +3,7 @@
 import {
   useState, useRef, useEffect, useCallback, KeyboardEvent,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,41 +18,33 @@ import { useDestinationSearch, type SearchResult } from '@/hooks/useDestinationS
 const RECENT_KEY = 'trpy:recent_destinations';
 const MAX_RECENT = 5;
 
-// Sugestões populares exibidas quando o campo está vazio
 const POPULAR: SearchResult[] = [
-  { place_id: 'pop_paris', main: 'Paris', secondary: 'França', description: 'Paris, França', types: ['locality'] },
-  { place_id: 'pop_bali', main: 'Bali', secondary: 'Indonésia', description: 'Bali, Indonésia', types: ['locality'] },
-  { place_id: 'pop_toquio', main: 'Tóquio', secondary: 'Japão', description: 'Tóquio, Japão', types: ['locality'] },
-  { place_id: 'pop_rj', main: 'Rio de Janeiro', secondary: 'Brasil', description: 'Rio de Janeiro, Brasil', types: ['locality'] },
-  { place_id: 'pop_ny', main: 'Nova York', secondary: 'EUA', description: 'Nova York, EUA', types: ['locality'] },
-  { place_id: 'pop_lisbon', main: 'Lisboa', secondary: 'Portugal', description: 'Lisboa, Portugal', types: ['locality'] },
+  { place_id: 'pop_paris',  main: 'Paris',           secondary: 'França',     description: 'Paris, França',           types: ['locality'] },
+  { place_id: 'pop_bali',   main: 'Bali',            secondary: 'Indonésia',  description: 'Bali, Indonésia',          types: ['locality'] },
+  { place_id: 'pop_toquio', main: 'Tóquio',          secondary: 'Japão',      description: 'Tóquio, Japão',           types: ['locality'] },
+  { place_id: 'pop_rj',     main: 'Rio de Janeiro',  secondary: 'Brasil',     description: 'Rio de Janeiro, Brasil',  types: ['locality'] },
+  { place_id: 'pop_ny',     main: 'Nova York',       secondary: 'EUA',        description: 'Nova York, EUA',          types: ['locality'] },
+  { place_id: 'pop_lisbon', main: 'Lisboa',          secondary: 'Portugal',   description: 'Lisboa, Portugal',        types: ['locality'] },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildSlug(result: SearchResult): string {
-  // "Rio de Janeiro, Brasil" → "rio-de-janeiro-brasil"
   return toSlug(result.description.replace(/,\s*/g, ' '));
 }
 
 function readRecent(): SearchResult[] {
   if (typeof window === 'undefined') return [];
-  try {
-    return JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]') as SearchResult[];
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]') as SearchResult[]; }
+  catch { return []; }
 }
 
 function saveRecent(result: SearchResult) {
   if (typeof window === 'undefined') return;
   try {
-    const existing = readRecent().filter((r) => r.place_id !== result.place_id);
-    const updated = [result, ...existing].slice(0, MAX_RECENT);
-    localStorage.setItem(RECENT_KEY, JSON.stringify(updated));
-  } catch {
-    // localStorage can throw in private mode — fail silently
-  }
+    const next = [result, ...readRecent().filter((r) => r.place_id !== result.place_id)].slice(0, MAX_RECENT);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+  } catch { /* private mode — ignore */ }
 }
 
 function clearRecent() {
@@ -59,15 +52,13 @@ function clearRecent() {
   localStorage.removeItem(RECENT_KEY);
 }
 
-// ─── Highlight — marca o texto digitado em negrito no resultado ──────────────
+// ─── Highlight ────────────────────────────────────────────────────────────────
 
 function HighlightMatch({ text, query }: { text: string; query: string }) {
   if (!query.trim()) return <>{text}</>;
-
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escaped})`, 'gi');
   const parts = text.split(regex);
-
   return (
     <>
       {parts.map((part, i) =>
@@ -82,11 +73,7 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
 // ─── Result Row ───────────────────────────────────────────────────────────────
 
 function ResultRow({
-  result,
-  query,
-  icon,
-  isActive,
-  onClick,
+  result, query, icon, isActive, onClick,
 }: {
   result: SearchResult;
   query: string;
@@ -95,9 +82,11 @@ function ResultRow({
   onClick: () => void;
 }) {
   return (
-    <motion.button
-      initial={{ opacity: 0, x: -6 }}
-      animate={{ opacity: 1, x: 0 }}
+    <button
+      type="button"
+      // onPointerDown previne que o blur do input feche o dropdown antes
+      // do onClick disparar. O onClick executa a navegação.
+      onPointerDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={cn(
         'group w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
@@ -122,13 +111,18 @@ function ResultRow({
         'w-3.5 h-3.5 shrink-0 transition-all',
         isActive ? 'opacity-100 text-primary' : 'opacity-0 group-hover:opacity-60 text-muted-foreground',
       )} />
-    </motion.button>
+    </button>
   );
 }
 
-// ─── Dropdown ─────────────────────────────────────────────────────────────────
+// ─── Dropdown (portal) ────────────────────────────────────────────────────────
+// Renderizado via createPortal no document.body para escapar de qualquer
+// stacking context pai (backdrop-blur, z-index de headers, overflow, etc.).
+
+interface DropdownRect { top: number; left: number; width: number; }
 
 interface DropdownProps {
+  anchorRect: DropdownRect;
   query: string;
   results: SearchResult[];
   loading: boolean;
@@ -139,34 +133,36 @@ interface DropdownProps {
   onClearRecent: () => void;
 }
 
-function SearchDropdown({
-  query,
-  results,
-  loading,
-  error,
-  activeIndex,
-  recent,
-  onSelect,
-  onClearRecent,
+function SearchDropdownPortal({
+  anchorRect, query, results, loading, error,
+  activeIndex, recent, onSelect, onClearRecent,
 }: DropdownProps) {
   const hasQuery = query.trim().length > 0;
   const showResults = hasQuery && results.length > 0;
-  const showEmpty = hasQuery && !loading && results.length === 0;
-  const showRecent = !hasQuery && recent.length > 0;
+  const showEmpty   = hasQuery && !loading && results.length === 0 && !error;
+  const showRecent  = !hasQuery && recent.length > 0;
   const showPopular = !hasQuery && recent.length === 0;
 
-  return (
+  const dropdown = (
     <motion.div
-      key="dropdown"
-      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+      key="search-dropdown"
+      data-search-dropdown="true"
+      initial={{ opacity: 0, y: -6, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.98 }}
-      transition={{ duration: 0.16, ease: [0.4, 0, 0.2, 1] }}
-      className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden z-50"
+      exit={{ opacity: 0, y: -6, scale: 0.98 }}
+      transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+      style={{
+        position: 'fixed',
+        top: anchorRect.top + 8,
+        left: anchorRect.left,
+        width: anchorRect.width,
+        zIndex: 99999,
+      }}
+      className="bg-card border border-border rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.18)] overflow-hidden"
     >
-      {/* Loading skeleton */}
+      {/* Loading */}
       {loading && (
-        <div className="px-4 py-3 flex items-center gap-2.5 text-muted-foreground">
+        <div className="px-4 py-3.5 flex items-center gap-2.5 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin shrink-0" />
           <p className="text-sm">Buscando destinos...</p>
         </div>
@@ -174,19 +170,23 @@ function SearchDropdown({
 
       {/* Error */}
       {error && !loading && (
-        <div className="px-4 py-3 flex items-center gap-2.5 text-destructive">
+        <div className="px-4 py-3.5 flex items-center gap-2.5 text-destructive">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <p className="text-sm">{error}</p>
         </div>
       )}
 
       {/* Zero results */}
-      {showEmpty && !error && (
+      {showEmpty && (
         <div className="px-4 py-6 text-center">
+          <MapPin className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
-            Nenhum resultado para <span className="font-semibold text-foreground">"{query}"</span>
+            Nenhum resultado para{' '}
+            <span className="font-semibold text-foreground">"{query}"</span>
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Tente um nome de cidade, país ou região.</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Tente um nome de cidade, país ou região.
+          </p>
         </div>
       )}
 
@@ -215,6 +215,7 @@ function SearchDropdown({
             </div>
             <button
               type="button"
+              onPointerDown={(e) => e.preventDefault()}
               onClick={onClearRecent}
               className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -255,20 +256,17 @@ function SearchDropdown({
       )}
     </motion.div>
   );
+
+  return createPortal(dropdown, document.body);
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface DestinationSearchBarProps {
-  /** className aplicada ao wrapper externo */
   className?: string;
-  /** Placeholder do input */
   placeholder?: string;
-  /** Callback extra chamado após seleção (além da navegação) */
   onSelect?: (result: SearchResult, slug: string) => void;
-  /** Rota base de navegação — default: /dashboard/destinations */
   baseRoute?: string;
-  /** Se true, o componente auto-foca ao montar */
   autoFocus?: boolean;
 }
 
@@ -286,39 +284,58 @@ export function DestinationSearchBar({
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [recent, setRecent] = useState<SearchResult[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  // Posição do input na viewport — calculada dinamicamente para o portal
+  const [anchorRect, setAnchorRect] = useState<DropdownRect>({ top: 0, left: 0, width: 0 });
 
   const { query, setQuery, results, loading, error, clear } = useDestinationSearch({
-    debounce: 300,
+    debounce: 280,
     minLength: 2,
   });
 
-  // Lê recentes ao montar (client-only)
+  useEffect(() => { setMounted(true); }, []);
   useEffect(() => { setRecent(readRecent()); }, []);
-
-  // Auto-foco opcional
-  useEffect(() => {
-    if (autoFocus) inputRef.current?.focus();
-  }, [autoFocus]);
-
-  // Fecha dropdown ao clicar fora
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setFocused(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Reset active index quando os resultados mudam
+  useEffect(() => { if (autoFocus) inputRef.current?.focus(); }, [autoFocus]);
   useEffect(() => { setActiveIndex(-1); }, [results]);
 
-  const showDropdown = focused && !loading
-    ? focused
-    : focused && loading && query.trim().length >= 2;
+  // Recalcula a posição do anchor toda vez que o dropdown abre ou a janela
+  // muda de tamanho (resize/scroll).
+  const updateAnchorRect = useCallback(() => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setAnchorRect({
+      top: rect.bottom,
+      left: rect.left,
+      width: rect.width,
+    });
+  }, []);
 
-  // Lista que o teclado deve navegar (resultados, recentes ou populares)
+  useEffect(() => {
+    if (!focused) return;
+    updateAnchorRect();
+    window.addEventListener('resize', updateAnchorRect);
+    window.addEventListener('scroll', updateAnchorRect, true);
+    return () => {
+      window.removeEventListener('resize', updateAnchorRect);
+      window.removeEventListener('scroll', updateAnchorRect, true);
+    };
+  }, [focused, updateAnchorRect]);
+
+  // Fecha ao clicar fora.
+  // Precisamos checar tanto o container do input quanto o dropdown (que está
+  // no body via portal) — identificado pelo atributo data-search-dropdown.
+  useEffect(() => {
+    function handlePointerDown(e: MouseEvent) {
+      const target = e.target as Element;
+      if (containerRef.current?.contains(target)) return;
+      if (target.closest('[data-search-dropdown]')) return;
+      setFocused(false);
+    }
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
   const navigableList = results.length > 0
     ? results
     : query.trim().length === 0
@@ -337,7 +354,6 @@ export function DestinationSearchBar({
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (!focused) return;
-
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setActiveIndex((i) => Math.min(i + 1, navigableList.length - 1));
@@ -349,20 +365,20 @@ export function DestinationSearchBar({
       if (activeIndex >= 0 && navigableList[activeIndex]) {
         navigate(navigableList[activeIndex]);
       } else if (query.trim()) {
-        // Navegação direta pelo nome digitado
-        const synthetic: SearchResult = {
+        navigate({
           place_id: `typed_${Date.now()}`,
           main: query.trim(),
           secondary: '',
           description: query.trim(),
-        };
-        navigate(synthetic);
+        });
       }
     } else if (e.key === 'Escape') {
       setFocused(false);
       inputRef.current?.blur();
     }
   }
+
+  const showDropdown = focused && mounted;
 
   return (
     <div ref={containerRef} className={cn('relative', className)}>
@@ -393,7 +409,7 @@ export function DestinationSearchBar({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setFocused(true)}
+          onFocus={() => { setFocused(true); updateAnchorRect(); }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
@@ -420,10 +436,11 @@ export function DestinationSearchBar({
         </AnimatePresence>
       </motion.div>
 
-      {/* Dropdown */}
+      {/* Dropdown — renderizado no body via portal */}
       <AnimatePresence>
-        {focused && (
-          <SearchDropdown
+        {showDropdown && (
+          <SearchDropdownPortal
+            anchorRect={anchorRect}
             query={query}
             results={results}
             loading={loading}
@@ -431,10 +448,7 @@ export function DestinationSearchBar({
             activeIndex={activeIndex}
             recent={recent}
             onSelect={navigate}
-            onClearRecent={() => {
-              clearRecent();
-              setRecent([]);
-            }}
+            onClearRecent={() => { clearRecent(); setRecent([]); }}
           />
         )}
       </AnimatePresence>
@@ -442,8 +456,7 @@ export function DestinationSearchBar({
   );
 }
 
-// ─── Full-screen modal variant (mobile) ──────────────────────────────────────
-// Usada pelo Topbar em telas pequenas para dar mais espaço ao input.
+// ─── Full-screen modal (mobile) ───────────────────────────────────────────────
 
 interface DestinationSearchModalProps {
   open: boolean;
@@ -451,7 +464,11 @@ interface DestinationSearchModalProps {
 }
 
 export function DestinationSearchModal({ open, onClose }: DestinationSearchModalProps) {
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
+
+  const modal = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -460,12 +477,13 @@ export function DestinationSearchModal({ open, onClose }: DestinationSearchModal
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
-          className="fixed inset-0 z-[9998] bg-background/95 backdrop-blur-sm flex flex-col"
+          style={{ position: 'fixed', inset: 0, zIndex: 99998 }}
+          className="bg-background flex flex-col"
         >
           <motion.div
-            initial={{ y: -20, opacity: 0 }}
+            initial={{ y: -16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -20, opacity: 0 }}
+            exit={{ y: -16, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="flex items-center gap-3 px-4 py-4 border-b border-border shrink-0"
           >
@@ -483,14 +501,16 @@ export function DestinationSearchModal({ open, onClose }: DestinationSearchModal
             </button>
           </motion.div>
 
-          {/* Hint area */}
-          <div className="flex-1 overflow-y-auto px-4 pt-4">
-            <p className="text-xs text-muted-foreground text-center">
-              Digite o nome de uma cidade, país, região ou ponto turístico
+          <div className="flex-1 flex flex-col items-center justify-start px-4 pt-10 gap-2">
+            <Search className="w-10 h-10 text-muted-foreground/30" />
+            <p className="text-sm text-muted-foreground text-center max-w-xs">
+              Busque por cidades, países, regiões ou pontos turísticos em qualquer lugar do mundo
             </p>
           </div>
         </motion.div>
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modal, document.body);
 }
