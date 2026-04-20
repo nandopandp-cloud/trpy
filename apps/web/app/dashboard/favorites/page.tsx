@@ -12,7 +12,7 @@ import { cn, toSlug } from '@/lib/utils';
 import { useLocale, t } from '@/lib/i18n';
 import { PlaceDetailModal } from '@/components/integrations/google/place-detail-modal';
 
-type FavoriteType = 'PLACE' | 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' | 'VIDEO' | 'PIN';
+type FavoriteType = 'PLACE' | 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' | 'VIDEO';
 
 interface Favorite {
   id: string;
@@ -35,7 +35,6 @@ const TABS: { type: FavoriteType | 'ALL'; labelKey: string; icon: React.ElementT
   { type: 'HOTEL', labelKey: 'favorites.hotels', icon: Hotel },
   { type: 'ACTIVITY', labelKey: 'favorites.activities', icon: Zap },
   { type: 'VIDEO', labelKey: 'favorites.videos', icon: Youtube },
-  { type: 'PIN', labelKey: 'favorites.pins', icon: ImageIcon },
 ];
 
 const TYPE_COLOR: Record<FavoriteType, { text: string; bg: string }> = {
@@ -44,7 +43,6 @@ const TYPE_COLOR: Record<FavoriteType, { text: string; bg: string }> = {
   HOTEL: { text: 'text-sky-400', bg: 'bg-sky-500/10' },
   ACTIVITY: { text: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   VIDEO: { text: 'text-red-400', bg: 'bg-red-500/10' },
-  PIN: { text: 'text-pink-400', bg: 'bg-pink-500/10' },
 };
 
 const TYPE_GRADIENT: Record<FavoriteType, string> = {
@@ -53,7 +51,6 @@ const TYPE_GRADIENT: Record<FavoriteType, string> = {
   HOTEL: 'from-sky-500 to-blue-600',
   ACTIVITY: 'from-emerald-500 to-green-600',
   VIDEO: 'from-red-500 to-rose-600',
-  PIN: 'from-pink-500 to-fuchsia-600',
 };
 
 const TYPE_ICON: Record<FavoriteType, React.ElementType> = {
@@ -62,7 +59,6 @@ const TYPE_ICON: Record<FavoriteType, React.ElementType> = {
   HOTEL: Hotel,
   ACTIVITY: Zap,
   VIDEO: Youtube,
-  PIN: ImageIcon,
 };
 
 async function fetchFavorites(type?: FavoriteType): Promise<Favorite[]> {

@@ -5,12 +5,15 @@ import { motion } from 'framer-motion';
 import { Play, Volume2, VolumeX } from 'lucide-react';
 import type { MediaItem } from '@/lib/integrations/media';
 import { cn } from '@/lib/utils';
+import { FavoriteButton } from '@/components/favorites/favorite-button';
 
 interface VideoCardProps {
   item: MediaItem;
   onClick?: (item: MediaItem) => void;
   /** On desktop we autoplay muted on hover. On mobile we show poster + tap-to-play. */
   className?: string;
+  /** Hide favorite button */
+  hideFavorite?: boolean;
 }
 
 function formatDuration(seconds?: number): string {
@@ -20,7 +23,7 @@ function formatDuration(seconds?: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export function VideoCard({ item, onClick, className }: VideoCardProps) {
+export function VideoCard({ item, onClick, className, hideFavorite = false }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -109,6 +112,15 @@ export function VideoCard({ item, onClick, className }: VideoCardProps) {
               <span className="text-[10px] font-mono font-semibold text-white bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
                 {formatDuration(item.duration)}
               </span>
+            )}
+            {!hideFavorite && (
+              <FavoriteButton
+                type="VIDEO"
+                externalId={item.id}
+                name={item.author.name}
+                youtubeVideoId={item.id}
+                className="w-7 h-7"
+              />
             )}
             <button
               type="button"

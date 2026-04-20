@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Image as ImageIcon, ExternalLink } from 'lucide-react';
-import { FavoriteButton } from '@/components/favorites/favorite-button';
 import type { PinterestPin } from '@/lib/integrations/pinterest/pinterest-service';
 
 interface PinterestGalleryProps {
@@ -37,13 +36,6 @@ function PinterestPinCard({ pin, index }: { pin: PinterestPin; index: number }) 
 
       {/* Actions */}
       <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <FavoriteButton
-          type="PIN"
-          externalId={pin.id}
-          name={pin.title ?? 'Pin'}
-          image={pin.image}
-          size="sm"
-        />
         {pin.link && (
           <a
             href={pin.link}

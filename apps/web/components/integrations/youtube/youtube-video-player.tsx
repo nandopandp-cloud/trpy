@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, X, ExternalLink } from 'lucide-react';
 import type { YouTubeVideo } from '@/lib/integrations/youtube/youtube-service';
 import { cn } from '@/lib/utils';
+import { FavoriteButton } from '@/components/favorites/favorite-button';
 
 interface YouTubeVideoPlayerProps {
   video: YouTubeVideo;
@@ -83,6 +84,15 @@ export function YouTubeVideoPlayer({ video, className }: YouTubeVideoPlayerProps
                   <p className="text-xs text-muted-foreground mt-0.5">{video.channelTitle}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  <FavoriteButton
+                    type="VIDEO"
+                    externalId={video.id}
+                    name={video.title}
+                    image={video.thumbnail}
+                    youtubeVideoId={video.id}
+                    variant="button"
+                    size="sm"
+                  />
                   <a
                     href={`https://www.youtube.com/watch?v=${video.id}`}
                     target="_blank"

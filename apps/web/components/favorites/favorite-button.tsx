@@ -5,7 +5,7 @@ import { Heart } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 
-type FavoriteType = 'PLACE' | 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' | 'VIDEO' | 'PIN';
+type FavoriteType = 'PLACE' | 'RESTAURANT' | 'HOTEL' | 'ACTIVITY' | 'VIDEO';
 
 interface FavoriteButtonProps {
   type: FavoriteType;
@@ -13,6 +13,8 @@ interface FavoriteButtonProps {
   name: string;
   image?: string;
   rating?: number;
+  googlePlaceId?: string | null;
+  youtubeVideoId?: string | null;
   metadata?: Record<string, unknown>;
   size?: 'sm' | 'md' | 'lg';
   variant?: 'icon' | 'button';
@@ -25,6 +27,8 @@ export function FavoriteButton({
   name,
   image,
   rating,
+  googlePlaceId,
+  youtubeVideoId,
   metadata,
   size = 'md',
   variant = 'icon',
@@ -50,7 +54,16 @@ export function FavoriteButton({
         await fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type, externalId, name, image, rating, metadata }),
+          body: JSON.stringify({
+            type,
+            externalId,
+            name,
+            image,
+            rating,
+            googlePlaceId,
+            youtubeVideoId,
+            metadata,
+          }),
         });
       } else {
         await fetch('/api/favorites', {
