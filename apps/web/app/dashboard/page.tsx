@@ -25,7 +25,7 @@ import { cn, toSlug } from '@/lib/utils';
 import { useLocale, formatNumber } from '@/lib/i18n';
 import { deriveStatus, STATUS_LABEL, STATUS_BADGE_LIGHT } from '@/lib/trip-status';
 import {
-  getTrendingDestinations,
+  getWeeklyTrendingDestinations,
   resolveCountryName,
   type TrendingFilter,
 } from '@/lib/destinations';
@@ -228,7 +228,7 @@ export default function DashboardPage() {
   // Filtro da seção "Em alta". Alterna entre: mix, só local, só internacional.
   const [trendingFilter, setTrendingFilter] = useState<TrendingFilter>('all');
   const TRENDING = useMemo(
-    () => getTrendingDestinations({ userCountry, filter: trendingFilter, count: 12 }),
+    () => getWeeklyTrendingDestinations({ userCountry, filter: trendingFilter, count: 12 }),
     [userCountry, trendingFilter],
   );
 

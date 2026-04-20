@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { ok, err, handleError } from '@/lib/api';
 
-export const dynamic = 'force-dynamic';
+// Cache de 7 dias no edge — resultados mudam apenas na segunda-feira
+export const revalidate = 604800;
 
 // POST /api/destination-photo/batch
 // Body: { destinations: string[] }  (máx 20)

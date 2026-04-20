@@ -37,8 +37,8 @@ export function useDestinationPhoto(query: string | null | undefined): string | 
       return items[0]?.url ?? null;
     },
     enabled: !!query?.trim(),
-    staleTime: 60 * 60 * 1000, // 1h — backend already caches 24h
-    gcTime: 2 * 60 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000, // 24h — alinhado com cache do edge
+    gcTime: 7 * 24 * 60 * 60 * 1000, // 7 dias — cobre toda a semana do trending
     retry: 1,
     // Don't replace on refetch to avoid image flicker
     placeholderData: (prev) => prev,

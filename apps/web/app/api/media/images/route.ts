@@ -2,7 +2,8 @@ import { NextRequest } from 'next/server';
 import { ok, err, handleError } from '@/lib/api';
 import { searchImages } from '@/lib/integrations/media';
 
-export const revalidate = 3600;
+// Cache de 24h no edge — covers de destino são estáveis
+export const revalidate = 86400;
 
 // GET /api/media/images?query=paris&perPage=12&orientation=landscape
 export async function GET(req: NextRequest) {

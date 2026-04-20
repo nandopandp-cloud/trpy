@@ -47,25 +47,23 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // ── 2) Google Places (fallback — só se Pexels não retornou) ──────────────
-    // Importado dinamicamente para que o custo-guard só seja consultado quando
-    // realmente necessário (evita hit desnecessário no DB quando Pexels resolve).
-    const googleKey = process.env.GOOGLE_PLACES_API_KEY;
-    if (googleKey) {
-      const { searchPlaces } = await import('@/lib/integrations/google/places-service');
-      const results = await searchPlaces(`${q} destino turístico viagem`);
-
-      const destinationTypes = [
-        'locality', 'natural_feature', 'country',
-        'administrative_area_level_1', 'tourist_attraction', 'park', 'point_of_interest',
-      ];
-      const best =
-        results.find((r) => r.types?.some((t) => destinationTypes.includes(t))) ?? results[0];
-
-      const photo = best?.photos?.[0];
-      if (photo) {
-        const photoUrl = `/api/place-photo?ref=${encodeURIComponent(photo.photo_reference)}&maxwidth=${maxWidth}`;
-        return ok({ photoUrl, source: 'google' });
+    // ── 2) Unsplash (fallback — só se Pexels não retornou) ───────────────────
+    const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
+    if (unsplashKey) {
+      const query = encodeURIComponent(`${q} travel`);
+      const unsplashRes = await fetch(
+        `https://api.unsplash.com/search/photos?query=${query}&per_page=1&orientation=landscape`,
+        {
+          headers: { Authorization: `Client-ID ${unsplashKey}` },
+          next: { revalidate: 604800 },
+        },
+      );
+      if (unsplashRes.ok) {
+        const data = await unsplashRes.json();
+        const photo = data.results?.[0];
+        if (photo?.urls?.regular) {
+          return ok({ photoUrl: photo.urls.regular as string, source: 'unsplash' });
+        }
       }
     }
 

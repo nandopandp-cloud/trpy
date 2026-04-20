@@ -322,7 +322,8 @@ export function resolveCountryName(code: string): string {
   return COUNTRY_NAMES_FALLBACK[upper] ?? getCountryNameFromCode(upper) ?? upper;
 }
 
-// ─── Shuffle helper ──────────────────────────────────────────────────────────
+// ─── Shuffle helpers ─────────────────────────────────────────────────────────
+
 function shuffle<T>(arr: T[]): T[] {
   const out = [...arr];
   for (let i = out.length - 1; i > 0; i--) {
@@ -330,6 +331,49 @@ function shuffle<T>(arr: T[]): T[] {
     [out[i], out[j]] = [out[j], out[i]];
   }
   return out;
+}
+
+/** Mulberry32 PRNG — fast, deterministic, good distribution for small seeds. */
+function mulberry32(seed: number) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Seeded Fisher-Yates — same seed always produces same order. */
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  const out = [...arr];
+  const rand = mulberry32(seed);
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/**
+ * Número da semana ISO 8601 para uma data.
+ * Semana começa na segunda-feira. Segunda-feira às 00:00 UTC = nova semana.
+ */
+function isoWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+/**
+ * Seed determinístico baseado em ano + semana ISO.
+ * Muda toda segunda-feira às 00:00 UTC — estável o resto da semana.
+ */
+function weekSeed(date: Date = new Date()): number {
+  const year = date.getUTCFullYear();
+  const week = isoWeekNumber(date);
+  return year * 100 + week;
 }
 
 // ─── Seleção balanceada ──────────────────────────────────────────────────────
@@ -406,6 +450,61 @@ export function getTrendingDestinations(opts: GetTrendingOptions = {}): Trending
 }
 
 /**
+ * Versão semanal de getTrendingDestinations.
+ *
+ * Usa um seed derivado do número da semana ISO para embaralhar os pools de
+ * forma determinística — todos os usuários veem os mesmos destinos durante
+ * a mesma semana e a seleção muda automaticamente toda segunda-feira às 00:00 UTC.
+ *
+ * A função aceita os mesmos parâmetros que getTrendingDestinations mas nunca
+ * usa Math.random() — o embaralhamento é 100% reproduzível pelo seed.
+ */
+export function getWeeklyTrendingDestinations(opts: GetTrendingOptions = {}): TrendingEntry[] {
+  const { userCountry, filter = 'all', count = 12 } = opts;
+  const userCC = (userCountry ?? '').toUpperCase();
+  const seed = weekSeed();
+
+  const localPool = userCC ? TRENDING_POOL.filter((e) => e.countryCode === userCC) : [];
+  const worldPool = userCC ? TRENDING_POOL.filter((e) => e.countryCode !== userCC) : [...TRENDING_POOL];
+
+  if (filter === 'local') {
+    return seededShuffle(localPool, seed).slice(0, count);
+  }
+  if (filter === 'international') {
+    return pickBalancedFromWorldSeeded(worldPool, count, seed);
+  }
+
+  if (localPool.length === 0) {
+    return pickBalancedFromWorldSeeded(worldPool, count, seed);
+  }
+
+  // Cota fixa de locais por semana: 4 (seed par) ou 5 (seed ímpar)
+  const LOCAL_TARGET = Math.min(seed % 2 === 0 ? 4 : 5, localPool.length);
+  const WORLD_TARGET = count - LOCAL_TARGET;
+
+  const localPicks = seededShuffle(localPool, seed).slice(0, LOCAL_TARGET);
+  const worldPicks = pickBalancedFromWorldSeeded(worldPool, WORLD_TARGET, seed + 1);
+
+  const result: TrendingEntry[] = [];
+  const maxLen = Math.max(localPicks.length, worldPicks.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (localPicks[i]) result.push(localPicks[i]);
+    if (worldPicks[i]) result.push(worldPicks[i]);
+  }
+
+  if (result.length < count) {
+    const used = new Set(result.map((r) => r.name));
+    const remaining = seededShuffle(TRENDING_POOL.filter((e) => !used.has(e.name)), seed + 2);
+    for (const extra of remaining) {
+      if (result.length >= count) break;
+      result.push(extra);
+    }
+  }
+
+  return result.slice(0, count);
+}
+
+/**
  * Seleciona destinos do mundo equilibrando por região (continente).
  * Evita que 12 slots virem 12 europeus.
  */
@@ -448,6 +547,48 @@ function pickBalancedFromWorld(pool: TrendingEntry[], count: number): TrendingEn
     const used = new Set(picked.map((p) => p.name));
     const leftovers = pool.filter((e) => !used.has(e.name));
     picked.push(...shuffle(leftovers).slice(0, count - picked.length));
+  }
+
+  return picked.slice(0, count);
+}
+
+/** Versão determinística de pickBalancedFromWorld usando seededShuffle. */
+function pickBalancedFromWorldSeeded(pool: TrendingEntry[], count: number, seed: number): TrendingEntry[] {
+  if (pool.length === 0) return [];
+  if (count <= 0) return [];
+
+  const byRegion = new Map<TrendingRegion, TrendingEntry[]>();
+  for (const entry of pool) {
+    if (!byRegion.has(entry.region)) byRegion.set(entry.region, []);
+    byRegion.get(entry.region)!.push(entry);
+  }
+  let regionSeed = seed;
+  byRegion.forEach((entries, region) => byRegion.set(region, seededShuffle(entries, regionSeed++)));
+
+  const regions = seededShuffle(Array.from(byRegion.keys()), seed);
+
+  const perRegionCap = Math.max(1, Math.ceil(count / Math.max(regions.length, 1)) + 1);
+  const countByRegion = new Map<TrendingRegion, number>();
+  const picked: TrendingEntry[] = [];
+
+  let i = 0;
+  while (picked.length < count && i < regions.length * perRegionCap) {
+    const region = regions[i % regions.length];
+    const used = countByRegion.get(region) ?? 0;
+    if (used < perRegionCap) {
+      const regionPool = byRegion.get(region) ?? [];
+      if (regionPool[used]) {
+        picked.push(regionPool[used]);
+        countByRegion.set(region, used + 1);
+      }
+    }
+    i++;
+  }
+
+  if (picked.length < count) {
+    const used = new Set(picked.map((p) => p.name));
+    const leftovers = pool.filter((e) => !used.has(e.name));
+    picked.push(...seededShuffle(leftovers, seed).slice(0, count - picked.length));
   }
 
   return picked.slice(0, count);
