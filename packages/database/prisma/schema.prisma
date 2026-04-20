@@ -263,3 +263,32 @@ model Expense {
   @@index([category])
   @@map("expenses")
 }
+
+// ─── API Usage — cost tracking + kill switch ────────────────────────────────
+// Persiste o custo acumulado de chamadas a APIs externas (hoje: Google Places)
+// por mês. Serve de base para o circuit breaker: quando o custo ultrapassa o
+// limite configurado, o wrapper no backend para de chamar o Google e entra em
+// modo degradado (retorna apenas resultados da base local).
+
+model ApiUsage {
+  id          String   @id @default(cuid())
+  /// Provider da API — "google_places" por enquanto, extensível
+  provider    String
+  /// Chave do período no formato YYYY-MM (UTC)
+  period      String
+  /// Tipo da operação (autocomplete, details, text_search, photo, geocode)
+  operation   String
+  /// Quantidade de chamadas realizadas no período
+  callCount   Int      @default(0)
+  /// Custo acumulado no período em centavos de USD (evita drift de float)
+  costCents   Int      @default(0)
+  /// Flag de kill switch manual
+  killed      Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@unique([provider, period, operation])
+  @@index([provider, period])
+  @@map("api_usage")
+}
+

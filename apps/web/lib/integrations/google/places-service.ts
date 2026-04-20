@@ -61,6 +61,8 @@ export interface AutocompleteResult {
   types?: string[];
 }
 
+import { withGoogleGuard } from './cost-guard';
+
 const BASE_URL = 'https://maps.googleapis.com/maps/api';
 
 function getApiKey() {
@@ -70,25 +72,24 @@ function getApiKey() {
 }
 
 export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
-  const key = getApiKey();
-  // Billing do Google Places Details é cobrado por combinação de "SKU" (Basic /
-  // Contact / Atmosphere). Mantemos só os campos usados pela UI para não pagar
-  // por SKUs que a gente não renderiza. Atmosphere (rating, price_level, reviews)
-  // é o mais caro — evite adicionar aqui se não for realmente usado.
-  const fields = [
-    'place_id', 'name', 'formatted_address',
-    'website', 'rating', 'user_ratings_total', 'price_level', 'types',
-    'geometry', 'photos', 'reviews', 'opening_hours', 'url',
-  ].join(',');
+  const guarded = await withGoogleGuard('details', async () => {
+    const key = getApiKey();
+    // Billing do Google Places Details é cobrado por combinação de "SKU" (Basic /
+    // Contact / Atmosphere). Mantemos só os campos usados pela UI para não pagar
+    // por SKUs que a gente não renderiza.
+    const fields = [
+      'place_id', 'name', 'formatted_address',
+      'website', 'rating', 'user_ratings_total', 'price_level', 'types',
+      'geometry', 'photos', 'reviews', 'opening_hours', 'url',
+    ].join(',');
 
-  const url = `${BASE_URL}/place/details/json?place_id=${placeId}&fields=${fields}&language=pt-BR&key=${key}`;
-  // Details são estáveis — 24h de cache corta drasticamente chamadas repetidas
-  // para o mesmo place (hero cards, modais abertos várias vezes).
-  const res = await fetch(url, { next: { revalidate: 86400 } });
-  const data = await res.json();
-
-  if (data.status !== 'OK') return null;
-  return data.result as PlaceDetails;
+    const url = `${BASE_URL}/place/details/json?place_id=${placeId}&fields=${fields}&language=pt-BR&key=${key}`;
+    const res = await fetch(url, { next: { revalidate: 86400 } });
+    const data = await res.json();
+    if (data.status !== 'OK') return null;
+    return data.result as PlaceDetails;
+  });
+  return guarded.result;
 }
 
 export interface PlaceSearchPage {
@@ -101,22 +102,22 @@ export async function searchPlaces(
   location?: string,
   type?: string,
 ): Promise<PlaceSearchResult[]> {
-  const key = getApiKey();
-  const params = new URLSearchParams({
-    query: location ? `${query} em ${location}` : query,
-    language: 'pt-BR',
-    key,
+  const guarded = await withGoogleGuard('text_search', async () => {
+    const key = getApiKey();
+    const params = new URLSearchParams({
+      query: location ? `${query} em ${location}` : query,
+      language: 'pt-BR',
+      key,
+    });
+    if (type) params.set('type', type);
+
+    const url = `${BASE_URL}/place/textsearch/json?${params}`;
+    const res = await fetch(url, { next: { revalidate: 43200 } });
+    const data = await res.json();
+    if (data.status !== 'OK') return [];
+    return (data.results as PlaceSearchResult[]).slice(0, 20);
   });
-  if (type) params.set('type', type);
-
-  const url = `${BASE_URL}/place/textsearch/json?${params}`;
-  // Textsearch é caro — 12h de cache. Queries repetidas (hero image lookup,
-  // listagens) viram hit e deixam de bater no Google.
-  const res = await fetch(url, { next: { revalidate: 43200 } });
-  const data = await res.json();
-
-  if (data.status !== 'OK') return [];
-  return (data.results as PlaceSearchResult[]).slice(0, 20);
+  return guarded.result ?? [];
 }
 
 // Múltiplas queries por tipo — garante diversidade de resultados (preço, bairro, estilo)
@@ -154,40 +155,39 @@ async function fetchOnePage(
   type: 'restaurant' | 'lodging' | 'tourist_attraction' | 'museum',
   pageToken?: string,
 ): Promise<PlaceSearchPage> {
-  const key = getApiKey();
-
-  let url: string;
-  if (pageToken) {
-    const params = new URLSearchParams({ pagetoken: pageToken, key });
-    url = `${BASE_URL}/place/textsearch/json?${params}`;
-  } else {
-    const params = new URLSearchParams({
-      query: `${query} em ${location}`,
-      language: 'pt-BR',
-      key,
-    });
-    if (type === 'restaurant' || type === 'lodging') {
-      params.set('type', type);
+  const guarded = await withGoogleGuard('text_search', async () => {
+    const key = getApiKey();
+    let url: string;
+    if (pageToken) {
+      const params = new URLSearchParams({ pagetoken: pageToken, key });
+      url = `${BASE_URL}/place/textsearch/json?${params}`;
+    } else {
+      const params = new URLSearchParams({
+        query: `${query} em ${location}`,
+        language: 'pt-BR',
+        key,
+      });
+      if (type === 'restaurant' || type === 'lodging') {
+        params.set('type', type);
+      }
+      url = `${BASE_URL}/place/textsearch/json?${params}`;
     }
-    url = `${BASE_URL}/place/textsearch/json?${params}`;
-  }
 
-  // Não cachear pagetoken — tokens expiram em 2 minutos e não são reutilizáveis.
-  // Para as outras queries, 6h de cache evita requisições repetidas de
-  // exploração de mesmo destino/tipo.
-  const res = await fetch(url, {
-    next: { revalidate: pageToken ? 0 : 21600 },
+    const res = await fetch(url, {
+      next: { revalidate: pageToken ? 0 : 21600 },
+    });
+    const data = await res.json();
+
+    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      return { results: [] as PlaceSearchResult[] };
+    }
+
+    return {
+      results: (data.results ?? []) as PlaceSearchResult[],
+      nextPageToken: data.next_page_token as string | undefined,
+    } as PlaceSearchPage;
   });
-  const data = await res.json();
-
-  if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-    return { results: [] };
-  }
-
-  return {
-    results: (data.results ?? []) as PlaceSearchResult[],
-    nextPageToken: data.next_page_token as string | undefined,
-  };
+  return guarded.result ?? { results: [] };
 }
 
 // Mantida para compatibilidade com chamadas externas existentes
@@ -271,43 +271,51 @@ export async function autocomplete(
   input: string,
   sessionToken?: string,
 ): Promise<AutocompleteResult[]> {
-  const key = getApiKey();
-  const params = new URLSearchParams({
-    input,
-    language: 'pt-BR',
-    // Restringe a cidades + regiões administrativas + países. Corta POIs/negócios
-    // irrelevantes e cai num billing mais barato (Autocomplete - per session).
-    // Para busca de atrações específicas (restaurantes etc.) usamos Text Search.
-    types: '(regions)',
-    key,
+  const guarded = await withGoogleGuard('autocomplete', async () => {
+    const key = getApiKey();
+    const params = new URLSearchParams({
+      input,
+      language: 'pt-BR',
+      // (regions) = cidades + regiões + países (SKU mais barato que POIs).
+      types: '(regions)',
+      key,
+    });
+    if (sessionToken) params.set('sessiontoken', sessionToken);
+
+    const url = `${BASE_URL}/place/autocomplete/json?${params}`;
+    const res = await fetch(url, { next: { revalidate: 604800 } });
+    const data = await res.json();
+    if (data.status !== 'OK') return [];
+    return (data.predictions as AutocompleteResult[]).slice(0, 5);
   });
-  if (sessionToken) params.set('sessiontoken', sessionToken);
-
-  const url = `${BASE_URL}/place/autocomplete/json?${params}`;
-  // 7 dias — predições de autocomplete para um mesmo input são essencialmente
-  // estáveis. Cache long-lived elimina queries repetidas entre usuários.
-  const res = await fetch(url, { next: { revalidate: 604800 } });
-  const data = await res.json();
-
-  if (data.status !== 'OK') return [];
-  // Limita a 5 — UX não se beneficia de mais, e o payload fica menor
-  return (data.predictions as AutocompleteResult[]).slice(0, 5);
+  return guarded.result ?? [];
 }
 
+/**
+ * Retorna a URL do nosso proxy /api/place-photo, que:
+ *   - NÃO expõe a chave da API para o cliente
+ *   - Aplica cache edge de 7 dias
+ *   - Respeita o kill switch via a rota server-side
+ *
+ * A chave pública `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` continua sendo usada
+ * APENAS pelo Maps JS SDK (mapa interativo) — que exige key no browser.
+ */
 export function getPhotoUrl(photoRef: string, maxWidth = 800): string {
-  const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
-  return `${BASE_URL}/place/photo?maxwidth=${maxWidth}&photo_reference=${photoRef}&key=${key}`;
+  return `/api/place-photo?ref=${encodeURIComponent(photoRef)}&maxwidth=${maxWidth}`;
 }
 
 export async function geocodeAddress(
   address: string,
 ): Promise<{ lat: number; lng: number } | null> {
-  const key = getApiKey();
-  const params = new URLSearchParams({ address, language: 'pt-BR', key });
-  const res = await fetch(`${BASE_URL}/geocode/json?${params}`, {
-    next: { revalidate: 86400 },
+  const guarded = await withGoogleGuard('geocode', async () => {
+    const key = getApiKey();
+    const params = new URLSearchParams({ address, language: 'pt-BR', key });
+    const res = await fetch(`${BASE_URL}/geocode/json?${params}`, {
+      next: { revalidate: 86400 },
+    });
+    const data = await res.json();
+    if (data.status !== 'OK' || !data.results?.[0]) return null;
+    return data.results[0].geometry.location as { lat: number; lng: number };
   });
-  const data = await res.json();
-  if (data.status !== 'OK' || !data.results?.[0]) return null;
-  return data.results[0].geometry.location as { lat: number; lng: number };
+  return guarded.result;
 }

@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { autocomplete, type AutocompleteResult } from '@/lib/integrations/google/places-service';
 import { searchLocal, type LocalDestination } from '@/lib/search/local-destinations';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { getGuardStatus } from '@/lib/integrations/google/cost-guard';
 
 /**
  * GET /api/places/autocomplete?q=paris&session=<token>&country=<ISO>
@@ -118,10 +120,47 @@ function dedupeByName(items: SearchPayload[]): SearchPayload[] {
 const MIN_LENGTH = 3;
 const MAX_RESULTS = 6;
 
+// Valida país ISO 3166-1 alpha-2
+const COUNTRY_RE = /^[A-Z]{2}$/i;
+// Valida session token (UUID v4 ou similar — defensivo)
+const SESSION_RE = /^[A-Za-z0-9_-]{1,64}$/;
+// Valida query: letras (com acentos), números, espaços, pontuação comum.
+// Regex sem flag u para manter compatibilidade com target TS atual.
+const QUERY_RE = /^[A-Za-zÀ-ÿ0-9\s'\-,.()]+$/;
+const MAX_QUERY_LEN = 80;
+
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get('q')?.trim() ?? '';
+  // Rate limit — 60 req/min por IP. Corta scrapers e bugs de loop infinito.
+  const rl = checkRateLimit(req, { key: 'places-autocomplete', max: 60, windowMs: 60_000 });
+  if (rl.limited) {
+    return NextResponse.json(
+      { results: [], error: 'rate_limited' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)),
+          'X-RateLimit-Remaining': '0',
+        },
+      },
+    );
+  }
+
+  const rawQ = req.nextUrl.searchParams.get('q') ?? '';
+  const q = rawQ.trim().slice(0, MAX_QUERY_LEN);
+
   const session = req.nextUrl.searchParams.get('session') ?? undefined;
   const country = req.nextUrl.searchParams.get('country') ?? undefined;
+
+  // Validação de input — rejeita caracteres estranhos que indicam uso malicioso
+  if (q.length > 0 && !QUERY_RE.test(q)) {
+    return NextResponse.json({ results: [], error: 'invalid_query' }, { status: 400 });
+  }
+  if (session && !SESSION_RE.test(session)) {
+    return NextResponse.json({ results: [], error: 'invalid_session' }, { status: 400 });
+  }
+  if (country && !COUNTRY_RE.test(country)) {
+    return NextResponse.json({ results: [], error: 'invalid_country' }, { status: 400 });
+  }
 
   if (q.length < MIN_LENGTH) {
     return NextResponse.json(
@@ -165,7 +204,24 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 3) Fallback Google Places
+  // 3) Guard check — se o kill switch disparou, não chama Google.
+  // Devolve só a base local, com header sinalizando degradação (observável
+  // no Network tab e nos logs).
+  const guard = await getGuardStatus();
+  if (guard.blocked) {
+    const payload = localPayload.slice(0, MAX_RESULTS);
+    return NextResponse.json(
+      { results: payload, degraded: true, reason: guard.reason },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300',
+          'X-Search-Degraded': guard.reason ?? 'unknown',
+        },
+      },
+    );
+  }
+
+  // 4) Fallback Google Places
   try {
     const googleResults = await autocomplete(q, session);
     const googlePayload = googleResults.map(googleToPayload);
