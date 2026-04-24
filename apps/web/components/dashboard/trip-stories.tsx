@@ -4,9 +4,10 @@ import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate as animateMotion } from 'framer-motion';
 import {
   Plus, X, ChevronLeft, ChevronRight,
-  ExternalLink, MapPin, Volume2, VolumeX, Plane,
+  ExternalLink, MapPin, Volume2, VolumeX, Plane, Heart,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 
 /* ── Mobile detection hook ─────────────────────────────── */
@@ -320,11 +321,51 @@ function NeighborSlide({ story }: { story: StoryItem }) {
   );
 }
 
+/* ── Favorite helper ──────────────────────────────────── */
+// Toggle "VIDEO" favorite via API. Optimistic, idempotent — duplo-tap repetido
+// alterna entre favorito/não favorito.
+
+async function toggleVideoFavorite(video: YouTubeVideo, destination: string): Promise<'added' | 'removed' | 'error'> {
+  try {
+    const params = new URLSearchParams({ type: 'VIDEO', externalId: video.id });
+    const checkRes = await fetch(`/api/favorites/check?${params}`);
+    const checkData = await checkRes.json();
+    const isFav = checkData.success ? checkData.data?.favorited : false;
+
+    if (isFav) {
+      await fetch('/api/favorites', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'VIDEO', externalId: video.id }),
+      });
+      return 'removed';
+    }
+
+    await fetch('/api/favorites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'VIDEO',
+        externalId: video.id,
+        name: video.title,
+        image: video.thumbnail,
+        youtubeVideoId: video.id,
+        metadata: { channelTitle: video.channelTitle, destination },
+      }),
+    });
+    return 'added';
+  } catch {
+    return 'error';
+  }
+}
+
 /* ════════════════════════════════════════════════════════ */
 /* STORY VIEWER  — Instagram-grade experience              */
 /* ════════════════════════════════════════════════════════ */
 
 const STORY_DURATION = 50000; // ms per video segment
+const DOUBLE_TAP_MS = 280;    // janela para detectar duplo-toque
+const HOLD_MS = 220;          // long-press para pause sustentado
 
 interface StoryViewerProps {
   stories: StoryItem[];
@@ -342,6 +383,7 @@ const slideVariants = {
 function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
 
   /* ── Indices & direction ── */
   const [storyIdx, setStoryIdx] = useState(initialIndex);
@@ -358,6 +400,16 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [muted, setMuted]       = useState(true);
   const isPausedRef = useRef(false);
+  const mutedRef    = useRef(true);
+  mutedRef.current  = muted;
+
+  /* ── Heart feedback (duplo-tap → favoritar) ── */
+  const [hearts, setHearts] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const [favStatus, setFavStatus] = useState<'added' | 'removed' | null>(null);
+  const heartIdRef = useRef(0);
+
+  /* ── Iframe ref para postMessage de mute/play/pause ── */
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   /* ── Mobile cube-swipe drag state ── */
   const dragX = useMotionValue(0);              // live x offset during drag
@@ -373,6 +425,13 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didSwipeRef  = useRef(false);
   const gestureModeRef = useRef<'idle' | 'hold' | 'hdrag' | 'vdrag'>('idle');
+
+  /* Para distinguir single-tap (centro = pause) de double-tap (favoritar),
+     guardamos a última posição/tempo de tap e um timer pendente para o
+     single-tap. O timer é cancelado se um segundo tap chega dentro de DOUBLE_TAP_MS. */
+  const lastTapRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPressRef = useRef(false);
 
   /* ── Video data ── */
   const currentStory = stories[storyIdx];
@@ -406,17 +465,35 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storyIdx, videoIdx]);
 
+  /* ── YouTube iframe controls (postMessage API) ── */
+  const sendYTCommand = useCallback((command: string, args: unknown[] = []) => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    win.postMessage(JSON.stringify({ event: 'command', func: command, args }), '*');
+  }, []);
+
   const pauseRaf = useCallback(() => {
     isPausedRef.current = true;
     setIsPaused(true);
-  }, []);
+    sendYTCommand('pauseVideo');
+  }, [sendYTCommand]);
 
   const resumeRaf = useCallback(() => {
     isPausedRef.current = false;
     setIsPaused(false);
     // Reset start so elapsed time resets (progress saved in savedPctRef)
     startTsRef.current = null;
-  }, []);
+    sendYTCommand('playVideo');
+  }, [sendYTCommand]);
+
+  /* Toggle mute via postMessage — não remonta o iframe, evita re-loading */
+  const toggleMute = useCallback(() => {
+    setMuted((prev) => {
+      const next = !prev;
+      sendYTCommand(next ? 'mute' : 'unMute');
+      return next;
+    });
+  }, [sendYTCommand]);
 
   /* ══════════════════ NAVIGATION ═══════════════════════ */
 
@@ -509,6 +586,21 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     return () => window.removeEventListener('keydown', fn);
   }, [advanceFn, goBackFn, onClose, pauseRaf, resumeRaf]);
 
+  /* Quando o vídeo muda, o novo iframe inicia mutado (parâmetro mute=1).
+     Se o usuário já tinha desmutado, restaurar via postMessage assim que
+     o iframe sinalizar que está pronto. */
+  useEffect(() => {
+    if (!currentVideo) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const apply = () => {
+      if (!mutedRef.current) sendYTCommand('unMute');
+    };
+    // YouTube postMessage só funciona após o player estar carregado;
+    // damos um pequeno delay e aplicamos. Idempotente.
+    timer = setTimeout(apply, 600);
+    return () => { if (timer) clearTimeout(timer); };
+  }, [currentVideo?.id, sendYTCommand]);
+
   /* ══════════════════ TOUCH / GESTURE ══════════════════ */
 
   /* Commit a cube-swipe: animate dragX to its end position, then swap storyIdx */
@@ -561,10 +653,56 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     });
   }, [dragX, resumeRaf]);
 
+  /* ── Triggers de tap resolvidos depois do double-tap window ── */
+
+  const togglePause = useCallback(() => {
+    if (isPausedRef.current) resumeRaf();
+    else pauseRaf();
+  }, [pauseRaf, resumeRaf]);
+
+  /* Mostra um heart animado na posição (x, y) relativa ao frame */
+  const showHeart = useCallback((x: number, y: number) => {
+    const id = ++heartIdRef.current;
+    setHearts((arr) => [...arr, { id, x, y }]);
+    setTimeout(() => {
+      setHearts((arr) => arr.filter((h) => h.id !== id));
+    }, 900);
+  }, []);
+
+  const triggerFavorite = useCallback(async (x: number, y: number) => {
+    showHeart(x, y);
+    if (!currentVideo) return;
+    const result = await toggleVideoFavorite(currentVideo, currentStory.destination);
+    if (result === 'added' || result === 'removed') {
+      setFavStatus(result);
+      setTimeout(() => setFavStatus(null), 1400);
+      // Invalida queries de favoritos pra atualizar a UI da página
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
+      queryClient.invalidateQueries({ queryKey: ['favorites-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['favorite-check', 'VIDEO', currentVideo.id] });
+    }
+  }, [currentVideo, currentStory.destination, queryClient, showHeart]);
+
+  /* Resolve um tap simples — chamado depois da janela DOUBLE_TAP_MS expirar
+     (sem segundo tap detectado). Aplica zona 30/40/30: esquerda volta,
+     centro pausa/despausa, direita avança. */
+  const resolveSingleTap = useCallback((relativeX: number, frameWidth: number) => {
+    const leftZone  = frameWidth * 0.30;
+    const rightZone = frameWidth * 0.70;
+    if (relativeX < leftZone) {
+      goBackFn();
+    } else if (relativeX > rightZone) {
+      advanceFn();
+    } else {
+      togglePause();
+    }
+  }, [goBackFn, advanceFn, togglePause]);
+
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     // Block new gestures while a swipe animation is in flight
     if (swipeAnimatingRef.current) return;
     didSwipeRef.current = false;
+    didLongPressRef.current = false;
     gestureModeRef.current = 'idle';
     touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
 
@@ -573,13 +711,15 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
       frameWidthRef.current = frameRef.current.getBoundingClientRect().width;
     }
 
-    // Long-press → pause (Instagram-style hold to inspect)
+    // Long-press → pause sustentado (Instagram-style hold to inspect).
+    // Marca didLongPressRef para que onTouchEnd não confunda com tap simples.
     holdTimerRef.current = setTimeout(() => {
       if (gestureModeRef.current === 'idle') {
         gestureModeRef.current = 'hold';
+        didLongPressRef.current = true;
         pauseRaf();
       }
-    }, 180);
+    }, HOLD_MS);
   }, [pauseRaf]);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
@@ -664,7 +804,7 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
       return;
     }
 
-    // Resuming from hold-to-pause
+    // Long-press soltou: retomar reprodução
     if (gestureModeRef.current === 'hold') {
       gestureModeRef.current = 'idle';
       resumeRaf();
@@ -673,47 +813,79 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     }
 
     if (!touchRef.current) return;
-    const dx = e.changedTouches[0].clientX - touchRef.current.x;
-    const dy = e.changedTouches[0].clientY - touchRef.current.y;
-    const dt = Date.now() - touchRef.current.time;
+    const startTouch = touchRef.current;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const dx = endX - startTouch.x;
+    const dy = endY - startTouch.y;
     touchRef.current = null;
 
     // Swipe down → close (vdrag mode)
     if (dy > 100 && Math.abs(dy) > Math.abs(dx) * 1.5) {
       onClose();
+      gestureModeRef.current = 'idle';
       return;
     }
 
-    // Desktop-only horizontal fallback swipe (mobile uses cube drag above)
-    if (!isMobile) {
-      const velocity = Math.abs(dx) / Math.max(dt, 1);
-      if (Math.abs(dx) > Math.abs(dy) * 1.2 && (velocity > 0.25 || Math.abs(dx) > 55)) {
-        if (dx < 0) advanceFn(); else goBackFn();
-        return;
-      }
+    // Se foi um swipe (movimento maior que 8px), não processa como tap
+    if (didSwipeRef.current || didLongPressRef.current) {
+      gestureModeRef.current = 'idle';
+      return;
     }
 
-    // Tap (barely moved) → sub-story navigation
-    if (!didSwipeRef.current) {
-      const { clientX } = e.changedTouches[0];
-      const rect = frameRef.current?.getBoundingClientRect();
-      const leftEdge = rect?.left ?? 0;
-      const width = rect?.width ?? window.innerWidth;
-      const relative = clientX - leftEdge;
-      // Instagram-style: 1/3 left = back, 2/3 right = forward
-      if (relative < width * 0.33) goBackFn(); else advanceFn();
+    // ─── Tap genuíno: resolver single vs double ────────────────────────────
+    const rect = frameRef.current?.getBoundingClientRect();
+    const leftEdge = rect?.left ?? 0;
+    const topEdge  = rect?.top  ?? 0;
+    const width    = rect?.width ?? window.innerWidth;
+    const relativeX = endX - leftEdge;
+    const relativeY = endY - topEdge;
+    const now = Date.now();
+
+    const last = lastTapRef.current;
+    const isDoubleTap =
+      last !== null &&
+      now - last.t <= DOUBLE_TAP_MS &&
+      Math.abs(endX - last.x) < 40 &&
+      Math.abs(endY - last.y) < 40;
+
+    if (isDoubleTap) {
+      // Cancela o single-tap pendente para não disparar zona depois
+      if (singleTapTimerRef.current) {
+        clearTimeout(singleTapTimerRef.current);
+        singleTapTimerRef.current = null;
+      }
+      lastTapRef.current = null;
+      triggerFavorite(relativeX, relativeY);
+      gestureModeRef.current = 'idle';
+      return;
     }
+
+    // Primeiro tap — agenda single-tap. Se um segundo tap chegar dentro de
+    // DOUBLE_TAP_MS, este timer é cancelado pelo branch acima.
+    lastTapRef.current = { x: endX, y: endY, t: now };
+    if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+    singleTapTimerRef.current = setTimeout(() => {
+      singleTapTimerRef.current = null;
+      lastTapRef.current = null;
+      resolveSingleTap(relativeX, width);
+    }, DOUBLE_TAP_MS);
 
     gestureModeRef.current = 'idle';
-  }, [advanceFn, cancelCubeSwipe, commitCubeSwipe, goBackFn, isMobile, onClose, resumeRaf]);
+  }, [cancelCubeSwipe, commitCubeSwipe, onClose, resumeRaf, resolveSingleTap, triggerFavorite]);
 
   /* Mouse support for desktop hold-to-pause */
   const onMouseDown = useCallback(() => {
-    holdTimerRef.current = setTimeout(pauseRaf, 150);
+    didLongPressRef.current = false;
+    holdTimerRef.current = setTimeout(() => {
+      didLongPressRef.current = true;
+      pauseRaf();
+    }, HOLD_MS);
   }, [pauseRaf]);
   const onMouseUp = useCallback(() => {
     if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
-    if (isPausedRef.current) resumeRaf();
+    // Só retoma se o pause veio de long-press (não confunde com pause via tap central)
+    if (didLongPressRef.current && isPausedRef.current) resumeRaf();
   }, [resumeRaf]);
 
   /* ══════════════════ CUBE TRANSFORMS (mobile) ═════════ */
@@ -877,30 +1049,33 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
             </div>
 
             {/* ─── LAYER 2: YouTube iframe (fills frame, cover crop) ─── */}
+            {/*
+              Iframe key inclui apenas o videoId — mute é controlado via
+              postMessage (toggleMute) para NÃO remontar o iframe e causar
+              re-loading. Sem AnimatePresence em volta: o fade duplo
+              (exit do antigo + enter do novo) era a causa visual de
+              "carregar duas vezes" entre vídeos.
+            */}
             {currentVideo && (
-              <div className="absolute inset-0 overflow-hidden">
-                <AnimatePresence mode="wait">
-                  <motion.iframe
-                    key={`${currentVideo.id}-${muted ? 'm' : 'u'}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                    src={`https://www.youtube-nocookie.com/embed/${currentVideo.id}?autoplay=1&mute=${muted ? 1 : 0}&controls=0&rel=0&playsinline=1&modestbranding=1&loop=0`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    /* Cover-crop: fill height, overflow width */
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      height: '100%',
-                      aspectRatio: '16/9',
-                      transform: 'translate(-50%, -50%)',
-                      pointerEvents: 'none',  // gesture overlay handles all touches
-                    }}
-                  />
-                </AnimatePresence>
-              </div>
+              <motion.iframe
+                ref={iframeRef}
+                key={currentVideo.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35 }}
+                src={`https://www.youtube-nocookie.com/embed/${currentVideo.id}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&loop=0&enablejsapi=1`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  height: '100%',
+                  aspectRatio: '16/9',
+                  transform: 'translate(-50%, -50%)',
+                  pointerEvents: 'none',  // gesture overlay handles all touches
+                  border: 0,
+                }}
+              />
             )}
 
             {/* Loading state */}
@@ -968,7 +1143,7 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
               {/* Right: controls */}
               <div className="flex items-center gap-2 pointer-events-auto">
                 <button
-                  onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
+                  onClick={e => { e.stopPropagation(); toggleMute(); }}
                   className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 active:scale-90 transition"
                 >
                   {muted
@@ -1024,28 +1199,43 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
 
             {/* ─── LAYER 7: Gesture capture overlay ─── */}
             <div
-              className="absolute inset-0 z-20 cursor-pointer"
+              className="absolute inset-0 z-20 cursor-pointer select-none"
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
               onMouseDown={onMouseDown}
               onMouseUp={onMouseUp}
-              /* Desktop-only click zones — skip on touch devices to avoid double-fire */
-              onClick={e => {
-                // Touch devices already handle taps in onTouchEnd.
-                // The browser synthesises a click ~300ms after touchend,
-                // which would double-fire advance/goBack. Block it.
+              /* Desktop double-click → favoritar */
+              onDoubleClick={e => {
                 if (isMobile) return;
-                const x = e.clientX;
-                const w = (e.currentTarget as HTMLElement).getBoundingClientRect().width;
-                if (x < w * 0.35) goBackFn(); else advanceFn();
+                if (singleTapTimerRef.current) {
+                  clearTimeout(singleTapTimerRef.current);
+                  singleTapTimerRef.current = null;
+                }
+                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                triggerFavorite(e.clientX - rect.left, e.clientY - rect.top);
+              }}
+              /* Desktop single-click — usa zona 30/40/30, mas com delay para
+                 não disparar antes de um possível duplo-clique chegar. */
+              onClick={e => {
+                // Touch devices: onTouchEnd já resolve. Bloqueia o synthetic click.
+                if (isMobile) return;
+                if (didLongPressRef.current) { didLongPressRef.current = false; return; }
+                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                const relativeX = e.clientX - rect.left;
+                const w = rect.width;
+                if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+                singleTapTimerRef.current = setTimeout(() => {
+                  singleTapTimerRef.current = null;
+                  resolveSingleTap(relativeX, w);
+                }, DOUBLE_TAP_MS);
               }}
             />
 
           </motion.div>
         </AnimatePresence>
 
-        {/* ─── Pause indicator (hold to pause) ─── */}
+        {/* ─── Pause indicator ─── */}
         <AnimatePresence>
           {isPaused && (
             <motion.div
@@ -1059,6 +1249,41 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
                   <div className="w-[5px] h-7 rounded-full bg-white" />
                   <div className="w-[5px] h-7 rounded-full bg-white" />
                 </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ─── Heart pop animation (duplo-tap → favoritar) ─── */}
+        <AnimatePresence>
+          {hearts.map((h) => (
+            <motion.div
+              key={h.id}
+              initial={{ opacity: 0, scale: 0.4, x: h.x - 48, y: h.y - 48 }}
+              animate={{ opacity: 1, scale: 1, x: h.x - 48, y: h.y - 48 }}
+              exit={{ opacity: 0, scale: 1.4, y: h.y - 90 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute top-0 left-0 z-50 pointer-events-none"
+              style={{ filter: 'drop-shadow(0 4px 16px rgba(244, 63, 94, 0.55))' }}
+            >
+              <Heart className="w-24 h-24 fill-rose-500 text-rose-500" strokeWidth={1.5} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {/* ─── Toast de favorito ─── */}
+        <AnimatePresence>
+          {favStatus && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+              className="absolute bottom-32 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+            >
+              <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 text-sm font-medium text-white">
+                <Heart className={cn('w-4 h-4', favStatus === 'added' ? 'fill-rose-500 text-rose-500' : 'text-white/70')} />
+                {favStatus === 'added' ? 'Adicionado aos favoritos' : 'Removido dos favoritos'}
               </div>
             </motion.div>
           )}
