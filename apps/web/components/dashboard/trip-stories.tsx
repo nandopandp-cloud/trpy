@@ -364,8 +364,9 @@ async function toggleVideoFavorite(video: YouTubeVideo, destination: string): Pr
 /* ════════════════════════════════════════════════════════ */
 
 const STORY_DURATION = 50000; // ms per video segment
-const DOUBLE_TAP_MS = 280;    // janela para detectar duplo-toque
-const HOLD_MS = 220;          // long-press para pause sustentado
+const DOUBLE_TAP_MS = 220;    // janela para detectar duplo-toque (mais snappy)
+const HOLD_MS = 240;          // long-press para pause sustentado
+const SPINNER_DELAY_MS = 850; // só mostra spinner se vídeo demorar mais que isso
 
 interface StoryViewerProps {
   stories: StoryItem[];
@@ -410,6 +411,8 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
 
   /* ── Iframe ref para postMessage de mute/play/pause ── */
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const playerReadyRef = useRef(false);   // true quando o YT iframe sinaliza onReady
+  const [iframeFadeIn, setIframeFadeIn] = useState(false); // só fade in quando player ready
 
   /* ── Mobile cube-swipe drag state ── */
   const dragX = useMotionValue(0);              // live x offset during drag
@@ -433,6 +436,15 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPressRef = useRef(false);
 
+  // Limpa timers pendentes no unmount para evitar callbacks rodando após
+  // o componente sair (causaria stale state e pause "fantasma").
+  useEffect(() => {
+    return () => {
+      if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    };
+  }, []);
+
   /* ── Video data ── */
   const currentStory = stories[storyIdx];
   const coverPhoto   = useDestinationPhoto(currentStory.destination, currentStory.coverImage);
@@ -440,6 +452,15 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
 
   const currentVideo = videos[videoIdx] ?? null;
   const totalBars    = Math.max(videos.length, 1);
+
+  /* Spinner com atraso — evita pisca em transições rápidas entre destinos.
+     Só mostra spinner se loading durar mais que SPINNER_DELAY_MS. */
+  const [showSpinner, setShowSpinner] = useState(false);
+  useEffect(() => {
+    if (!loading) { setShowSpinner(false); return; }
+    const t = setTimeout(() => setShowSpinner(true), SPINNER_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   /* ══════════════════ RAF PROGRESS ══════════════════════ */
 
@@ -465,10 +486,17 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storyIdx, videoIdx]);
 
-  /* ── YouTube iframe controls (postMessage API) ── */
+  /* ── YouTube iframe controls (postMessage API) ──────────────────────────
+     Comandos enviados antes do `onReady` são descartados pelo YT player —
+     por isso enfileiramos enquanto não está pronto e drenamos no listener. */
+  const ytCommandQueueRef = useRef<Array<{ func: string; args: unknown[] }>>([]);
+
   const sendYTCommand = useCallback((command: string, args: unknown[] = []) => {
     const win = iframeRef.current?.contentWindow;
-    if (!win) return;
+    if (!win || !playerReadyRef.current) {
+      ytCommandQueueRef.current.push({ func: command, args });
+      return;
+    }
     win.postMessage(JSON.stringify({ event: 'command', func: command, args }), '*');
   }, []);
 
@@ -491,6 +519,8 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     setMuted((prev) => {
       const next = !prev;
       sendYTCommand(next ? 'mute' : 'unMute');
+      // setVolume reforça (alguns players ignoram unMute sem volume explícito)
+      if (!next) sendYTCommand('setVolume', [100]);
       return next;
     });
   }, [sendYTCommand]);
@@ -586,20 +616,77 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     return () => window.removeEventListener('keydown', fn);
   }, [advanceFn, goBackFn, onClose, pauseRaf, resumeRaf]);
 
-  /* Quando o vídeo muda, o novo iframe inicia mutado (parâmetro mute=1).
-     Se o usuário já tinha desmutado, restaurar via postMessage assim que
-     o iframe sinalizar que está pronto. */
+  /* ── YouTube postMessage listener — handshake real ──────────────────────
+     Quando o iframe carrega, envia `listening` para começar a receber eventos.
+     Quando recebe `onReady` (info.playerState != null), drena a fila de comandos
+     pendentes — isso garante que mute/unMute/setVolume cheguem no momento certo,
+     eliminando o problema de "áudio não sai". */
+  useEffect(() => {
+    function handleMessage(ev: MessageEvent) {
+      // Mensagens vêm do origin do YouTube nocookie
+      if (typeof ev.data !== 'string') return;
+      if (!/youtube/.test(ev.origin)) return;
+      let payload: any;
+      try { payload = JSON.parse(ev.data); } catch { return; }
+      if (!payload || payload.id == null) return;
+
+      // `onReady` chega com event="onReady" ou com info contendo playerState inicial
+      if (payload.event === 'onReady' || payload.event === 'initialDelivery') {
+        playerReadyRef.current = true;
+        const win = iframeRef.current?.contentWindow;
+        if (win) {
+          // 1) Drena fila ANTES de qualquer comando deste handler — assim
+          //    pauseVideo enfileirado durante a transição não é sobrescrito
+          //    pelo playVideo abaixo.
+          const queue = ytCommandQueueRef.current;
+          ytCommandQueueRef.current = [];
+          for (const cmd of queue) {
+            win.postMessage(JSON.stringify({ event: 'command', func: cmd.func, args: cmd.args }), '*');
+          }
+          // 2) Aplica mute/volume conforme estado atual
+          if (mutedRef.current) {
+            win.postMessage(JSON.stringify({ event: 'command', func: 'mute', args: [] }), '*');
+          } else {
+            win.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
+            win.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
+          }
+          // 3) Sincroniza play/pause com o estado atual (NÃO força play —
+          //    se o usuário pausou durante a transição, respeita).
+          win.postMessage(
+            JSON.stringify({
+              event: 'command',
+              func: isPausedRef.current ? 'pauseVideo' : 'playVideo',
+              args: [],
+            }),
+            '*',
+          );
+        }
+        // Mostra o iframe (fade in) só agora que sabemos que está pronto
+        setIframeFadeIn(true);
+      }
+    }
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  /* Quando o videoId muda, reseta o flag de ready, esconde o iframe (cobertura
+     pelo blurred cover), e dispara handshake `listening` assim que o iframe
+     monta. */
   useEffect(() => {
     if (!currentVideo) return;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const apply = () => {
-      if (!mutedRef.current) sendYTCommand('unMute');
-    };
-    // YouTube postMessage só funciona após o player estar carregado;
-    // damos um pequeno delay e aplicamos. Idempotente.
-    timer = setTimeout(apply, 600);
-    return () => { if (timer) clearTimeout(timer); };
-  }, [currentVideo?.id, sendYTCommand]);
+    playerReadyRef.current = false;
+    setIframeFadeIn(false);
+    ytCommandQueueRef.current = [];
+
+    // Aguarda o próximo frame para garantir que o iframe foi montado
+    const raf = requestAnimationFrame(() => {
+      const win = iframeRef.current?.contentWindow;
+      if (!win) return;
+      // Handshake oficial — sem isso o YT não envia eventos de volta
+      win.postMessage(JSON.stringify({ event: 'listening' }), '*');
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [currentVideo?.id]);
 
   /* ══════════════════ TOUCH / GESTURE ══════════════════ */
 
@@ -874,19 +961,10 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     gestureModeRef.current = 'idle';
   }, [cancelCubeSwipe, commitCubeSwipe, onClose, resumeRaf, resolveSingleTap, triggerFavorite]);
 
-  /* Mouse support for desktop hold-to-pause */
-  const onMouseDown = useCallback(() => {
-    didLongPressRef.current = false;
-    holdTimerRef.current = setTimeout(() => {
-      didLongPressRef.current = true;
-      pauseRaf();
-    }, HOLD_MS);
-  }, [pauseRaf]);
-  const onMouseUp = useCallback(() => {
-    if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
-    // Só retoma se o pause veio de long-press (não confunde com pause via tap central)
-    if (didLongPressRef.current && isPausedRef.current) resumeRaf();
-  }, [resumeRaf]);
+  /* No desktop, NÃO usamos hold-to-pause via mouse. O long-press no desktop
+     conflita com onClick (synthetic click ainda dispara depois do mousedown
+     via timer), e gera uma race com o singleTapTimer. Pausa no desktop é via
+     clique central + tecla espaço. Hold-to-pause permanece exclusivo do touch. */
 
   /* ══════════════════ CUBE TRANSFORMS (mobile) ═════════ */
 
@@ -1048,21 +1126,18 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
               )}
             </div>
 
-            {/* ─── LAYER 2: YouTube iframe (fills frame, cover crop) ─── */}
-            {/*
-              Iframe key inclui apenas o videoId — mute é controlado via
-              postMessage (toggleMute) para NÃO remontar o iframe e causar
-              re-loading. Sem AnimatePresence em volta: o fade duplo
-              (exit do antigo + enter do novo) era a causa visual de
-              "carregar duas vezes" entre vídeos.
-            */}
+            {/* ─── LAYER 2: YouTube iframe (fills frame, cover crop) ───
+                Iframe key = videoId apenas. Mute/play via postMessage
+                (handshake onReady garante entrega). O fade in é controlado
+                pelo state `iframeFadeIn` que vira true só quando o player
+                sinaliza onReady — assim a transição não mostra "buffer screen"
+                amarelo/preto do YouTube.
+                Cobertura visual durante carregamento: o blurred coverPhoto
+                da LAYER 1 fica visível atrás. Sem spinner piscando. */}
             {currentVideo && (
-              <motion.iframe
+              <iframe
                 ref={iframeRef}
                 key={currentVideo.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.35 }}
                 src={`https://www.youtube-nocookie.com/embed/${currentVideo.id}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&loop=0&enablejsapi=1`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 style={{
@@ -1072,15 +1147,29 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
                   height: '100%',
                   aspectRatio: '16/9',
                   transform: 'translate(-50%, -50%)',
-                  pointerEvents: 'none',  // gesture overlay handles all touches
+                  pointerEvents: 'none',
                   border: 0,
+                  opacity: iframeFadeIn ? 1 : 0,
+                  transition: 'opacity 280ms ease-out',
                 }}
               />
             )}
 
-            {/* Loading state */}
-            {loading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
+            {/* Cover photo cobre o iframe enquanto não está ready — evita
+                ver flash preto/buffer do YouTube na transição entre vídeos */}
+            {currentVideo && !iframeFadeIn && coverPhoto && (
+              <img
+                src={coverPhoto}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              />
+            )}
+
+            {/* Loading state — só aparece se demorar (>850ms). Evita pisca
+                rápido em transições normais entre destinos. */}
+            {showSpinner && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 pointer-events-none">
                 <div className="w-10 h-10 rounded-full border-[3px] border-white/20 border-t-white animate-spin" />
                 <p className="text-white/60 text-xs tracking-wide">Buscando vídeos…</p>
               </div>
@@ -1203,8 +1292,6 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
-              onMouseDown={onMouseDown}
-              onMouseUp={onMouseUp}
               /* Desktop double-click → favoritar */
               onDoubleClick={e => {
                 if (isMobile) return;
@@ -1215,12 +1302,11 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                 triggerFavorite(e.clientX - rect.left, e.clientY - rect.top);
               }}
-              /* Desktop single-click — usa zona 30/40/30, mas com delay para
+              /* Desktop single-click — usa zona 30/40/30, com delay para
                  não disparar antes de um possível duplo-clique chegar. */
               onClick={e => {
                 // Touch devices: onTouchEnd já resolve. Bloqueia o synthetic click.
                 if (isMobile) return;
-                if (didLongPressRef.current) { didLongPressRef.current = false; return; }
                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                 const relativeX = e.clientX - rect.left;
                 const w = rect.width;
