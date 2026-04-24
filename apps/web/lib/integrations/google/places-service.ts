@@ -62,8 +62,45 @@ export interface AutocompleteResult {
 }
 
 import { withGoogleGuard } from './cost-guard';
+import { prisma } from '@/lib/prisma';
 
 const BASE_URL = 'https://maps.googleapis.com/maps/api';
+
+// Cache de Place Details em DB com TTL de 30 dias. Sobrevive a redeploy/cold-start
+// (diferente do edge cache do Next que volta a 0). Evita re-cobrança quando o mesmo
+// place é aberto por outro usuário ou device.
+const PLACE_CACHE_TTL_DAYS = 30;
+
+async function readPlaceCache(placeId: string, tier: PlaceDetailsTier): Promise<PlaceDetails | null> {
+  try {
+    const row = await prisma.placeCache.findUnique({
+      where: { placeId_tier: { placeId, tier } },
+    });
+    if (!row) return null;
+    if (row.expiresAt.getTime() <= Date.now()) return null;
+    return row.payload as unknown as PlaceDetails;
+  } catch {
+    // Tabela pode não existir ainda (migração pendente). Degrada gracioso.
+    return null;
+  }
+}
+
+async function writePlaceCache(
+  placeId: string,
+  tier: PlaceDetailsTier,
+  payload: PlaceDetails,
+): Promise<void> {
+  const expiresAt = new Date(Date.now() + PLACE_CACHE_TTL_DAYS * 24 * 60 * 60 * 1000);
+  try {
+    await prisma.placeCache.upsert({
+      where: { placeId_tier: { placeId, tier } },
+      create: { placeId, tier, payload: payload as object, expiresAt },
+      update: { payload: payload as object, expiresAt },
+    });
+  } catch {
+    // Falha de DB não pode derrubar a request — só loga implicitamente.
+  }
+}
 
 function getApiKey() {
   const key = process.env.GOOGLE_PLACES_API_KEY;
@@ -71,24 +108,57 @@ function getApiKey() {
   return key;
 }
 
-export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
+// ─── Place Details: SKU split para minimizar custo ────────────────────────────
+//
+// Google cobra Details em 3 SKUs distintos:
+//   • Basic Data ($17/1k): place_id, name, formatted_address, geometry, types, url
+//   • Contact Data (+$3/1k): website, formatted_phone_number, opening_hours
+//   • Atmosphere Data (+$5/1k): rating, user_ratings_total, reviews, price_level
+//
+// Pedir todos os 3 = $25/1k = 2.5¢/call. Pedir só Basic = 1.7¢/call (32% menos).
+// Como reviews + opening_hours só aparecem no modal expandido, fazemos lazy
+// fetch desses SKUs sob demanda.
+//
+// Photos NUNCA é pedido aqui — usamos Pexels/Unsplash (custo zero pra Google).
+
+export type PlaceDetailsTier = 'basic' | 'full';
+
+const BASIC_FIELDS = [
+  'place_id', 'name', 'formatted_address', 'geometry', 'types', 'url', 'website',
+] as const;
+
+const FULL_FIELDS = [
+  ...BASIC_FIELDS,
+  // Contact:
+  'opening_hours',
+  // Atmosphere:
+  'rating', 'user_ratings_total', 'price_level', 'reviews',
+] as const;
+
+export async function getPlaceDetails(
+  placeId: string,
+  tier: PlaceDetailsTier = 'basic',
+): Promise<PlaceDetails | null> {
+  // 1) Tenta cache em DB primeiro (TTL 30d, sobrevive redeploy)
+  const cached = await readPlaceCache(placeId, tier);
+  if (cached) return cached;
+
+  // 2) Cai pra Google só se cache miss
   const guarded = await withGoogleGuard('details', async () => {
     const key = getApiKey();
-    // Billing do Google Places Details é cobrado por combinação de "SKU" (Basic /
-    // Contact / Atmosphere). Mantemos só os campos usados pela UI para não pagar
-    // por SKUs que a gente não renderiza.
-    const fields = [
-      'place_id', 'name', 'formatted_address',
-      'website', 'rating', 'user_ratings_total', 'price_level', 'types',
-      'geometry', 'photos', 'reviews', 'opening_hours', 'url',
-    ].join(',');
-
+    const fields = (tier === 'full' ? FULL_FIELDS : BASIC_FIELDS).join(',');
     const url = `${BASE_URL}/place/details/json?place_id=${placeId}&fields=${fields}&language=pt-BR&key=${key}`;
     const res = await fetch(url, { next: { revalidate: 86400 } });
     const data = await res.json();
     if (data.status !== 'OK') return null;
     return data.result as PlaceDetails;
   });
+
+  // 3) Persiste no cache (fire-and-forget — não bloqueia a resposta)
+  if (guarded.result) {
+    void writePlaceCache(placeId, tier, guarded.result);
+  }
+
   return guarded.result;
 }
 
@@ -289,19 +359,6 @@ export async function autocomplete(
     return (data.predictions as AutocompleteResult[]).slice(0, 5);
   });
   return guarded.result ?? [];
-}
-
-/**
- * Retorna a URL do nosso proxy /api/place-photo, que:
- *   - NÃO expõe a chave da API para o cliente
- *   - Aplica cache edge de 7 dias
- *   - Respeita o kill switch via a rota server-side
- *
- * A chave pública `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` continua sendo usada
- * APENAS pelo Maps JS SDK (mapa interativo) — que exige key no browser.
- */
-export function getPhotoUrl(photoRef: string, maxWidth = 800): string {
-  return `/api/place-photo?ref=${encodeURIComponent(photoRef)}&maxwidth=${maxWidth}`;
 }
 
 export async function geocodeAddress(

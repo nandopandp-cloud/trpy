@@ -64,10 +64,11 @@ function ReviewCard({ review, index }: { review: PlaceReview; index: number }) {
 
 export function GoogleReviewsWidget({ placeId, placeName }: GoogleReviewsWidgetProps) {
   const [locale] = useLocale();
+  // Widget de reviews precisa de Atmosphere SKU — pede tier full.
   const { data: place, isLoading } = useQuery<PlaceDetails>({
-    queryKey: ['place-details', placeId],
+    queryKey: ['place-details', placeId, 'full'],
     queryFn: async () => {
-      const res = await fetch(`/api/places/${placeId}`);
+      const res = await fetch(`/api/places/${placeId}?tier=full`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       return data.data;

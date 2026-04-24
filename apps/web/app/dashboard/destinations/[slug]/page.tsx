@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
 import { useDestinationPhoto } from '@/hooks/useDestinationPhoto';
+import { usePlacePhoto } from '@/hooks/usePlacePhoto';
 import dynamic from 'next/dynamic';
 import { PlaceDetailModal } from '@/components/integrations/google/place-detail-modal';
 
@@ -167,8 +168,12 @@ function PlaceCard({ place, favoriteType, onOpen }: {
   favoriteType: 'RESTAURANT' | 'HOTEL' | 'ACTIVITY';
   onOpen: () => void;
 }) {
-  const photo = place.photos?.[0];
-  const photoUrl = photo ? `/api/place-photo?ref=${photo.photo_reference}&maxwidth=400` : null;
+  // Foto via Pexels/Unsplash (mesh) — Google Photos API ($7/1k) está fora.
+  const photoUrl = usePlacePhoto({
+    name: place.name,
+    address: place.formatted_address,
+    types: place.types,
+  });
 
   return (
     <div

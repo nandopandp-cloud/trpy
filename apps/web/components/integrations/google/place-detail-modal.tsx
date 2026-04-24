@@ -10,6 +10,7 @@ import {
   ChevronDown, SlidersHorizontal, Check, Pencil, Plus, BedDouble,
 } from 'lucide-react';
 import { FavoriteButton } from '@/components/favorites/favorite-button';
+import { usePlacePhoto } from '@/hooks/usePlacePhoto';
 import { GoogleMapView } from './google-map-view';
 import { WriteReviewModal } from './write-review-modal';
 import { cn } from '@/lib/utils';
@@ -69,11 +70,59 @@ function prettyType(types?: string[]) {
 
 // ─── Photo Gallery ────────────────────────────────────────────────────────────
 
-function PhotoCarousel({ photos, name }: { photos: PlaceDetails['photos']; name: string }) {
+/**
+ * Galeria de fotos para o Place. Usa EXCLUSIVAMENTE Pexels/Unsplash via
+ * `/api/media/images` — nunca a Photos API do Google ($7/1k). Query é
+ * "nome + cidade + tipo" para máxima relevância visual; se a foto exata
+ * não existir, traz fotos representativas (estilo do estabelecimento,
+ * cidade, categoria) — qualidade editorial muito melhor que street-view.
+ */
+function PhotoCarousel({
+  name,
+  address,
+  types,
+}: {
+  name: string;
+  address?: string;
+  types?: string[];
+}) {
   const [index, setIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  if (!photos?.length) {
+  const queryString = useMemo(() => {
+    const parts = [name];
+    const city = address?.split(',').slice(-3, -1).join(' ').trim();
+    if (city) parts.push(city);
+    const semantic = types?.find((t) =>
+      ['restaurant', 'cafe', 'bar', 'lodging', 'museum', 'tourist_attraction', 'park', 'beach'].includes(t),
+    );
+    if (semantic) parts.push(semantic.replace('_', ' '));
+    return parts.join(' ');
+  }, [name, address, types]);
+
+  const { data: photos = [] } = useQuery<Array<{ url: string; id: string }>>({
+    queryKey: ['place-photos-mesh', queryString],
+    queryFn: async () => {
+      if (!queryString.trim()) return [];
+      const params = new URLSearchParams({
+        query: queryString,
+        perPage: '8',
+        orientation: 'landscape',
+      });
+      const res = await fetch(`/api/media/images?${params}`);
+      const json = await res.json();
+      if (!json.success || !json.data?.items?.length) return [];
+      return json.data.items.map((it: { id: string; url: string }) => ({
+        id: it.id,
+        url: it.url,
+      }));
+    },
+    enabled: !!name,
+    staleTime: 24 * 60 * 60 * 1000,
+    gcTime: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  if (!photos.length) {
     return (
       <div className="w-full h-64 sm:h-80 bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
         <Building2 className="w-12 h-12 text-muted-foreground/40" />
@@ -111,12 +160,12 @@ function PhotoCarousel({ photos, name }: { photos: PlaceDetails['photos']; name:
       >
         {photos.map((p, i) => (
           <div
-            key={p.photo_reference}
+            key={p.id}
             className="relative w-full h-full shrink-0 snap-center"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`/api/place-photo?ref=${p.photo_reference}&maxwidth=1200`}
+              src={p.url}
               alt={`${name} - foto ${i + 1}`}
               loading={i === 0 ? 'eager' : 'lazy'}
               className="w-full h-full object-cover"
@@ -806,10 +855,12 @@ export function PlaceDetailModal({
   const [showAllHours, setShowAllHours] = useState(false);
   const [writeReview, setWriteReview] = useState<{ open: boolean; existing?: TrpyReview }>({ open: false });
 
+  // Modal mostra reviews + horários + preço — precisa do tier full (Atmosphere).
+  // Para listas e itinerário usamos tier basic via callers separados.
   const { data: place, isLoading, isError } = useQuery<PlaceDetails>({
-    queryKey: ['place-details', placeId],
+    queryKey: ['place-details', placeId, 'full'],
     queryFn: async () => {
-      const res = await fetch(`/api/places/${placeId}`);
+      const res = await fetch(`/api/places/${placeId}?tier=full`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       return json.data;
@@ -844,9 +895,12 @@ export function PlaceDetailModal({
 
   const openNow = place?.opening_hours?.open_now;
   const typeLabel = prettyType(place?.types);
-  const photoUrl = place?.photos?.[0]
-    ? `/api/place-photo?ref=${place.photos[0].photo_reference}&maxwidth=600`
-    : undefined;
+  // Foto pequena usada no FavoriteButton — Pexels/Unsplash, nunca Google.
+  const photoUrl = usePlacePhoto({
+    name: place?.name,
+    address: place?.formatted_address,
+    types: place?.types,
+  }) ?? undefined;
 
   const mapMarkers = place?.geometry
     ? [{
@@ -921,7 +975,11 @@ export function PlaceDetailModal({
             {isLoading ? (
               <div className="w-full h-64 sm:h-80 bg-muted animate-pulse" />
             ) : (
-              <PhotoCarousel photos={place?.photos} name={place?.name ?? fallbackName ?? ''} />
+              <PhotoCarousel
+                name={place?.name ?? fallbackName ?? ''}
+                address={place?.formatted_address}
+                types={place?.types}
+              />
             )}
 
             {/* Title overlay */}

@@ -12,6 +12,7 @@ import { PlaceDetailModal } from './place-detail-modal';
 import { PlacesFilter, applyFilters, countActiveFilters, DEFAULT_FILTERS, type PlacesFilters } from './places-filter';
 import type { PlaceSearchResult } from '@/lib/integrations/google/places-service';
 import { useLocale, t, formatNumber, type Locale } from '@/lib/i18n';
+import { usePlacePhoto } from '@/hooks/usePlacePhoto';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,10 +60,13 @@ function PlaceCard({
   locale: Locale;
   onOpen: () => void;
 }) {
-  const photo = place.photos?.[0];
-  const photoUrl = photo
-    ? `/api/place-photo?ref=${photo.photo_reference}&maxwidth=600`
-    : null;
+  // Foto vem de Pexels/Unsplash (mesh) — NUNCA da Photos API do Google,
+  // que custa $7/1k e era o maior dreno em listas de 60 lugares.
+  const photoUrl = usePlacePhoto({
+    name: place.name,
+    address: place.formatted_address,
+    types: place.types,
+  });
 
   return (
     <div

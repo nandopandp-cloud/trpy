@@ -292,3 +292,29 @@ model ApiUsage {
   @@map("api_usage")
 }
 
+// ─── Cache persistente de Google Place Details ──────────────────────────────
+// Edge cache (24h via revalidate) some entre redeploys e em cold start.
+// Esta tabela mantém a resposta serializada por placeId+tier, com TTL longo
+// (30 dias) — sobrevive deploys e elimina re-cobrança quando o mesmo lugar
+// é aberto por usuários diferentes ou em devices diferentes.
+//
+// Atomic data (rating, opening_hours) muda raramente; 30 dias é seguro.
+// Se o Google mostrar discrepância, basta truncar a tabela ou esperar TTL.
+model PlaceCache {
+  id          String   @id @default(cuid())
+  /// Google place_id (chave primária lógica)
+  placeId     String
+  /// "basic" ou "full" — SKU de campos solicitados ao Google
+  tier        String
+  /// JSON serializado da resposta do Place Details
+  payload    Json
+  /// Quando o registro expira (now + 30d). Reads ignoram registros >= expiresAt.
+  expiresAt  DateTime
+  fetchedAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([placeId, tier])
+  @@index([expiresAt])
+  @@map("place_cache")
+}
+
