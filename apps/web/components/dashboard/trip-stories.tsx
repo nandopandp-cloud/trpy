@@ -622,77 +622,143 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     return () => window.removeEventListener('keydown', fn);
   }, [advanceFn, goBackFn, onClose, pauseRaf, resumeRaf]);
 
-  /* ── YouTube postMessage listener — handshake real ──────────────────────
-     Quando o iframe carrega, envia `listening` para começar a receber eventos.
-     Quando recebe `onReady` (info.playerState != null), drena a fila de comandos
-     pendentes — isso garante que mute/unMute/setVolume cheguem no momento certo,
-     eliminando o problema de "áudio não sai". */
+  /* ── YouTube postMessage listener — recebe eventos do player ───────────
+     Aplica mute/volume/play assim que o player sinaliza onReady (ou
+     initialDelivery, que é o evento que o YT envia em resposta ao
+     handshake `listening`). */
   useEffect(() => {
     function handleMessage(ev: MessageEvent) {
-      // Mensagens vêm do origin do YouTube nocookie
       if (typeof ev.data !== 'string') return;
-      if (!/youtube/.test(ev.origin)) return;
+      // youtube-nocookie.com OU youtube.com
+      if (!/youtube(-nocookie)?\.com$/.test(new URL(ev.origin).hostname)) return;
       let payload: any;
       try { payload = JSON.parse(ev.data); } catch { return; }
-      if (!payload || payload.id == null) return;
+      if (!payload) return;
 
-      // `onReady` chega com event="onReady" ou com info contendo playerState inicial
-      if (payload.event === 'onReady' || payload.event === 'initialDelivery') {
-        playerReadyRef.current = true;
-        const win = iframeRef.current?.contentWindow;
-        if (win) {
-          // 1) Drena fila ANTES de qualquer comando deste handler — assim
-          //    pauseVideo enfileirado durante a transição não é sobrescrito
-          //    pelo playVideo abaixo.
-          const queue = ytCommandQueueRef.current;
-          ytCommandQueueRef.current = [];
-          for (const cmd of queue) {
-            win.postMessage(JSON.stringify({ event: 'command', func: cmd.func, args: cmd.args }), '*');
-          }
-          // 2) Aplica mute/volume conforme estado atual
-          if (mutedRef.current) {
-            win.postMessage(JSON.stringify({ event: 'command', func: 'mute', args: [] }), '*');
-          } else {
-            win.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
-            win.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
-          }
-          // 3) Sincroniza play/pause com o estado atual (NÃO força play —
-          //    se o usuário pausou durante a transição, respeita).
-          win.postMessage(
-            JSON.stringify({
-              event: 'command',
-              func: isPausedRef.current ? 'pauseVideo' : 'playVideo',
-              args: [],
-            }),
-            '*',
-          );
-        }
-        // Mostra o iframe (fade in) só agora que sabemos que está pronto
-        setIframeFadeIn(true);
-      }
+      // O YT responde a `listening` com `initialDelivery` contendo info do player.
+      // Também emite `onReady` quando o player termina de inicializar.
+      const isReadyEvent =
+        payload.event === 'onReady' ||
+        payload.event === 'initialDelivery' ||
+        (payload.info && payload.info.playerState !== undefined);
+
+      if (!isReadyEvent || playerReadyRef.current) return;
+
+      playerReadyRef.current = true;
+      setIframeFadeIn(true);
+      applyPendingPlayerState();
     }
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
+    // applyPendingPlayerState é estável (useCallback abaixo)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Quando o videoId muda, reseta o flag de ready, esconde o iframe (cobertura
-     pelo blurred cover), e dispara handshake `listening` assim que o iframe
-     monta. */
+  /* Aplica estado desejado (mute/volume/play) assim que o player está pronto.
+     Drena a fila de comandos enfileirados durante a janela "não-pronto". */
+  const applyPendingPlayerState = useCallback(() => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+
+    // 1) Drena fila ANTES de aplicar estado novo
+    const queue = ytCommandQueueRef.current;
+    ytCommandQueueRef.current = [];
+    for (const cmd of queue) {
+      win.postMessage(JSON.stringify({ event: 'command', func: cmd.func, args: cmd.args }), '*');
+    }
+
+    // 2) Mute/volume conforme estado atual
+    if (mutedRef.current) {
+      win.postMessage(JSON.stringify({ event: 'command', func: 'mute', args: [] }), '*');
+    } else {
+      win.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
+      win.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*');
+    }
+
+    // 3) Play/pause conforme estado atual
+    win.postMessage(
+      JSON.stringify({
+        event: 'command',
+        func: isPausedRef.current ? 'pauseVideo' : 'playVideo',
+        args: [],
+      }),
+      '*',
+    );
+  }, []);
+
+  /* Handshake robusto: tenta enviar `listening` em múltiplos momentos —
+     no onLoad do iframe (mais confiável), com retries em intervalos curtos
+     para cobrir casos onde o player demora pra inicializar. Também tem
+     fallback de timeout que força o iframe a ficar visível para nunca
+     deixar o usuário com tela travada. */
+  const handshakeStateRef = useRef<{
+    retryTimer: ReturnType<typeof setTimeout> | null;
+    fallbackTimer: ReturnType<typeof setTimeout> | null;
+    attempts: number;
+  }>({ retryTimer: null, fallbackTimer: null, attempts: 0 });
+
+  const sendHandshake = useCallback(() => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    try {
+      win.postMessage(JSON.stringify({ event: 'listening' }), '*');
+    } catch {
+      // contentWindow ainda não acessível — próxima retry resolve
+    }
+  }, []);
+
+  /* Reset estado quando o vídeo muda — iframe vai recarregar com novo src.
+     onLoad disparará o handshake; se falhar, retries cobrem; fallback
+     garante visibilidade depois de 2s no pior caso. */
   useEffect(() => {
     if (!currentVideo) return;
+
     playerReadyRef.current = false;
     setIframeFadeIn(false);
     ytCommandQueueRef.current = [];
+    handshakeStateRef.current.attempts = 0;
 
-    // Aguarda o próximo frame para garantir que o iframe foi montado
-    const raf = requestAnimationFrame(() => {
-      const win = iframeRef.current?.contentWindow;
-      if (!win) return;
-      // Handshake oficial — sem isso o YT não envia eventos de volta
-      win.postMessage(JSON.stringify({ event: 'listening' }), '*');
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [currentVideo?.id]);
+    // Limpa timers anteriores
+    if (handshakeStateRef.current.retryTimer) {
+      clearTimeout(handshakeStateRef.current.retryTimer);
+    }
+    if (handshakeStateRef.current.fallbackTimer) {
+      clearTimeout(handshakeStateRef.current.fallbackTimer);
+    }
+
+    // Retries periódicos do handshake (cobre o caso de o iframe demorar pra
+    // carregar o documento). Para depois que o player responde ou após 2s.
+    function retry() {
+      if (playerReadyRef.current) return;
+      sendHandshake();
+      handshakeStateRef.current.attempts += 1;
+      if (handshakeStateRef.current.attempts < 12) {
+        handshakeStateRef.current.retryTimer = setTimeout(retry, 180);
+      }
+    }
+    handshakeStateRef.current.retryTimer = setTimeout(retry, 100);
+
+    // Fallback final: depois de 2s, mesmo sem onReady, força o iframe a ficar
+    // visível e tenta aplicar estado. O autoplay=1&mute=1 do src já dispara
+    // playback automático no Chrome/Safari mobile — o player toca mesmo se
+    // o handshake falhar. NUNCA deixe o usuário com tela preta.
+    handshakeStateRef.current.fallbackTimer = setTimeout(() => {
+      if (!playerReadyRef.current) {
+        playerReadyRef.current = true;
+        setIframeFadeIn(true);
+        applyPendingPlayerState();
+      }
+    }, 2000);
+
+    return () => {
+      if (handshakeStateRef.current.retryTimer) {
+        clearTimeout(handshakeStateRef.current.retryTimer);
+      }
+      if (handshakeStateRef.current.fallbackTimer) {
+        clearTimeout(handshakeStateRef.current.fallbackTimer);
+      }
+    };
+  }, [currentVideo?.id, sendHandshake, applyPendingPlayerState]);
 
   /* ══════════════════ TOUCH / GESTURE ══════════════════ */
 
@@ -1095,6 +1161,60 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
           </motion.div>
         )}
 
+        {/* ─── PERSISTENT bg + iframe layer ─────────────────────────────────
+            CRITICAL: o iframe e o blurred backdrop vivem FORA do
+            AnimatePresence. Se o iframe ficasse dentro do motion.div com
+            key={`${storyIdx}-${videoIdx}`}, ele seria desmontado/remontado
+            a cada animação de slide e o handshake postMessage perderia
+            a corrida — vídeo nunca tocaria (bug reportado). Aqui o iframe
+            só remonta quando currentVideo.id muda, de verdade. */}
+        <div className="absolute inset-0 bg-black overflow-hidden" style={{ zIndex: 0 }}>
+          {coverPhoto ? (
+            <img
+              key={coverPhoto}
+              src={coverPhoto}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50 pointer-events-none"
+              aria-hidden
+            />
+          ) : (
+            <div className={cn('absolute inset-0 bg-gradient-to-br opacity-70', currentStory.gradient ?? GRADIENT_FALLBACKS[0])} />
+          )}
+
+          {currentVideo && (
+            <iframe
+              ref={iframeRef}
+              key={currentVideo.id}
+              src={`https://www.youtube-nocookie.com/embed/${currentVideo.id}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&loop=0&enablejsapi=1`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              onLoad={sendHandshake}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                height: '100%',
+                aspectRatio: '16/9',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+                border: 0,
+                opacity: iframeFadeIn ? 1 : 0,
+                transition: 'opacity 280ms ease-out',
+              }}
+            />
+          )}
+
+          {/* Cover photo cobre o iframe enquanto não está ready — evita
+              ver flash preto/buffer do YouTube na transição entre vídeos */}
+          {currentVideo && !iframeFadeIn && coverPhoto && (
+            <img
+              src={coverPhoto}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            />
+          )}
+        </div>
+
         {/* ── Animated story transition ── */}
         <AnimatePresence custom={directionRef.current} mode="sync">
           <motion.div
@@ -1118,59 +1238,8 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
                 : undefined
             }
           >
-            {/* ─── LAYER 1: Blurred destination photo as BG ─── */}
-            <div className="absolute inset-0 bg-black">
-              {coverPhoto ? (
-                <img
-                  src={coverPhoto}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50 pointer-events-none"
-                  aria-hidden
-                />
-              ) : (
-                <div className={cn('absolute inset-0 bg-gradient-to-br opacity-70', currentStory.gradient ?? GRADIENT_FALLBACKS[0])} />
-              )}
-            </div>
-
-            {/* ─── LAYER 2: YouTube iframe (fills frame, cover crop) ───
-                Iframe key = videoId apenas. Mute/play via postMessage
-                (handshake onReady garante entrega). O fade in é controlado
-                pelo state `iframeFadeIn` que vira true só quando o player
-                sinaliza onReady — assim a transição não mostra "buffer screen"
-                amarelo/preto do YouTube.
-                Cobertura visual durante carregamento: o blurred coverPhoto
-                da LAYER 1 fica visível atrás. Sem spinner piscando. */}
-            {currentVideo && (
-              <iframe
-                ref={iframeRef}
-                key={currentVideo.id}
-                src={`https://www.youtube-nocookie.com/embed/${currentVideo.id}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&loop=0&enablejsapi=1`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  height: '100%',
-                  aspectRatio: '16/9',
-                  transform: 'translate(-50%, -50%)',
-                  pointerEvents: 'none',
-                  border: 0,
-                  opacity: iframeFadeIn ? 1 : 0,
-                  transition: 'opacity 280ms ease-out',
-                }}
-              />
-            )}
-
-            {/* Cover photo cobre o iframe enquanto não está ready — evita
-                ver flash preto/buffer do YouTube na transição entre vídeos */}
-            {currentVideo && !iframeFadeIn && coverPhoto && (
-              <img
-                src={coverPhoto}
-                alt=""
-                aria-hidden
-                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-              />
-            )}
+            {/* LAYERS 1+2 (bg + YouTube iframe) vivem FORA deste
+                AnimatePresence — ver bloco "PERSISTENT bg + iframe" acima. */}
 
             {/* Loading state — só aparece se demorar (>850ms). Evita pisca
                 rápido em transições normais entre destinos. */}
