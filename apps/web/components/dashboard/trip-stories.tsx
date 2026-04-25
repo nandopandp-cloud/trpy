@@ -464,6 +464,11 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
 
   /* ══════════════════ RAF PROGRESS ══════════════════════ */
 
+  // Ref para advanceFn — permite que o tick do RAF sempre chame a versão
+  // mais recente sem depender de closure, eliminando o bug de stale closure
+  // que fazia o progresso travar após o primeiro vídeo.
+  const advanceFnRef = useRef<() => void>(() => {});
+
   const stopRaf = useCallback(() => {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
@@ -479,12 +484,11 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
       const elapsed = ts - startTsRef.current;
       const pct = Math.min(savedPctRef.current + (elapsed / STORY_DURATION) * 100, 100);
       setProgress(pct);
-      if (pct >= 100) { advanceFn(); return; }
+      if (pct >= 100) { advanceFnRef.current(); return; }
       rafRef.current = requestAnimationFrame(tick);
     }
     rafRef.current = requestAnimationFrame(tick);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storyIdx, videoIdx]);
+  }, [stopRaf]);
 
   /* ── YouTube iframe controls (postMessage API) ──────────────────────────
      Comandos enviados antes do `onReady` são descartados pelo YT player —
@@ -557,6 +561,9 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
     }
   }, [stopRaf, onClose]);
 
+  // Mantém a ref sempre atualizada para que o tick do RAF use a versão correta.
+  advanceFnRef.current = advanceFn;
+
   const goBackFn = useCallback(() => {
     stopRaf();
     savedPctRef.current = 0;
@@ -601,8 +608,7 @@ function StoryViewer({ stories, initialIndex, onClose }: StoryViewerProps) {
       startRaf();
     }
     return stopRaf;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storyIdx, videoIdx, loading]);
+  }, [storyIdx, videoIdx, loading, startRaf, stopRaf]);
 
   /* ── Keyboard shortcuts ── */
   useEffect(() => {
